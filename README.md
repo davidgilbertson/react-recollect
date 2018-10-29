@@ -2,8 +2,10 @@
 
 First things first: **don't use this**.
 
-Browser support is terrible. I've tested it in about 2% of all possible scenarios, and I'll
+Browser support is ~90% (is uses the `Proxy` object, which can't be polyfilled or transpiled).
+I've only tested it in about 2% of all possible scenarios, and I'll
 probably lose interest 3 days after I publish it to npm.
+
 However I am relying on it in this app: https://github.com/davidgilbertson/scatter-bar so it's not complete junk.
 
 # Usage, for those that don't listen
@@ -17,23 +19,20 @@ You can treat `store` just like you'd treat any object, with one exception: you 
 ```js
 import { store } from 'react-recollect';
 
-// Fine
-store.tasks = ['one', 'two', 'three'];
+store.tasks = ['one', 'two', 'three']; // Fine
 
-// Good
-store.tasks.push('four');
+store.tasks.push('four'); // Good
 
-// No problem
-delete store.tasks;
+delete store.tasks; // No problem
 
-// NOPE!
-store = 'cats';
+store = 'cats'; // NOPE!
 ```
 
 ## The `collect` function
 
 This is a Higher Order Component. You wrap a component in `collect` to have 
-Recollect look after that component.
+Recollect look after that component. You should do this for _every_ component that uses data from
+the store when rendering.
 
 ```jsx
 import React from 'react';
@@ -42,9 +41,10 @@ import Task from './Task';
 
 const TaskList = () => (
   <div>
-    {!!store.tasks && store.tasks.map(task => (
+    {store.tasks.map(task => (
       <Task key={task.id} task={task} />
     ))}
+    
     <button onClick={() => {
       store.tasks.push({
         name: 'A new task',
@@ -66,11 +66,13 @@ Recollect will:
 Each time the component renders, Recollect re-records what data was used, so conditional rendering
 works just fine.
 
-Recollect is pretty aggressive and by default will not let React update child components while it
+This works fine with functional stateless components or class-based components.
+
+By default Recollect will not let React update child components while it
 updates some parent component. This is because Recollect believes it knows which components need to be
 updated, so React would only be wasting its time if it went diffing a bunch of children.
 Maybe there's some cases where this causes a problem, so as an escape hatch you can
-do `collect(MyComponent, { freeze: false})`.
+do `collect(MyComponent, { freeze: false})`, then let me know about the problem.
 
 ## The `afterChange` function
 
@@ -85,18 +87,22 @@ afterChange(() => {
 });
 ```
 
+Use wisely as this will be called on _every_ change. You might want to debounce if you've got a
+lot of data changing many times per second.
+
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 - Use `__RR__.debugOn()` to turn on debugging. The setting is stored in local storage, so
-will persist between refreshes. You can combine this with Chrome's console filtering, for example to only 
+will persist while you sleep. You can combine this with Chrome's console filtering, for example to only 
 see 'UPDATE' or 'SET' events. Who needs professional, well made dev tools extensions!
-- Use `__RR__.debugOff()` and see what happens!
+- Type `__RR__.debugOff()` and see what happens!
 - `__RR__.getStore()` returns a reference to the store. Because of the way Recollect works, this is
 'live'. For example, typing `__RR__.getStore().tasks.pop()` in the console would actually delete a task from the
 store and Recollect would instruct React to re-render the appropriate components, `__RR__.getStore().tasks[1].done = true` would
 tick a tickbox, and so on.
-- `__RR__.getListeners()` returns the actual listeners. This is of limited use, probably.
+- `__RR__.getListeners()` returns Recollect's list of component instances and the data they required the
+last time they rendered
 
 # TODO
 
