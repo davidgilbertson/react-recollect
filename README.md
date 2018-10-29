@@ -122,7 +122,7 @@ Recollect needs at least React 15.3 (for `PureComponent`), there are no dependen
 
 # TODO
 
-- [ ] Make `react` a peer dependency.
+- [x] Make `react` a peer dependency.
 - [ ] Break the source out into multiple files
 - [x] Test what happens when you pass state down into a `collect`ed component. Instead of returning false
 for `shouldComponentUpdate`, I could do a shallow check, or just use a `PureComponent`, right? Set up a performance test.
