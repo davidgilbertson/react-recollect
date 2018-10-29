@@ -58,10 +58,10 @@ const isProxy = obj => proxies.has(obj);
 const notifyListeners = (target, prop, value) => {
   listeners.forEach(listener => {
     if (listener.prop === prop && listener.target === target) {
-      log.info(`UPDATE component:     <${listener.component._name}>:`);
-      log.info('UPDATE prop:        ', prop);
-      log.info('UPDATE new value:   ', value);
-      log.info('UPDATE target:      ', target);
+      log.info(`UPDATE component: <${listener.component._name}>:`);
+      log.info('UPDATE prop:', prop);
+      log.info('UPDATE new value:', value);
+      log.info('UPDATE target:', target);
 
       listener.component.forceUpdate();
     }
@@ -142,9 +142,7 @@ const stopRecordingGetsForComponent = () => {
   currentComponent = null;
 };
 
-export const collect = (ComponentToWrap, options = {
-  freeze: true
-}) => {
+export const collect = (ComponentToWrap, options = { freeze: true }) => {
   const componentName = ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
   class WrappedComponent extends Component {
