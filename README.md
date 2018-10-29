@@ -12,9 +12,17 @@ However I am relying on it in this app: https://github.com/davidgilbertson/scatt
 
 # Usage, for those that won't heed my warnings
 
+## Installation
+
+```
+npm i react-recollect
+```
+
+## API
+
 `react-recollect` exports one object and two functions.
 
-## The `store` object
+### The `store` object
 
 This is where all your data goes, obviously.
 
@@ -34,7 +42,7 @@ delete store.tasks; // No problem
 store = 'tasks'; // NOPE!
 ```
 
-## The `collect` function
+### The `collect` function
 
 This is a Higher Order Component. You wrap a React component in `collect` to have 
 Recollect look after that component. You should do this for _every_ component that uses data from
@@ -79,7 +87,7 @@ works just fine.
 This works with functional stateless components or class-based components. Lifecycle
 methods, `setState()` etc continue to work just fine.
 
-## The `afterChange` function
+### The `afterChange` function
 
 Pass a function to `afterChange` to have it called whenever the store updates. For example, if you wanted
 to sync your store to local storage, you could do the following anywhere in your app.
@@ -108,6 +116,9 @@ store and Recollect would instruct React to re-render the appropriate components
  `__RR__.getStore().tasks[1].done = true` would tick a tickbox, and so on.
 - `__RR__.getListeners()` returns Recollect's list of component instances and the data they required the
 last time they rendered.
+
+# Dependencies
+Recollect needs at least React 15.3 (for `PureComponent`), there are no dependencies. 
 
 # TODO
 
