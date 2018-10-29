@@ -1,5 +1,7 @@
 # React Recollect
 
+A library for managing data within a React app.
+
 First things first: **don't use this**.
 
 Browser support is less that 90% (it uses the `Proxy` object, which can't be polyfilled or transpiled).
@@ -13,6 +15,8 @@ However I am relying on it in this app: https://github.com/davidgilbertson/scatt
 `react-recollect` exports one object and two functions.
 
 ## The `store` object
+
+This is where all your data goes, obviously.
 
 You can treat `store` just like you'd treat any JavaScript object, except you can't overwrite it.
 
@@ -32,13 +36,13 @@ store = 'tasks'; // NOPE!
 
 ## The `collect` function
 
-This is a Higher Order Component. You wrap a component in `collect` to have 
+This is a Higher Order Component. You wrap a React component in `collect` to have 
 Recollect look after that component. You should do this for _every_ component that uses data from
 the store when rendering.
 
 ```jsx
 import React from 'react';
-import { store, collect } from 'react-recollect';
+import { collect, store } from 'react-recollect';
 import Task from './Task';
 
 const TaskList = () => (
@@ -51,7 +55,7 @@ const TaskList = () => (
       store.tasks.push({
         name: 'A new task',
         done: false,
-      })
+      });
     }}>
       Add a task
     </button>
@@ -72,14 +76,8 @@ Recollect will:
 Each time the component renders, Recollect re-records what data was used, so conditional rendering
 works just fine.
 
-This works fine with functional stateless components or class-based components, and lifecycle
+This works with functional stateless components or class-based components. Lifecycle
 methods, `setState()` etc continue to work just fine.
-
-By default Recollect will not let React update child components while it
-updates some parent component. This is because Recollect believes it knows which components need to be
-updated, so React would only be wasting its time if it went diffing a bunch of children.
-Maybe there's some cases where this causes a problem, so as an escape hatch you can
-do `collect(MyComponent, { freeze: false})`, then let me know about the problem.
 
 ## The `afterChange` function
 
@@ -87,15 +85,15 @@ Pass a function to `afterChange` to have it called whenever the store updates. F
 to sync your store to local storage, you could do the following anywhere in your app.
 
 ```js
-import { afterChange, store } from 'react-recollect';
+import { afterChange } from 'react-recollect';
 
-afterChange(() => {
+afterChange(store => {
   localStorage.setItem('site-data', JSON.stringify(store));
 });
 ```
 
-Use this wisely as it will be called on _every_ change. You might want to debounce if you've got a
-lot of data changing many times per second.
+Use this wisely as it will be called on _every_ change. If you're saving hundreds of kilobytes, 
+hundreds of times per second, you might want to debounce.
 
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
@@ -104,17 +102,17 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 will persist while you sleep. You can combine this with Chrome's console filtering, for example to only 
 see 'UPDATE' or 'SET' events. Who needs professional, well made dev tools extensions!
 - Type `__RR__.debugOff()` and see what happens
-- `__RR__.getStore()` returns a reference to the store. Because of the way Recollect works, this is
-'live'. For example, typing `__RR__.getStore().tasks.pop()` in the console would actually delete a task from the
-store and Recollect would instruct React to re-render the appropriate components, `__RR__.getStore().tasks[1].done = true` would
-tick a tickbox, and so on.
+- `__RR__.getStore()` returns a 'live' reference to the store. For example, 
+typing `__RR__.getStore().tasks.pop()` in the console would actually delete a task from the
+store and Recollect would instruct React to re-render the appropriate components,
+ `__RR__.getStore().tasks[1].done = true` would tick a tickbox, and so on.
 - `__RR__.getListeners()` returns Recollect's list of component instances and the data they required the
-last time they rendered
+last time they rendered.
 
 # TODO
 
 - [ ] Make `react` a peer dependency.
 - [ ] Break the source out into multiple files
-- [ ] Test what happens when you pass state down into a `collect`ed component. Instead of returning false
+- [x] Test what happens when you pass state down into a `collect`ed component. Instead of returning false
 for `shouldComponentUpdate`, I could do a shallow check, or just use a `PureComponent`, right? Set up a performance test.
-- [ ] Return `store` in `afterChange`? Pointless, but perhaps what a developer would expect.
+- [x] Return `store` in `afterChange`? Pointless, but perhaps what a developer would expect.

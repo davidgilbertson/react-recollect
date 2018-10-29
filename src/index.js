@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 let DEBUG = localStorage.getItem('DEBUG') || 'off';
 
@@ -58,7 +58,7 @@ const isProxy = obj => proxies.has(obj);
 const notifyListeners = (target, prop, value) => {
   listeners.forEach(listener => {
     if (listener.prop === prop && listener.target === target) {
-      log.info(`UPDATE component: <${listener.component._name}>:`);
+      log.info(`UPDATE <${listener.component._name}>:`);
       log.info('UPDATE prop:', prop);
       log.info('UPDATE new value:', value);
       log.info('UPDATE target:', target);
@@ -67,7 +67,7 @@ const notifyListeners = (target, prop, value) => {
     }
   });
 
-  manualListeners.forEach(cb => cb());
+  manualListeners.forEach(cb => cb(store));
 };
 
 const proxyHandler = {
@@ -142,18 +142,13 @@ const stopRecordingGetsForComponent = () => {
   currentComponent = null;
 };
 
-export const collect = (ComponentToWrap, options = { freeze: true }) => {
+export const collect = ComponentToWrap => {
   const componentName = ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
-  class WrappedComponent extends Component {
+  class WrappedComponent extends React.PureComponent {
     constructor() {
       super();
       this._name = componentName;
-    }
-
-    shouldComponentUpdate() {
-      // by default, components don't update
-      return !options.freeze;
     }
 
     componentDidMount() {
