@@ -1,6 +1,6 @@
 import React from 'react';
 
-let DEBUG = localStorage.getItem('DEBUG') || 'off';
+let DEBUG = localStorage.getItem('RECOLLECT__DEBUG') || 'off';
 
 const log = new Proxy(console, {
   get(target, prop) {
@@ -177,10 +177,10 @@ window.__RR__ = {
   getListeners: () => listeners,
   debugOn: () => {
     DEBUG = 'on';
-    localStorage.setItem('DEBUG', DEBUG);
+    localStorage.setItem('RECOLLECT__DEBUG', DEBUG);
   },
   debugOff: () => {
     DEBUG = 'off';
-    localStorage.setItem('DEBUG', DEBUG);
+    localStorage.setItem('RECOLLECT__DEBUG', DEBUG);
   },
 };
