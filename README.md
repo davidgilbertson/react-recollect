@@ -1,6 +1,6 @@
 # React Recollect
 
-A library for managing data within a React app.
+A library for managing state in a React app.
 
 First things first: **don't use this**.
 
