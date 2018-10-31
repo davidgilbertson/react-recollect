@@ -1,16 +1,22 @@
 # React Recollect
 
-A library for managing state in a React app.
+Featureless state management for React.
 
-First things first: **don't use this**.
+What does that mean? It means that Recollect doesn't have any 'features' - it has an absolutely miniaml API with (almost) nothing to learn.
 
-Browser support is less that 90% (it uses the `Proxy` object, which can't be polyfilled or transpiled).
-I've only tested it in about 2% of all possible scenarios, and I'll
-probably lose interest 3 days after I publish it to npm.
+If you want an opinionated library that guides you in structuring a larger app, use Redux.
 
-However I am relying on it in this app: https://github.com/davidgilbertson/scatter-bar so it's not complete garbage.
+If you want 'observables' and 'features', use MobX.
 
-# Usage, for those that won't heed my warnings
+## Warnings:
+
+There is no support for any version of IE, Opera mini, or Android browser 4.4, because Recollect uses the `Proxy` object. Check out the latest usage stats at [caniuse.com](https://caniuse.com/#feat=proxy)
+
+This tool is in its early days, so please test heavily in all browsers you want to support and raise any issues you find.
+
+However I am relying on it in this app: https://github.com/davidgilbertson/scatter-bar so it's not completely unreliable.
+
+# Usage
 
 ## Installation
 
@@ -20,7 +26,7 @@ npm i react-recollect
 
 ## API
 
-`react-recollect` exports one object and two functions.
+All you need to use `react-recollect` is one object and one function.
 
 ### The `store` object
 
@@ -89,6 +95,8 @@ methods, `setState()` etc continue to work just fine.
 
 ### The `afterChange` function
 
+In addition to those two things, there's just one more thing...
+
 Pass a function to `afterChange` to have it called whenever the store updates. For example, if you wanted
 to sync your store to local storage, you could do the following anywhere in your app.
 
@@ -119,11 +127,3 @@ last time they rendered.
 
 # Dependencies
 Recollect needs at least React 15.3 (for `PureComponent`), there are no dependencies. 
-
-# TODO
-
-- [x] Make `react` a peer dependency.
-- [ ] Break the source out into multiple files
-- [x] Test what happens when you pass state down into a `collect`ed component. Instead of returning false
-for `shouldComponentUpdate`, I could do a shallow check, or just use a `PureComponent`, right? Set up a performance test.
-- [x] Return `store` in `afterChange`? Pointless, but perhaps what a developer would expect.
