@@ -14,6 +14,8 @@ There is no support for any version of IE, Opera mini, or Android browser 4.4 (b
 
 This tool is in its early days, so please test thoroughly and raise any issues you find.
 
+There's some problems when it comes to comparing state at two different points in time. So if you're relying on reading 'previous props' to implement some sort of transition logic, Recollect may not be for you, or you might need to do this outside of the Recollect store. (See [Immutability problems](#immutability-problems) below for more details.)
+
 # Usage
 
 ## Installation
@@ -129,7 +131,21 @@ That's the wrong question :)
 
 When using React _without_ Recollect, React must assess each component to decide which ones it will re-render. `PureComponent` and `React.memo` are hints to React that say 'you won't need to update this component if its props and state are the same as last time'.
 
-But Recollect does away with this roundabout method of 'working out' what to re-render. Instead it tells React _exactly_ which components it needs to re-render. As a result, these 'hints' are of no benefit.
+But Recollect does away with this roundabout method of 'working out' what to re-render. Instead it tells React _exactly_ which components it needs to re-render.
+
+As a result, these 'hints' are of no benefit as performance enhancing methods.
+
+## Can I use this with `shouldComponentUpdate()`?
+
+Yes, but no, but you probably don't need to.
+
+The [React docs](https://reactjs.org/docs/react-component.html#shouldcomponentupdate) say of `shouldComponentUpdate()`:
+
+> This method only exists as a performance optimization. Do not rely on it to “prevent” a rendering, as this can lead to bugs ... In the future React may treat shouldComponentUpdate() as a hint rather than a strict directive, and returning false may still result in a re-rendering of the component
+
+So, if you're using `shouldComponentUpdate` for _performance_ reasons, then you don't need it anymore. If the `shouldComponentUpdate` method is executing, it's because Recollect has _told_ React to update the component, which means a value that it needs to render has changed.
+
+Unfortunately, the `prevProps` that you're going to get as the first argument are going to be wrong. See [Immutability problems](#immutability-problems) below for more details.
 
 ## Can I use this with `Context`?
 
@@ -141,7 +157,26 @@ Context is a way to share data across your components. But why would you bother 
 
 You don't want multiple stores :)
 
-There is no performance improvement to be had, so the desire for multiple stores is just an organizational preference. But objects already have a mechanism to organize their contents, they're called 'properties'. 
+There is no performance improvement to be had, so the desire for multiple stores is just an organizational preference. But objects already have a mechanism to organize their contents, they're called 'properties'.
+
+# Immutability problems
+
+Recollect does away with immutability, in the belief that this is the cause of too much complexity for no benefit. With Recollect, your components will match your store, and that's all you need to know.
+
+99% of the time.
+
+Unfortunately, React brings immutability to the surface in three places:
+- `componentDidUpdate` in the `prevProps`, `prevState`, and potentially `snapshot` arguments.
+- `shouldComponentUpdate` which you should rarely need when using Recollect.
+- `getSnapshotBeforeUpdate`, which will pass the snapshot to `componentDidUpdate` 
+
+This causes a problem with Recollect, because the values you receive in the arguments to these methods will always be the _current_ state of your store. NOT the previous version!
+
+Sorry about that.
+
+In the future, Recollect may handle these cases if two things hold true:
+- Immutability doesn't increase complexity for the developer
+- Immutability doesn't have a negative performance impact
 
 # Dependencies
 
@@ -167,4 +202,6 @@ Also there is a library that is very similar to this one (I didn't copy, promise
 - [ ] Investigate polyfilling/adaptation for IE11 and friends. I'm guessing it's slow.
 - [ ] Investigate reading of props in constructor/lifecycle methods. Do these get recorded correctly? (Particularly componentDidMount.)
 - [ ] Do away with that one line of JSX and then Babel? Check support for trailing commas, etc
+- [ ] The `prevProps` passed to `componentDidUpdate()` will be wrong. I either need to proxied object to be immutable, or to somehow get just this value to be mutable (retain a reference to the previous props) only for components that use componentDidUpdate/shouldComponentUpdate. 
+- [ ] Is `this.setState({})` better than `this.forceUpdate()`? 
 - [ ] Tests
