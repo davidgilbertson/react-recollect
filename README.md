@@ -14,7 +14,7 @@ There is no support for any version of IE, Opera mini, or Android browser 4.4 (b
 
 This tool is in its early days, so please test thoroughly and raise any issues you find.
 
-There's some problems when it comes to comparing state at two different points in time. So if you're relying on reading 'previous props' to implement some sort of transition logic, Recollect may not be for you, or you might need to do this outside of the Recollect store. (See [Immutability problems](#immutability-problems) below for more details.)
+If you need to compare the current and previous state of the store (e.g. to implement some sort of transition logic), Recollect may not be for you. Or you might need to do this outside of the Recollect store. (See [Immutability problems](#immutability-problems) below for more details.)
 
 # Usage
 
@@ -161,22 +161,37 @@ There is no performance improvement to be had, so the desire for multiple stores
 
 # Immutability problems
 
-Recollect does away with immutability, in the belief that this is the cause of too much complexity for no benefit. With Recollect, your components will match your store, and that's all you need to know.
+Recollect does away with immutability, in the belief that this is the cause of too much complexity/bugs for little benefit. With Recollect, your components will match your store, and that's all you need to know.
 
 99% of the time.
 
-Unfortunately, React brings immutability to the surface in three places:
-- `componentDidUpdate` in the `prevProps`, `prevState`, and potentially `snapshot` arguments.
-- `shouldComponentUpdate` which you should rarely need when using Recollect.
+But React brings immutability to the surface in three places:
+- `componentDidUpdate` in the `prevProps`, `prevState`, and potentially `snapshot` arguments
+- `shouldComponentUpdate` which you should rarely need when using Recollect
 - `getSnapshotBeforeUpdate`, which will pass the snapshot to `componentDidUpdate` 
 
-This causes a problem with Recollect, because the values you receive in the arguments to these methods will always be the _current_ state of your store. NOT the previous version!
+This is a problem when using Recollect, because the Recollect store is _always_ the Recollect store as it currently exists. If you want to say something like "if the previous 'loadingStatus' was 'loading' and now it's 'complete', do something fancy", you can't. 
 
-Sorry about that.
+Perhaps this is a blessing in disguise, because inferring state by comparing two different points in time is fiddly. The more declarative thing to do might be:
 
-In the future, Recollect may handle these cases if two things hold true:
-- Immutability doesn't increase complexity for the developer
-- Immutability doesn't have a negative performance impact
+```js
+const fetchData = async () => {
+    store.loadingStatus = 'loading';
+    
+    const data = await fetchData();
+    
+    store.data = data;
+    store.loadingStatus = 'justCompleted';
+    
+    setTimeout(() => {
+      store.loadingStatus = null;
+    }, 2000);
+}
+```
+
+In the future, Recollect may implement immutability if two things hold true:
+- It doesn't increase complexity for the developer (I can do it under the hood)
+- It doesn't have a negative impact on performance
 
 # Dependencies
 
@@ -195,6 +210,17 @@ If you want explicit 'observables' and multiple stores, use MobX.
 If you want nostalgia, use Flux.
 
 Also there is a library that is very similar to this one (I didn't copy, promise) called [`react-easy-state`](https://github.com/solkimicreb/react-easy-state). It's more mature than this library, but _slightly_ more complex and has external dependencies.
+
+# Is it really OK to drop support for IE?
+Sure, why not! Just imagine, all that time you spend getting stuff to work for a few users in crappy old browsers could instead be spent making awesome new features for the vast majority of your users. Also:
+
+- GitHub doesn't support IE (and shows a message saying that)
+- Egghead.io doesn't work in IE (and shows a message saying that)
+- devdocs.io doesn't support IE (and shows a message saying that)
+- Flickr doesn't support IE (and shows a message saying that)
+- Codepen doesn't support IE
+- Smashing Magazine is messed up but readable 
+- MobX 5 doesn't support IE
 
 # TODO
 
