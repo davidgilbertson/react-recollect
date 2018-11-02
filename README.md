@@ -161,16 +161,18 @@ There is no performance improvement to be had, so the desire for multiple stores
 
 # Immutability problems
 
-Recollect does away with immutability, in the belief that this is the cause of too much complexity/bugs for little benefit. With Recollect, your components will match your store, and that's all you need to know.
-
-99% of the time.
+Recollect does away with immutability for two reasons:
+ - It doesn't need it. Recollect is far more precise than Redux when updating components, so React doesn't need to compare current/previous state to improve performance.
+ - Immutability is the cause of too much complexity (and the bugs that go with it) for too little benefit. Just take a look at any reducer to see the cost of immutability.
+ 
+With Recollect, your components will match your store, and that's all you need to know. 99% of the time.
 
 But React brings immutability to the surface in three places:
-- `componentDidUpdate` in the `prevProps`, `prevState`, and potentially `snapshot` arguments
-- `shouldComponentUpdate` which you should rarely need when using Recollect
-- `getSnapshotBeforeUpdate`, which will pass the snapshot to `componentDidUpdate` 
+- `componentDidUpdate`
+- `shouldComponentUpdate`
+- `getSnapshotBeforeUpdate` 
 
-This is a problem when using Recollect, because the Recollect store is _always_ the Recollect store as it currently exists. If you want to say something like "if the previous 'loadingStatus' was 'loading' and now it's 'complete', do something fancy", you can't. 
+This is a problem when using Recollect, because the Recollect store is _always_ the Recollect store as it currently exists. You can't say "if the previous 'loadingStatus' was 'loading' and now it's 'complete', do something fancy", because there is no 'previous' and 'current' version of the store. 
 
 Perhaps this is a blessing in disguise, because inferring state by comparing two different points in time is fiddly. The more declarative thing to do might be:
 
@@ -188,6 +190,53 @@ const fetchData = async () => {
     }, 2000);
 }
 ```
+
+You can consider your components as being a visual representation of your state, and not triggering side effects based on transitions from one value to another.
+
+Another example: rather than do as they suggest in the [React docs](https://reactjs.org/docs/react-component.html):
+
+```js
+componentDidUpdate(prevProps) {
+  // Typical usage (don't forget to compare props):
+  if (this.props.userID !== prevProps.userID) {
+    this.fetchData(this.props.userID);
+  }
+}
+```
+
+Instead trigger the fetching of new data wherever it was that you updated the `userId`.
+
+```js
+const updateUserId = newId => {
+  store.userId = newId;
+  
+  fetchUserdata(newId);
+  
+  // and the rest
+}    
+```
+
+Lastly, if you're converting an existing component to use Recollect and really don't feel like re-architecting how things update, you can make a relatively small tweak and keep the rest of your logic the same, like
+```js
+class User extends Component {
+  constructor(props) {
+    super(props);
+
+    this.prevUserId = props.userID;
+  }
+
+  componentDidUpdate() {
+    if (this.prevUserId !== this.props.userID) {
+      this.prevUserId = this.props.userID;
+      this.fetchData(this.props.userID);
+    }
+  }
+
+  render () { /* and the rest */ }
+}
+```
+
+This whole immutability situation isn't great, and if it means you can't really get excited about Recollect I'll understand. It will be sad to see you go :(
 
 In the future, Recollect may implement immutability if two things hold true:
 - It doesn't increase complexity for the developer (I can do it under the hood)
@@ -212,15 +261,14 @@ If you want nostalgia, use Flux.
 Also there is a library that is very similar to this one (I didn't copy, promise) called [`react-easy-state`](https://github.com/solkimicreb/react-easy-state). It's more mature than this library, but _slightly_ more complex and has external dependencies.
 
 # Is it really OK to drop support for IE?
-Sure, why not! Just imagine, all that time you spend getting stuff to work for a few users in crappy old browsers could instead be spent making awesome new features for the vast majority of your users. Also:
+Sure, why not! Just imagine, all that time you spend getting stuff to work for a few users in crappy old browsers could instead be spent making awesome new features for the vast majority of your users.
 
-- GitHub doesn't support IE (and shows a message saying that)
-- Egghead.io doesn't work in IE (and shows a message saying that)
-- devdocs.io doesn't support IE (and shows a message saying that)
-- Flickr doesn't support IE (and shows a message saying that)
-- Codepen doesn't support IE
-- Smashing Magazine is messed up but readable 
-- MobX 5 doesn't support IE
+These websites have made the brave move and show a message saying they don't support IE:
+
+- GitHub (owned by Microsoft!)
+- devdocs.io 
+- Flickr 
+- Codepen
 
 # TODO
 
