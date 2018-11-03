@@ -2,10 +2,6 @@ import React, { Component } from 'react';
 import { render } from 'react-testing-library';
 import { collect, store } from '../lib';
 
-store.userId = 1;
-
-const fetchData = jest.fn();
-
 class RawClassComponent extends Component {
   constructor(props) {
     super(props);
@@ -35,9 +31,13 @@ class RawClassComponent extends Component {
 
 const ClassComponent = collect(RawClassComponent);
 
+const fetchData = jest.fn();
+
 // Recollect doesn't do immutability, so a slightly hacky approach is required to detect a change
 // in a value between renders
 it('should handle a change in a value', () => {
+  store.userId = 1;
+
   const { getByText } = render(<ClassComponent fetchData={fetchData} />);
 
   expect(fetchData).toHaveBeenCalledTimes(0);

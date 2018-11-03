@@ -2,9 +2,6 @@ import React, { Component } from 'react';
 import { render } from 'react-testing-library';
 import { collect, store } from '../lib';
 
-store.title = 'The initial title';
-store.clickCount = 3;
-
 class RawClassComponent extends Component {
   render () {
     return (
@@ -22,6 +19,9 @@ class RawClassComponent extends Component {
 }
 
 const ClassComponent = collect(RawClassComponent);
+
+store.title = 'The initial title';
+store.clickCount = 3;
 
 it('should render and update the title', () => {
   const { getByText } = render(<ClassComponent />);

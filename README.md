@@ -236,6 +236,8 @@ class User extends Component {
 }
 ```
 
+This approach has its own test in [tests/componentDidUpdate.test.js](./tests/componentDidUpdate.test.js)
+
 This whole immutability situation isn't great, and if it means you can't really get excited about Recollect I'll understand. It will be sad to see you go :(
 
 In the future, Recollect may implement immutability if two things hold true:
