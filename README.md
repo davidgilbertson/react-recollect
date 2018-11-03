@@ -2,7 +2,7 @@
 
 **Featureless state management for React.**
 
-What does that mean? It means that Recollect has a tiny API with (almost) nothing to learn.
+What does 'featureless' mean? It means that Recollect has a tiny API with (almost) nothing to learn.
 
 Recollect can replace Redux or MobX or similar state management libraries.
 
@@ -278,4 +278,3 @@ These websites have made the brave move and show a message saying they don't sup
 - [ ] Do away with that one line of JSX and then Babel? Check support for trailing commas, etc
 - [ ] The `prevProps` passed to `componentDidUpdate()` will be wrong. I either need to proxied object to be immutable, or to somehow get just this value to be mutable (retain a reference to the previous props) only for components that use componentDidUpdate/shouldComponentUpdate. 
 - [ ] Is `this.setState({})` better than `this.forceUpdate()`? 
-- [ ] Tests
