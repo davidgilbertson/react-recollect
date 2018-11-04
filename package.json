@@ -4,7 +4,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "preversion": "npm run build",
+    "preversion": "npm t && npm run build",
     "test": "jest --watch",
     "build": "babel src -d lib"
   },

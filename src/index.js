@@ -1,8 +1,8 @@
 import React from 'react';
 
 let DEBUG = localStorage.getItem('RECOLLECT__DEBUG') || 'off';
-// const PATH_PROP = Symbol('path'); // TODO (davidg): symbols mean I can't define the path as a string easily
-const PATH_PROP = '__RR_PATH_PROP';
+const PATH_PROP = Symbol('path'); // TODO (davidg): symbols mean I can't define the path as a string easily
+// const PATH_PROP = '__RR_PATH_PROP';
 
 const log = new Proxy(console, {
   get(target, prop) {
@@ -36,6 +36,8 @@ const addListener = (target, prop) => {
   const path = makePath(target, prop);
 
   if (listeners[path]) {
+    // TODO (davidg): consider set or WeakSet instead of array? Easier to delete a component?
+    // And no need to check for duplicates?
     listeners[path].push(currentComponent);
   } else {
     listeners[path] = [currentComponent];
@@ -127,7 +129,7 @@ const decorateWithPath = (item, path) => {
 const proxyHandler = {
   get(target, prop) {
     // This will actually be called when reading PATH_PROP (so meta). Don't add a listener
-    if (prop === PATH_PROP) return Reflect.get(target, prop);
+    if (typeof prop === 'symbol') return Reflect.get(target, prop);
 
     // TODO (davidg): think about this. Is 'constructor' a valid prop name? How can I avoid it?
     if (prop === 'constructor') return Reflect.get(target, prop);
