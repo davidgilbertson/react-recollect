@@ -135,6 +135,8 @@ But Recollect does away with this roundabout method of 'working out' what to re-
 
 As a result, these 'hints' are of no benefit as performance enhancing methods.
 
+To _answer_ the question: no you can't, sorry. See [Immutability problems](#immutability-problems) below for more details.
+
 ## Can I use this with `shouldComponentUpdate()`?
 
 Yes, but no, but you probably don't need to.
@@ -161,18 +163,20 @@ There is no performance improvement to be had, so the desire for multiple stores
 
 # Immutability problems
 
-Recollect does away with immutability for two reasons:
+Recollect, for now, does away with immutability for two reasons:
  - It doesn't need it. Recollect is far more precise than Redux when updating components, so React doesn't need to compare current/previous state to improve performance.
  - Immutability is the cause of too much complexity (and the bugs that go with it) for too little benefit. Just take a look at any reducer to see the cost of immutability.
  
 With Recollect, your components will match your store, and that's all you need to know. 99% of the time.
 
-But React brings immutability to the surface in three places:
+Unfortunately, React brings immutability to the surface in three places:
 - `componentDidUpdate`
 - `shouldComponentUpdate`
 - `getSnapshotBeforeUpdate` 
 
-This is a problem when using Recollect, because the Recollect store is _always_ the Recollect store as it currently exists. You can't say "if the previous 'loadingStatus' was 'loading' and now it's 'complete', do something fancy", because there is no 'previous' and 'current' version of the store. 
+This is a problem when using Recollect, because the Recollect store is _always_ the Recollect store as it currently exists. You can't say "if the previous 'loadingStatus' was 'loading' and now it's 'complete', do something fancy", because there is no 'previous' and 'current' version of the store.
+
+This also means that `PureComponent` components won't update (which is fine for you app, because you don't need them, but pretty terrible DX.)
 
 Perhaps this is a blessing in disguise, because inferring state by comparing two different points in time is fiddly. The more declarative thing to do might be:
 
@@ -240,7 +244,7 @@ This approach has its own test in [tests/componentDidUpdate.test.js](./tests/com
 
 This whole immutability situation isn't great, and if it means you can't really get excited about Recollect I'll understand. It will be sad to see you go :(
 
-In the future, Recollect may implement immutability if two things hold true:
+I hope to make the Recollect store immutable in the future, provided these two things hold true:
 - It doesn't increase complexity for the developer (I can do it under the hood)
 - It doesn't have a negative impact on performance
 
