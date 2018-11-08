@@ -81,15 +81,21 @@ const updateComponents = ({ components, path, newStore }) => {
     log.info(`UPDATE <${component._name}>:`);
     log.info(`UPDATE path: ${path}`);
 
-    // TODO (davidg): pass in new store from other callers of updateComponents
-    // TODO (davidg): component.setState(newStore); ??
-    component.setState({...newStore});
+    component.setState({ store: newStore });
   });
 };
 
 const notifyByPath = ({ path, newStore }) => {
+  let components = [];
+
+  for (const listenerPath in listeners) {
+    if (path.startsWith(`${listenerPath}.`)) {
+      components = components.concat(listeners[listenerPath]);
+    }
+  }
+
   updateComponents({
-    components: listeners[path],
+    components,
     path,
     newStore,
   });
@@ -101,9 +107,9 @@ const notifyByPath = ({ path, newStore }) => {
 const notifyByPathStart = ({ parentPath, newStore }) => {
   let components = [];
 
-  for (const path in listeners) {
-    if (path.startsWith(`${parentPath}.`)) {
-      components = components.concat(listeners[path]);
+  for (const listenerPath in listeners) {
+    if (listenerPath.startsWith(`${parentPath}.`)) {
+      components = components.concat(listeners[listenerPath]);
     }
   }
 
@@ -194,7 +200,12 @@ const updateStoreAtPath = ({
   muteProxy = false;
 
   // The clone of the top level won't be a proxy object
-  return isProxy(newStore) ? newStore : createProxy(newStore, proxyHandler);
+  // TODO (davidg): actually newStore will already be a proxy, no?
+  if (isProxy(newStore)) {
+    return newStore;
+  }
+  console.log('Well this is unexpected, the store is not a proxy?');
+  return createProxy(newStore, proxyHandler);
 };
 
 const proxyHandler = {
@@ -221,13 +232,6 @@ const proxyHandler = {
       addListener(target, prop);
     }
 
-    // const result = Reflect.get(target, prop);
-
-    // We need to recursively wrap arrays/objects in proxies
-    // if ((Array.isArray(result) || isObject(result)) && !isProxy(result)) {
-    //   return createProxy(result, proxyHandler);
-    // } else {
-    // }
     return Reflect.get(target, prop);
   },
 
@@ -371,7 +375,7 @@ export const collect = ComponentToWrap => {
   class WrappedComponent extends React.PureComponent {
     constructor() {
       super();
-      this.state = store; // whatever the current state is.
+      this.state = { store }; // whatever the current state is.
       this._name = componentName;
     }
 
@@ -388,7 +392,7 @@ export const collect = ComponentToWrap => {
 
       setTimeout(stopRecordingGetsForComponent);
 
-      return <ComponentToWrap {...this.props} store={this.state} />;
+      return <ComponentToWrap {...this.props} store={this.state.store} />;
     }
   }
 
