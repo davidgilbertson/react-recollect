@@ -31,7 +31,10 @@ const isObject = item => item && typeof item === 'object' && item.constructor ==
 const canBeProxied = item => (isObject(item) || Array.isArray(item)) && !isProxy(item);
 
 const addPathProp = (item, value) => {
-  Object.defineProperty(item, PATH_PROP, { value });
+  Object.defineProperty(item, PATH_PROP, {
+    value,
+    writable: true, // paths can be updated. E.g. store.tasks.2 could become store.tasks.1
+  });
 };
 
 // TODO (davidg): This risks collisions if a user's property name contains whatever
@@ -89,7 +92,7 @@ const notifyByPath = ({ path, newStore }) => {
   let components = [];
 
   for (const listenerPath in listeners) {
-    if (path.startsWith(`${listenerPath}.`)) {
+    if (path === listenerPath || path.startsWith(`${listenerPath}.`)) {
       components = components.concat(listeners[listenerPath]);
     }
   }
@@ -155,6 +158,7 @@ const updateStoreAtPath = ({
 
   const update = (target, i) => {
     if (i === propArray.length) return value;
+    const isLastProp = i === propArray.length - 1;
 
     let thisProp = propArray[i];
     let targetClone;
@@ -167,7 +171,7 @@ const updateStoreAtPath = ({
       addPathProp(targetClone, target[PATH_PROP]);
 
       // If this is adding something to an array
-      if (thisProp >= target.length) {
+      if (isLastProp && thisProp >= target.length) {
         // const isObjectOrArray = Array.isArray(value) || isObject(value);
         // targetClone[thisProp] = isObjectOrArray ? createProxy(value, proxyHandler) : value;
         targetClone[thisProp] = createProxy(value, proxyHandler);
@@ -270,11 +274,15 @@ const proxyHandler = {
       // - target is array, prop is a number bigger than the array (adding an item, should update store by paths matching the parent)
       // - target is array, prop is length. Usually fired after some other update.
       // - target is array, prop is existing index, existing value is object. Then update all listeners for any properties on the object being replaced (by matching on the start of the path)
-      if (prop === 'length') return true;
-
-      // setting the length. TODO handle manual setting to zero in newStore
-      // Ofter this is called automatically after updating an array.
-      // return Reflect.set(target, prop, value);
+      if (prop === 'length') {
+        if (value === 0) {
+          // a special case of a user doing arr.length = 0; to empty an array
+          valueToSet = [];
+        } else {
+          // otherwise probably fired by the JS engine after some other array change
+          return true;
+        }
+      }
 
       if (!Number.isNaN(prop)) {
         const newStore = updateStoreAtPath({ store, path, value });
@@ -296,13 +304,16 @@ const proxyHandler = {
       }
     }
 
+    // TODO (davidg): this actually needs to be a 'deep proxy' and deep path setting as well
+    // whenever the value is an array or object.
     if (Array.isArray(value)) {
       // We are CREATING or REPLACING an array, so wrap it, and its items, in proxies
       // TODO: I can do this in `decorateWithPath` to save looping through twice
-      const wrappedItems = value.map(item => {
+      const wrappedItems = value.map((item, i) => {
         // For example, there may have been an existing array of proxied objects,
         // then some new, non-proxied objects were added. We'll need to wrap some but not
         // others
+        addPathProp(item, `${path}.${i}`); // We might be updating the path for this one
         return canBeProxied(item) ? createProxy(item, proxyHandler) : item;
       });
 

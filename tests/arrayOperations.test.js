@@ -83,3 +83,9 @@ it('should handle deleting an entire array', () => {
 
   expect(queryByText('Task list')).toBeNull();
 });
+
+// It should handle the fact that paths need to update (e.g. when store.tasks.1.done becomes
+// store.tasks.0.done) in both they keys in the listeners AND the path prop/symbol on
+// the item in the store.
+
+// It should handle emptying an array with arr.length = 0;
