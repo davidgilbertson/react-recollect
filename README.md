@@ -279,8 +279,5 @@ These websites have made the brave move and show a message saying they don't sup
 # TODO
 
 - [ ] Check for differences between React 15's stack reconciler and 16's fibre reconciler.
-- [ ] Investigate polyfilling/adaptation for IE11 and friends. I'm guessing it's slow.
 - [ ] Investigate reading of props in constructor/lifecycle methods. Do these get recorded correctly? (Particularly componentDidMount.)
-- [ ] Do away with that one line of JSX and then Babel? Check support for trailing commas, etc
-- [ ] The `prevProps` passed to `componentDidUpdate()` will be wrong. I either need to proxied object to be immutable, or to somehow get just this value to be mutable (retain a reference to the previous props) only for components that use componentDidUpdate/shouldComponentUpdate. 
-- [ ] Is `this.setState({})` better than `this.forceUpdate()`? 
+- [ ] Handle the more obscure traps

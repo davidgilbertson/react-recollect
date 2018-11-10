@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-testing-library';
-import { collect, store } from '../lib';
+import { collect, store } from '../dist';
 
 const Task = props => (
   <div>{props.task.name}</div>
@@ -89,3 +89,6 @@ it('should handle deleting an entire array', () => {
 // the item in the store.
 
 // It should handle emptying an array with arr.length = 0;
+
+// It should handle adding a deep object (or nested array) to an array
+// (e.g. it needs to recursively wrap any object/array in new paths/proxies.

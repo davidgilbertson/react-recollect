@@ -114,6 +114,8 @@ describe('Changing the store', () => {
     expect(store.deletionTest).not.toHaveProperty('name');
   });
 
+  // it('should set an empty array, then add items to the array', () => {});
+
   // it('should not allow setting of a deleted thing', () => {
   //   store.test = {
   //     animal: 'cat',

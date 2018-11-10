@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-testing-library';
-import { collect, store } from '../lib';
+import { collect, store } from '../dist';
 
 class RawClassComponent extends Component {
   render () {
