@@ -2,8 +2,8 @@ import React from 'react';
 import { render } from 'react-testing-library';
 import { collect, store } from '../dist';
 
-const BasicComponent = collect(() => (
-  <h1>{store.title}</h1>
+const BasicComponent = collect((props) => (
+  <h1>{props.store.title}</h1>
 ));
 
 it('should render the title', () => {
@@ -11,9 +11,9 @@ it('should render the title', () => {
 
   const { getByText } = render(<BasicComponent />);
 
-  expect(getByText('The initial title'));
+  getByText('The initial title');
 
   store.title = 'The updated title';
 
-  expect(getByText('The updated title'));
+  getByText('The updated title');
 });

@@ -54,13 +54,11 @@ var unsetCurrentComponent = function unsetCurrentComponent() {
 exports.unsetCurrentComponent = unsetCurrentComponent;
 
 var startRecordingGetsForComponent = function startRecordingGetsForComponent(component) {
-  (0, _updating.removeListenersForComponent)(component); // currentComponent = component;
-
+  (0, _updating.removeListenersForComponent)(component);
   setCurrentComponent(component);
 };
 
 var stopRecordingGetsForComponent = function stopRecordingGetsForComponent() {
-  // currentComponent = null;
   unsetCurrentComponent();
 };
 
@@ -83,16 +81,30 @@ var collect = function collect(ComponentToWrap) {
 
       };
       _this._name = componentName;
+      _this._isMounted = false;
       return _this;
-    } // componentDidMount() {
-    //   stopRecordingGetsForComponent();
-    // }
-
+    }
 
     _createClass(WrappedComponent, [{
+      key: "update",
+      value: function update(newStore) {
+        if (this._isMounted) {
+          this.setState({
+            store: newStore
+          });
+        }
+      }
+    }, {
+      key: "componentDidMount",
+      value: function componentDidMount() {
+        this._isMounted = true;
+        stopRecordingGetsForComponent();
+      }
+    }, {
       key: "componentWillUnmount",
       value: function componentWillUnmount() {
         (0, _updating.removeListenersForComponent)(this);
+        this._isMounted = false;
       }
     }, {
       key: "render",

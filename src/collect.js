@@ -16,12 +16,10 @@ export const unsetCurrentComponent = () => {
 
 const startRecordingGetsForComponent = component => {
   removeListenersForComponent(component);
-  // currentComponent = component;
   setCurrentComponent(component);
 };
 
 const stopRecordingGetsForComponent = () => {
-  // currentComponent = null;
   unsetCurrentComponent();
 };
 
@@ -35,14 +33,23 @@ export const collect = ComponentToWrap => {
         store: getStore(), // whatever the current state is
       };
       this._name = componentName;
+      this._isMounted = false;
     }
 
-    // componentDidMount() {
-    //   stopRecordingGetsForComponent();
-    // }
+    update(newStore) {
+      if (this._isMounted) {
+        this.setState({ store: newStore });
+      }
+    }
+
+    componentDidMount() {
+      this._isMounted = true;
+      stopRecordingGetsForComponent();
+    }
 
     componentWillUnmount() {
       removeListenersForComponent(this);
+      this._isMounted = false;
     }
 
     render() {

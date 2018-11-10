@@ -6,10 +6,10 @@ class RawClassComponent extends Component {
   render () {
     return (
       <div>
-        <h1>{store.title}</h1>
-        <p>Button was pressed {store.clickCount} times</p>
+        <h1>{this.props.store.title}</h1>
+        <p>Button was pressed {this.props.store.clickCount} times</p>
         <button onClick={() => {
-          store.clickCount++;
+          this.props.store.clickCount++;
         }}>
           Click me
         </button>

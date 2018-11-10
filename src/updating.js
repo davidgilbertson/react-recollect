@@ -43,7 +43,7 @@ export const updateComponents = ({ components, path, newStore }) => {
     log.info(`UPDATE <${component._name}>:`);
     log.info(`UPDATE path: ${path}`);
 
-    component.setState({ store: newStore });
+    component.update(newStore);
   });
 };
 

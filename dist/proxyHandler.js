@@ -70,8 +70,6 @@ var proxyHandler = {
     var valueToSet = value; // Add paths to this new value
 
     var newProxiedValue = (0, _general.decorateWithPathAndProxy)(value, path);
-    console.log('  --  >  proxyHandler.js:64 > set > newProxiedValue', newProxiedValue);
-    console.log('  --  >  proxyHandler.js:64 > set > newProxiedValue', newProxiedValue);
 
     _logging.log.info("---- SET ----");
 

@@ -62,9 +62,7 @@ var updateComponents = function updateComponents(_ref) {
 
     _logging.log.info("UPDATE path: ".concat(path));
 
-    component.setState({
-      store: newStore
-    });
+    component.update(newStore);
   });
 };
 

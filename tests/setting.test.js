@@ -114,46 +114,56 @@ describe('Changing the store', () => {
     expect(store.deletionTest).not.toHaveProperty('name');
   });
 
-  // it('should set an empty array, then add items to the array', () => {});
+  it('should set an empty array, then add items to the array', () => {
+    store.emptyArray = [];
 
-  // it('should not allow setting of a deleted thing', () => {
-  //   store.test = {
-  //     animal: 'cat',
-  //     name: 'Steven2',
-  //   };
-  //
-  //   delete store.test;
-  //
-  //   handleChange.mockClear();
-  //
-  //   expect(() => {
-  //     store.test.animal = 'dog';
-  //   }).toThrowError();
-  //
-  //   expect(handleChange).toHaveBeenCalledTimes(0);
-  // });
+    handleChange.mockClear();
 
-  // it('calls listeners with the changed path', () => {
-  //   store.test = {
-  //     objectProp: {
-  //       arr: [
-  //         1,
-  //         2,
-  //         {
-  //           name: 'David',
-  //         },
-  //       ],
-  //     },
-  //   };
-  //
-  //   handleChange.mockClear();
-  //
-  //   // Doesn't matter how the item is referenced, obviously
-  //   const { arr } = store.test.objectProp;
-  //   const secondItem = arr[2];
-  //   secondItem.name = 'Sam';
-  //
-  //   expect(handleChange).toHaveBeenCalledTimes(1);
-  //   expect(handleChange.mock.calls[0][1]).toBe('store.test.objectProp.arr.2.name');
-  // });
+    store.emptyArray.push(1);
+
+    expect(store.emptyArray[0]).toBe(1);
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    expect(handleChange.mock.calls[0][1]).toBe('store.emptyArray');
+  });
+
+  it('should not allow setting of a deleted thing', () => {
+    store.test = {
+      animal: 'cat',
+      name: 'Steven2',
+    };
+
+    delete store.test;
+
+    handleChange.mockClear();
+
+    expect(() => {
+      store.test.animal = 'dog';
+    }).toThrowError();
+
+    expect(handleChange).toHaveBeenCalledTimes(0);
+  });
+
+  it('calls listeners with the changed path', () => {
+    store.test = {
+      objectProp: {
+        arr: [
+          1,
+          2,
+          {
+            name: 'David',
+          },
+        ],
+      },
+    };
+
+    handleChange.mockClear();
+
+    // Doesn't matter how the item is referenced, obviously
+    const { arr } = store.test.objectProp;
+    const secondItem = arr[2];
+    secondItem.name = 'Sam';
+
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    expect(handleChange.mock.calls[0][1]).toBe('store.test.objectProp.arr.2.name');
+  });
 });

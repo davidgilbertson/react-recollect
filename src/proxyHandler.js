@@ -60,8 +60,6 @@ const proxyHandler = {
 
     // Add paths to this new value
     const newProxiedValue = decorateWithPathAndProxy(value, path);
-    console.log('  --  >  proxyHandler.js:64 > set > newProxiedValue', newProxiedValue);
-    console.log('  --  >  proxyHandler.js:64 > set > newProxiedValue', newProxiedValue);
 
     log.info(`---- SET ----`);
     log.info('SET target:', target);
