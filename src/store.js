@@ -6,22 +6,18 @@ const rawStore = {};
 
 addPathProp(rawStore, 'store');
 
-export let store = createProxy(rawStore);
+export const store = createProxy(rawStore);
 
-// Thanks to https://github.com/debitoor/dot-prop-immutable
-export const updateStoreAtPath = ({
-                                    path,
-                                    value,
-                                    deleteItem,
-                                  }) => {
-  // muteProxy = true; // don't need to keep logging gets.
+let nextStore;
+
+export const updateStoreAtPath = ({ path, value, deleteItem }) => {
   muteProxy();
 
   const propArray = path.split(SEP);
   propArray.shift(); // we don't need 'store'.
 
   const update = (target, i) => {
-    if (i === propArray.length) return value;
+    if (i === propArray.length) return createProxy(value); // value might be [] or {}
     const isLastProp = i === propArray.length - 1;
 
     let thisProp = propArray[i];
@@ -65,20 +61,34 @@ export const updateStoreAtPath = ({
 
   addPathProp(newStore, 'store');
 
-  // muteProxy = false;
   unMuteProxy();
 
-  // The clone of the top level won't be a proxy object
-  // TODO (davidg): actually newStore will already be a proxy, no?
-  if (isProxy(newStore)) {
-    return newStore;
-  }
-  console.log('Well this is unexpected, the store is not a proxy?');
   return createProxy(newStore);
 };
 
 export const getStore = () => store;
 
-export const setStore = newStore => {
-  store = newStore;
+/**
+ * Replace the contents of the old store with the new store.
+ * DO NOT replace the old store object since the user's app will have a reference to it
+ * @param next
+ */
+export const setStore = next => {
+  muteProxy();
+  Object.keys(store).forEach(prop => {
+    delete store[prop];
+  });
+
+  Object.keys(next).forEach(prop => {
+    store[prop] = next[prop];
+  });
+  unMuteProxy();
 };
+
+export const setNextStore = next => {
+  nextStore = next;
+};
+
+// TODO (davidg):  should getStore() just do nextStore || store?
+// will getStore ever be called to get the last one?
+export const getNextStore = () => nextStore || store;

@@ -90,5 +90,9 @@ it('should handle deleting an entire array', () => {
 
 // It should handle emptying an array with arr.length = 0;
 
-// It should handle adding a deep object (or nested array) to an array
+// It should handle adding a deep object (and/or nested array) to an array
 // (e.g. it needs to recursively wrap any object/array in new paths/proxies.
+
+// It should handle multiple updates to the store. E.g. I have a component that starts with
+// if (store.ready && store.tasks.length) ... then it is actually only listening to store.ready
+// after the first render. See notes in updating.js where I was going to do batching.

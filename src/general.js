@@ -5,7 +5,12 @@ export const isObject = item => item && typeof item === 'object' && item.constru
 
 export const isArray = item => Array.isArray(item);
 
-export const makePath = (target, prop) => [target[PATH_PROP], prop].join(SEP);
+export const makePath = (target, prop) => {
+  if (prop) {
+    return [target[PATH_PROP], prop].join(SEP);
+  }
+  return target[PATH_PROP];
+};
 
 export const addPathProp = (item, value) => {
   Object.defineProperty(item, PATH_PROP, {

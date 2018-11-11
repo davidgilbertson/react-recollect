@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setStore = exports.getStore = exports.updateStoreAtPath = exports.store = void 0;
+exports.getNextStore = exports.setNextStore = exports.setStore = exports.getStore = exports.updateStoreAtPath = exports.store = void 0;
 
 var _proxy = require("./proxy");
 
@@ -13,21 +13,21 @@ var _constants = require("./constants");
 
 var rawStore = {};
 (0, _general.addPathProp)(rawStore, 'store');
-var store = (0, _proxy.createProxy)(rawStore); // Thanks to https://github.com/debitoor/dot-prop-immutable
-
+var store = (0, _proxy.createProxy)(rawStore);
 exports.store = store;
+var nextStore;
 
 var updateStoreAtPath = function updateStoreAtPath(_ref) {
   var path = _ref.path,
       value = _ref.value,
       deleteItem = _ref.deleteItem;
-  // muteProxy = true; // don't need to keep logging gets.
   (0, _proxy.muteProxy)();
   var propArray = path.split(_constants.SEP);
   propArray.shift(); // we don't need 'store'.
 
   var update = function update(target, i) {
-    if (i === propArray.length) return value;
+    if (i === propArray.length) return (0, _proxy.createProxy)(value); // value might be [] or {}
+
     var isLastProp = i === propArray.length - 1;
     var thisProp = propArray[i];
     var targetClone; // We'll be cloning proxied objects with non-enumerable props
@@ -65,16 +65,8 @@ var updateStoreAtPath = function updateStoreAtPath(_ref) {
   };
 
   var newStore = update(store, 0);
-  (0, _general.addPathProp)(newStore, 'store'); // muteProxy = false;
-
-  (0, _proxy.unMuteProxy)(); // The clone of the top level won't be a proxy object
-  // TODO (davidg): actually newStore will already be a proxy, no?
-
-  if ((0, _proxy.isProxy)(newStore)) {
-    return newStore;
-  }
-
-  console.log('Well this is unexpected, the store is not a proxy?');
+  (0, _general.addPathProp)(newStore, 'store');
+  (0, _proxy.unMuteProxy)();
   return (0, _proxy.createProxy)(newStore);
 };
 
@@ -83,11 +75,38 @@ exports.updateStoreAtPath = updateStoreAtPath;
 var getStore = function getStore() {
   return store;
 };
+/**
+ * Replace the contents of the old store with the new store.
+ * DO NOT replace the old store object since the user's app will have a reference to it
+ * @param next
+ */
+
 
 exports.getStore = getStore;
 
-var setStore = function setStore(newStore) {
-  exports.store = store = newStore;
+var setStore = function setStore(next) {
+  (0, _proxy.muteProxy)();
+  Object.keys(store).forEach(function (prop) {
+    delete store[prop];
+  });
+  Object.keys(next).forEach(function (prop) {
+    store[prop] = next[prop];
+  });
+  (0, _proxy.unMuteProxy)();
 };
 
 exports.setStore = setStore;
+
+var setNextStore = function setNextStore(next) {
+  nextStore = next;
+}; // TODO (davidg):  should getStore() just do nextStore || store?
+// will getStore ever be called to get the last one?
+
+
+exports.setNextStore = setNextStore;
+
+var getNextStore = function getNextStore() {
+  return nextStore || store;
+};
+
+exports.getNextStore = getNextStore;

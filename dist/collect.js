@@ -77,10 +77,13 @@ var collect = function collect(ComponentToWrap) {
 
       _this = _possibleConstructorReturn(this, _getPrototypeOf(WrappedComponent).call(this));
       _this.state = {
-        store: (0, _store.getStore)() // whatever the current state is
+        // This might be called by React when a parent component has updated with a new store,
+        // we want this component (if it's a child) to have that next store as well.
+        store: (0, _store.getNextStore)() // whatever the current state is
 
       };
-      _this._name = componentName;
+      _this._name = componentName; // TODO (davidg): use more obscure name, or symbol
+
       _this._isMounted = false;
       return _this;
     }
@@ -97,7 +100,14 @@ var collect = function collect(ComponentToWrap) {
     }, {
       key: "componentDidMount",
       value: function componentDidMount() {
-        this._isMounted = true;
+        this._isMounted = true; // Stop recording. For first render()
+
+        stopRecordingGetsForComponent();
+      }
+    }, {
+      key: "componentDidUpdate",
+      value: function componentDidUpdate() {
+        // Stop recording. For not-first render()
         stopRecordingGetsForComponent();
       }
     }, {
@@ -109,8 +119,13 @@ var collect = function collect(ComponentToWrap) {
     }, {
       key: "render",
       value: function render() {
-        startRecordingGetsForComponent(this);
-        setTimeout(stopRecordingGetsForComponent);
+        startRecordingGetsForComponent(this); // TODO (davidg): Problem. If you do store.this = 1 and store.that = 2, then
+        // a render will be called twice while data is still being written (synchronously) so
+        // any reads to data while its writing get attributed to this component.
+        // I think the solution is to only do 'setState()' on the next tick after any writing
+        // to the store.
+        // Write a test to demonstrate this. Or is this fixed by getNextStore()?
+
         return _react.default.createElement(ComponentToWrap, _extends({}, this.props, {
           store: this.state.store
         }));

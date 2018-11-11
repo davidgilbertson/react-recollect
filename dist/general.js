@@ -32,7 +32,11 @@ var isArray = function isArray(item) {
 exports.isArray = isArray;
 
 var makePath = function makePath(target, prop) {
-  return [target[_constants.PATH_PROP], prop].join(_constants.SEP);
+  if (prop) {
+    return [target[_constants.PATH_PROP], prop].join(_constants.SEP);
+  }
+
+  return target[_constants.PATH_PROP];
 };
 
 exports.makePath = makePath;

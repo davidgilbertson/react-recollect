@@ -122,8 +122,10 @@ describe('Changing the store', () => {
     store.emptyArray.push(1);
 
     expect(store.emptyArray[0]).toBe(1);
-    expect(handleChange).toHaveBeenCalledTimes(1);
-    expect(handleChange.mock.calls[0][1]).toBe('store.emptyArray');
+    // push() calls set with the new item, then sets the length
+    expect(handleChange).toHaveBeenCalledTimes(2);
+    expect(handleChange.mock.calls[0][1]).toBe('store.emptyArray.0');
+    expect(handleChange.mock.calls[1][1]).toBe('store.emptyArray.length');
   });
 
   it('should not allow setting of a deleted thing', () => {
