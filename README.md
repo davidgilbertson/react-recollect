@@ -210,3 +210,4 @@ For inspiration, these brave websites have made the move and now show a message 
 - [ ] Handle the more obscure traps
 - [ ] Work on minimising renders
 - [ ] More tests
+- [ ] .gitignore dist (but still publish source to npm)
