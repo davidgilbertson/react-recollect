@@ -2,19 +2,17 @@
 
 **Featureless state management for React.**
 
-What does 'featureless' mean? It means that Recollect has a tiny API with (almost) nothing to learn.
+What does 'featureless' mean? It means that Recollect doesn't do much, and you don't need to know much to use it.
 
 Recollect can replace Redux or MobX or similar state management libraries.
 
 Have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ## Warnings
-This tool is in its early days, so please test thoroughly and raise any issues you find. I'm still working out the kinks, particularly around immutability (see below).
-
-There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats at [caniuse.com](https://caniuse.com/#feat=proxy).
 
 This tool is in its early days, so please test thoroughly and raise any issues you find.
-Also, there is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats at [caniuse.com](https://caniuse.com/#feat=proxy)
+
+There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 
 # Usage
 
@@ -26,7 +24,7 @@ npm i react-recollect
 
 ## API
 
-To use Recollect, you need to know about two things: the `store` object and the `collect` function.
+To use Recollect, you need to know about two simple things: the `store` object and the `collect` function.
 
 ### The `store` object
 
@@ -50,7 +48,7 @@ You can write to and read from this store object _anytime_, _anywhere_. Your Rea
 
 ### The `collect` function
 
-Wrap a React component in `collect` to have Recollect look after that component.
+Wrap a React component in `collect` to have Recollect update the component when the store changes.
 
 ```jsx
 import React from 'react';
@@ -79,8 +77,8 @@ export default collect(TaskList);
 
 Recollect will:
 - Provide the store as a prop
-- Collect information about what data the component needs in order to render.
-- When any of that data changes, Recollect will instruct React to re-render the component.
+- Collect information about what data the component needs to render
+- When any of that data changes, Recollect will instruct React to re-render the component
 
 As a general rule, if you're **reading from** the store in a component, use the store passed in as a prop. If you're **writing to** the store outside of a component, use the store object exported by `react-recollect`.
 
@@ -102,15 +100,85 @@ afterChange(store => {
 });
 ```
 
-Use this wisely as it will be called on _every_ change. If you're saving hundreds of kilobytes, hundreds of times per second, you might want to debounce.
+(Use the above pattern wisely. It will be called on _every_ change. If you're saving hundreds of kilobytes, hundreds of times per second, you might want to debounce.)
 
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 - Use `__RR__.debugOn()` to turn on debugging. The setting is stored in local storage, so will persist while you sleep. You can combine this with Chrome's console filtering, for example to only see 'UPDATE' or 'SET' events. Who needs professional, well made dev tools extensions!
 - Type `__RR__.debugOff()` and see what happens
-- `__RR__.getStore()` returns a 'live' reference to the store. For example, typing `__RR__.getStore().tasks.pop()` in the console would actually delete a task from the store and Recollect would instruct React to re-render the appropriate components, `__RR__.getStore().tasks[1].done = true` would tick a tickbox, and so on.
-- `__RR__.getListeners()` returns Recollect's list of component instances and the data they required the last time they rendered.
+- `__RR__.getStore()` returns a 'live' reference to the store. For example, typing `__RR__.getStore().tasks[1].done = true` in the console would update the store, and Recollect would instruct React to re-render the appropriate components.
+
+# How Recollect works
+
+The `store` object that Recollect exposes is designed to _feel_ like a mutable object, but it isn't.
+ 
+If you do something like `store.tasks[0].done = true`, Recollect will **not** modify the store. Instead, it will create a new store where the first task's `done` property is `true`. It will then re-render any React components that need to know about that task, passing this _new_ store.
+
+If a React component looks at `prevProps` inside `componentDidUpdate()` it will see the previous version of the store, just like you're used to with state or context (or Redux).
+
+Immediately after the components have re-rendered, the contents of the global `store` object are replaced with contents of the new store. This is all synchronous so that you can treat the store as though it was mutated.
+
+Imagine that we have an array of tasks, none of them done.
+
+```js
+// Mark a task as done
+store.tasks[0].done = true;
+
+// You changed a property in the store! Now a whole lotta stuff happens:
+// - the attempted change above is blocked so that the store object is not changed (mutated)
+// - a new store is created where task one is done
+// - React components relying on that task will be re-rendered and passed this new store
+// - the global store object will have its contents replaced with the new store
+
+// ... and then this code will continue to execute
+
+console.log(store.tasks[0].done); // true. Like you would expect
+```
+
+So the end result is exactly the same behaviour as a mutable object.
+
+Sweet.
+
+Hiding away immutability like this allows for simpler code, but there may be times when you're left scratching your head.
+
+For example:
+
+```js
+const firstTask = store.tasks[0];
+const secondTask = store.tasks[1];
+
+store.tasks[0].done = true;
+
+console.log(store.tasks[0].done); // true
+
+console.log(firstTask === store.tasks[0]); // false. This task was changed
+console.log(secondTask === store.tasks[1]); // true. This task wasn't changed
+```
+
+`firstTask` starts life as a reference to `store.tasks[0]`, but when the store is updated, `store.tasks[0]` is _replaced_ with a new version of the task. So it is no longer the same thing as `firstTask`.
+
+Note also that Recollect is not just doing a full clone of the store, it only clones the object that was changed (and its ancestors), just like Redux reducers.
+
+Now for something a bit weird:
+```js
+const firstTask = store.tasks[0];
+
+firstTask.done = true;
+
+console.log(firstTask.done); // false. Wot?!
+console.log(store.tasks[0].done); // true. Hmmm.
+```
+
+This is not so weird when you remember that any change to the store will immutably change the innards of the store. So when I set `firstTask.done`, Recollect is going to create a new store where that task is done. It doesn't matter if I do `store.tasks[0].done` or `firstTask.done` - at the point where I do this they're the same object.
+
+But when the new version of the store is created, and then written back into the `store` object, the link between `store.tasks[0]` and `firstTask` is broken. So `firstTask` is still pointing to the original version of the task (where `done` is `false`).
+
+This sucks a bit - no one likes confusing things - but it's necessary for React to be able to compare current and previous versions of state.
+
+Just remember:
+ - you are safe if you read from the `store` object, you will get the most recent version of the store always.
+ - deep references to items in the store may be broken if you modify the store. I'd be interested to hear about cases where this is proving unpleasant. Please feel free to open an issue with a code snippet, even if you think it's something that can't be fixed.
 
 # Questions
 
@@ -124,34 +192,30 @@ Yep. Recollect has no effect on state and the updates triggered as a result of c
 
 ## What sort of stuff can go in the store?
 
-Data. Objects, array, numbers, booleans, strings, null, undefined.
+Data.
 
-In short, if your data would survive `JSON.parse(JSON.stringify(store))` then you'll be fine.
+Objects, arrays, strings, numbers, booleans, `null`, and `undefined` are all fine. If your data would survive `JSON.parse(JSON.stringify(store))` then you'll be fine.
+
+Some specific rules:
 
 - No functions (e.g. getters, setters, other methods)
 - No properties defined with `Object.defineProperty()`
-- No RegExp objects
-- No Sets, Maps etc.
-- No Symbols (why you gotta be so fancy?)
+- No `RegExp` objects
+- No `Set`, `Map`, `Proxy`, `Uint16Array` etc.
+- No `Symbol` (why you gotta be so fancy?)
 - No linking (e.g. one item in the store that is just a reference to another item in the store)
 
 That last one might suck a bit and I'm super sorry about it. But Recollect needs to know 'where' an object is in the store so that it can look after immutability for you.
 
 ## Do lifecycle methods still fire?
 
-Yep. Recollect has no effect on `componentDidMount` and friends.
+Yep. Recollect has no effect on `componentDidMount`, `componentDidUpdate` and friends.
 
-## Can I use this with `PureComponent` and `React.memo`?
+## Can I wrap a `PureComponent` or `React.memo` in `collect`?
 
-That's the wrong question :)
+There is nothing to be gained in doing this.
 
-When using React _without_ Recollect, React must assess each component to decide which ones it will re-render. `PureComponent` and `React.memo` are hints to React that say 'you won't need to update this component if its props and state are the same as last time'.
-
-But Recollect does away with this roundabout method of 'working out' what to re-render. Instead it tells React _exactly_ which components it needs to re-render.
-
-As a result, these 'hints' are of no benefit as performance enhancing methods.
-
-(And if you're still not convinced, you should know that the `collect` function actually wraps your component in a `PureComponent` so it would be doubly useless to use a `PureComponent` then wrap it in `collect`.)
+The `collect` function wraps your component in a `PureComponent` and there's no point in having two of them.
 
 ## Can I use this with `shouldComponentUpdate()`?
 
@@ -165,9 +229,9 @@ So, if you're using `shouldComponentUpdate` for _performance_ reasons, then you 
 
 ## Can I use this with `Context`?
 
-Sorry, another wrong question.
+That's a wrong question.
 
-Context is a way to share data across your components. But why would you bother when you have a global `store` object that you can write to and read from anywhere and any time.
+Context is a way to share data across your components. You don't need this now that you have a global `store` object that you can read from and write to anywhere and at any time.
 
 ## Can I have multiple stores?
 
@@ -198,7 +262,7 @@ Also there is a library that is very similar to this one (I didn't copy, promise
 # Is it really OK to drop support for IE?
 Sure, why not! Imagine: all that time you spend getting stuff to work for a few users in crappy old browsers could instead be spent making awesome new features for the vast majority of your users.
 
-For inspiration, these brave websites have made the move and now show a message saying they don't support IE:
+For inspiration, these brave websites have dropped the hammer and now show a message saying they don't support IE:
 
 - GitHub (owned by Microsoft!)
 - devdocs.io 
@@ -213,3 +277,4 @@ For inspiration, these brave websites have made the move and now show a message 
 - [ ] Work on minimising renders
 - [ ] More tests
 - [ ] .gitignore dist (but still publish source to npm)
+- [ ] A readme section for patters. Or a blog post. 'selectors', 'updaters', general best practices and elaboration of gotchas.
