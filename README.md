@@ -6,7 +6,7 @@ What does 'featureless' mean? It means that Recollect doesn't do much, and you d
 
 Recollect can replace Redux or MobX or similar state management libraries.
 
-Have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
+Have a play in this [Code Sandbox](https://codesandbox.io/s/xo2037yzzq).
 
 ## Warnings
 
