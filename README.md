@@ -9,10 +9,12 @@ Recollect can replace Redux or MobX or similar state management libraries.
 Have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ## Warnings
+This tool is in its early days, so please test thoroughly and raise any issues you find. I'm still working out the kinks, particularly around immutability (see below).
 
 There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats at [caniuse.com](https://caniuse.com/#feat=proxy).
 
 This tool is in its early days, so please test thoroughly and raise any issues you find.
+Also, there is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats at [caniuse.com](https://caniuse.com/#feat=proxy)
 
 # Usage
 
