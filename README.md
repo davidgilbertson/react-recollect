@@ -52,10 +52,10 @@ Wrap a React component in `collect` to have Recollect update the component when 
 
 ```jsx
 import React from 'react';
-import { collect } from 'react-recollect';
+import { store, collect } from 'react-recollect';
 import Task from './Task';
 
-const TaskList = ({ store ) => (
+const TaskList = () => (
   <div>
     {store.tasks.map(task => (
       <Task key={task.id} task={task} />
