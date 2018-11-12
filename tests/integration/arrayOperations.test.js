@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-testing-library';
-import { collect, store } from '../dist';
+import { collect, store } from '../../dist';
 
 const Task = props => (
   <div>{props.task.name}</div>

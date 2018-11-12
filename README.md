@@ -182,23 +182,15 @@ Just remember:
 
 # Questions
 
-## Can I use this with class-based components and functional components?
-
-Yep and yep.
-
-## Will component state still work?
-
-Yep. Recollect has no effect on state and the updates triggered as a result of calling `this.setState`.
-
 ## What sort of stuff can go in the store?
 
 Data.
 
-Objects, arrays, strings, numbers, booleans, `null`, and `undefined` are all fine. If your data would survive `JSON.parse(JSON.stringify(store))` then you'll be fine.
+Objects, arrays, strings, numbers, booleans, `null`, and `undefined` are all fine. If your data would survive `JSON.parse(JSON.stringify(store))` then she'll be apples.
 
 Some specific rules:
 
-- No functions (e.g. getters, setters, other methods)
+- No functions (e.g. getters, setters, or other methods)
 - No properties defined with `Object.defineProperty()`
 - No `RegExp` objects
 - No `Set`, `Map`, `Proxy`, `Uint16Array` etc.
@@ -207,13 +199,19 @@ Some specific rules:
 
 That last one might suck a bit and I'm super sorry about it. But Recollect needs to know 'where' an object is in the store so that it can look after immutability for you.
 
+## Can I use this with class-based components and functional components?
+
+Yep and yep.
+
+## Will component state still work?
+
+Yep. Recollect has no effect on state and the updates triggered as a result of calling `this.setState`.
+
 ## Do lifecycle methods still fire?
 
 Yep. Recollect has no effect on `componentDidMount`, `componentDidUpdate` and friends.
 
 ## Can I wrap a `PureComponent` or `React.memo` in `collect`?
-
-There is nothing to be gained in doing this.
 
 The `collect` function wraps your component in a `PureComponent` and there's no point in having two of them.
 
@@ -239,6 +237,12 @@ You don't want multiple stores :)
 
 There is no performance improvement to be had, so the desire for multiple stores is just an organizational preference. And objects already have a mechanism to organize their contents: 'properties'.
 
+## Tell me about your tests
+
+In the `/tests` directory you'll find:
+- Unit tests that test the behaviour of the store directly
+- Integration tests that simulate a user interacting with React components that use `store` and `collect` - these might be interesting to you if you want to see examples of `store`/`collect` being used.
+
 # Dependencies
 
 Recollect has a peer dependency of React, and needs at least version 15.3 (when `PureComponent` was released).
@@ -255,7 +259,7 @@ If you want IE support, use Redux.
 
 If you want explicit 'observables' and multiple stores, use MobX.
 
-If you want nostalgia, use Flux.
+If you want a walk down memory lane, use Flux.
 
 Also there is a library that is very similar to this one (I didn't copy, promise) called [`react-easy-state`](https://github.com/solkimicreb/react-easy-state). It's more mature than this library, but _slightly_ more complex and has external dependencies.
 
@@ -277,4 +281,5 @@ For inspiration, these brave websites have dropped the hammer and now show a mes
 - [ ] Work on minimising renders
 - [ ] More tests
 - [ ] .gitignore dist (but still publish source to npm)
-- [ ] A readme section for patters. Or a blog post. 'selectors', 'updaters', general best practices and elaboration of gotchas.
+- [ ] A readme section for patterns. Or a blog post. 'selectors', 'updaters', general best practices and elaboration of gotchas.
+- [ ] Minify/strip comments on build

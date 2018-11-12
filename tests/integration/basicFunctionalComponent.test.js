@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-testing-library';
-import { collect, store } from '../dist';
+import { collect, store } from '../../dist';
 
 const BasicComponent = collect((props) => (
   <h1>{props.store.title}</h1>
