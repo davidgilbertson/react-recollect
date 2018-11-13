@@ -1,7 +1,7 @@
 import { getCurrentComponent } from './collect';
 import { makePath } from './general';
 import { log } from './logging';
-import { setNextStore, setStore } from './store';
+import { getStore, setNextStore, setStore } from './store';
 
 let listeners = {
   store: [],
@@ -54,10 +54,12 @@ const updateComponents = ({ components, path, newStore }) => {
     });
   }
 
+  const oldStore = Object.assign({}, getStore());
+
   setStore(newStore);
 
   // pass the path too, just useful for testing/debugging
-  manualListeners.forEach(cb => cb(newStore, path));
+  manualListeners.forEach(cb => cb(newStore, path, updated, oldStore));
 };
 
 /**

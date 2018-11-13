@@ -73,10 +73,11 @@ var updateComponents = function updateComponents(_ref) {
     });
   }
 
+  var oldStore = Object.assign({}, (0, _store.getStore)());
   (0, _store.setStore)(newStore); // pass the path too, just useful for testing/debugging
 
   manualListeners.forEach(function (cb) {
-    return cb(newStore, path);
+    return cb(newStore, path, updated, oldStore);
   });
 };
 /**

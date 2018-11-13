@@ -100,7 +100,7 @@ afterChange(store => {
 });
 ```
 
-(Use the above pattern wisely. It will be called on _every_ change. If you're saving hundreds of kilobytes, hundreds of times per second, you might want to debounce.)
+For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](./docs/reacting-to-changes.md)
 
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
