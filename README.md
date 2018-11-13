@@ -55,7 +55,7 @@ import React from 'react';
 import { collect } from 'react-recollect';
 import Task from './Task';
 
-const TaskList = ({ store ) => (
+const TaskList = ({ store }) => (
   <div>
     {store.tasks.map(task => (
       <Task key={task.id} task={task} />
