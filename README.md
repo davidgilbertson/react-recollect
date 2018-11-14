@@ -44,11 +44,11 @@ delete store.tasks; // No problem
 store = 'tasks'; // NOPE! (Can't reassign a constant)
 ```
 
-You can write to and read from this store object _anytime_, _anywhere_. Your React components will _always_ reflect the data in this store, provided they're wrapped in...
+You can write to this store object _anytime_, _anywhere_. Your React components will _always_ reflect the data in this store, provided they're wrapped in...
 
 ### The `collect` function
 
-Wrap a React component in `collect` to have Recollect update the component when the store changes.
+Wrap a React component in `collect` to have Recollect take care of it.
 
 ```jsx
 import React from 'react';
@@ -80,7 +80,9 @@ Recollect will:
 - Collect information about what data the component needs to render
 - When any of that data changes, Recollect will instruct React to re-render the component
 
-As a general rule, if you're **reading from** the store in a component, use the store passed in as a prop. If you're **writing to** the store outside of a component, use the store object exported by `react-recollect`.
+**An important note:** when referring to the store within a component (reading or writing), it's important that you use `props.store`, not the `store` imported from `react-recollect`.
+
+Generally you won't need to `import { store } from 'react-recollect'` in component files.
 
 ---
 
@@ -253,8 +255,6 @@ Recollect has no dependencies. :boom:
 
 If you want a library that guides you in structuring your app, use Redux.
 
-If you want time travel, use Redux.
-
 If you want IE support, use Redux.
 
 If you want explicit 'observables' and multiple stores, use MobX.
@@ -275,6 +275,7 @@ For inspiration, these brave websites have dropped the hammer and now show a mes
 
 # TODO
 
+- [ ] Find a solution for the confusion/bugs around where/when to use the imported store vs the props store.
 - [ ] Check for differences between React 15's stack reconciler and 16's fibre reconciler.
 - [ ] Investigate reading of props in constructor/lifecycle methods. Do these get recorded correctly? (Particularly componentDidMount.)
 - [ ] Handle the more obscure traps
