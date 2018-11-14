@@ -24,11 +24,50 @@ npm i react-recollect
 
 ## API
 
-To use Recollect, you need to know about two simple things: the `store` object and the `collect` function.
+To use Recollect, you need to know about two things: the `store` object and the `collect` function.
+
+### The `collect` function
+
+You can wrap a React component in `collect` to have Recollect take care of it. Here's a component that reads from and writes to the store.
+
+```jsx
+import React from 'react';
+import { collect } from 'react-recollect';
+import Task from './Task';
+
+const TaskList = ({ store }) => (
+  <div>
+    {store.tasks.map(task => (
+      <Task key={task.id} task={task} />
+    ))}
+    
+    <button onClick={() => {
+      store.tasks.push({
+        id: Math.random(),
+        name: 'A new task',
+        done: false,
+      });
+    }}>
+      Add a task
+    </button>
+  </div>
+);
+
+export default collect(TaskList);
+```
+
+Recollect will:
+- Provide a store object as a prop
+- Collect information about what data the component needs to render
+- When any of that data changes, Recollect will instruct React to re-render the component
+
+Let's talk some more about...
 
 ### The `store` object
 
-This is where your data goes. You can treat `store` just like you'd treat any JavaScript object.
+You can import, read from, and write to the store in any file. Or, as you saw above, access it as a prop in a component wrapped in `collect`. It's all the same store.
+
+And you can treat the `store` object just like you'd treat any JavaScript object.
 
 ```js
 import { store } from 'react-recollect';
@@ -44,51 +83,15 @@ delete store.tasks; // No problem
 store = 'tasks'; // NOPE! (Can't reassign a constant)
 ```
 
-You can write to this store object _anytime_, _anywhere_. Your React components will _always_ reflect the data in this store, provided they're wrapped in...
+ Recollect is always watching and it knows which components need what data from the store, so it will trigger updates accordingly.
 
-### The `collect` function
-
-Wrap a React component in `collect` to have Recollect take care of it.
-
-```jsx
-import React from 'react';
-import { collect } from 'react-recollect';
-import Task from './Task';
-
-const TaskList = ({ store }) => (
-  <div>
-    {store.tasks.map(task => (
-      <Task key={task.id} task={task} />
-    ))}
-    
-    <button onClick={() => {
-      store.tasks.push({
-        name: 'A new task',
-        done: false,
-      });
-    }}>
-      Add a task
-    </button>
-  </div>
-);
-
-export default collect(TaskList);
-```
-
-Recollect will:
-- Provide the store as a prop
-- Collect information about what data the component needs to render
-- When any of that data changes, Recollect will instruct React to re-render the component
-
-**An important note:** when referring to the store within a component (reading or writing), it's important that you use `props.store`, not the `store` imported from `react-recollect`.
-
-Generally you won't need to `import { store } from 'react-recollect'` in component files.
+**An important note:** when referring to the store **within a component**, it's important that you use the `store` object passed in as a prop, not the `store` imported from `react-recollect`. The reason for this is super-interesting and described in great detail below.
 
 ---
 
-You've already finished learning `react-recollect`. Well done, you!
+Congratulations my friend, you just finished learning Recollect. I am very proud of you.
 
-In addition to those two things, there's just one more thing you might like to know...
+But there's just one more thing you might like to know...
 
 ### The `afterChange` function
 
@@ -115,13 +118,13 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 The `store` object that Recollect exposes is designed to _feel_ like a mutable object, but it isn't.
  
-If you do something like `store.tasks[0].done = true`, Recollect will **not** modify the store. Instead, it will create a new store where the first task's `done` property is `true`. It will then re-render any React components that need to know about that task, passing this _new_ store.
+If you do something like `store.tasks[0].done = true`, Recollect will **not** mutate the store object. Instead, it will create a new store where the first task's `done` property is `true`. It will then re-render any React components that need to know about that task, passing this _new_ store.
 
-If a React component looks at `prevProps` inside `componentDidUpdate()` it will see the previous version of the store, just like you're used to with state or context (or Redux).
+During that next render cycle, if a React component looks at `prevProps` inside `componentDidUpdate()` it will see the previous version of the store, just like you're used to with state or context (or Redux).
 
-Immediately after the components have re-rendered, the contents of the global `store` object are replaced with contents of the new store. This is all synchronous so that you can treat the store as though it was mutated.
+Immediately after the components have re-rendered, the contents of the global `store` object are replaced with the contents of the new store. This is all synchronous so that you can treat the store as though it was mutated.
 
-Imagine that we have an array of tasks, none of them done.
+Imagine that we have an array of tasks, none of them done, let's look at what happens when we mark one as done.
 
 ```js
 // Mark a task as done
@@ -168,15 +171,15 @@ const firstTask = store.tasks[0];
 
 firstTask.done = true;
 
-console.log(firstTask.done); // false. Wot?!
-console.log(store.tasks[0].done); // true. Hmmm.
+console.log(firstTask.done); // false - wot?!
+console.log(store.tasks[0].done); // true - double-wot??!!
 ```
 
-This is not so weird when you remember that any change to the store will immutably change the innards of the store. So when I set `firstTask.done`, Recollect is going to create a new store where that task is done. It doesn't matter if I do `store.tasks[0].done` or `firstTask.done` - at the point where I do this they're the same object.
+This is not so weird when you remember that any attempted change to the store will create a new version of the store, then copy it back into the store object. So when I set `firstTask.done`, Recollect is going to create a new store where that task is done. It doesn't matter if I do `store.tasks[0].done` or `firstTask.done` - at the point where I do this they're the same object.
 
 But when the new version of the store is created, and then written back into the `store` object, the link between `store.tasks[0]` and `firstTask` is broken. So `firstTask` is still pointing to the original version of the task (where `done` is `false`).
 
-This sucks a bit - no one likes confusing things - but it's necessary for React to be able to compare current and previous versions of state.
+This sucks a bit - no one likes confusing things - but it's necessary to allow React to compare current and previous versions of state (which allows it to cleverly not update components where props didn't change).
 
 Just remember:
  - you are safe if you read from the `store` object, you will get the most recent version of the store always.
@@ -188,18 +191,21 @@ Just remember:
 
 Data.
 
-Objects, arrays, strings, numbers, booleans, `null`, and `undefined` are all fine. If your data would survive `JSON.parse(JSON.stringify(store))` then she'll be apples.
+Objects, arrays, strings, numbers, booleans, `null`, and `undefined` are all fine.
 
-Some specific rules:
+Specifically, it must be JSON data, which means:
 
 - No functions (e.g. getters, setters, or other methods)
 - No properties defined with `Object.defineProperty()`
 - No `RegExp` objects
+- No `Date` objects (I'm working on this)
 - No `Set`, `Map`, `Proxy`, `Uint16Array` etc.
 - No `Symbol` (why you gotta be so fancy?)
 - No linking (e.g. one item in the store that is just a reference to another item in the store)
 
 That last one might suck a bit and I'm super sorry about it. But Recollect needs to know 'where' an object is in the store so that it can look after immutability for you.
+
+(OK technically you can't have `undefined` in JSON, but it's fine in the Recollect store.)
 
 ## Can I use this with class-based components and functional components?
 
