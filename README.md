@@ -116,29 +116,28 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 # How Recollect works
 
+> This section is for the curious, you don't need to know any of this to use Recollect.
+
 The `store` object that Recollect exposes is designed to _feel_ like a mutable object, but it isn't.
  
-If you do something like `store.tasks[0].done = true`, Recollect will **not** mutate the store object. Instead, it will create a new store where the first task's `done` property is `true`. It will then re-render any React components that need to know about that task, passing this _new_ store.
+If you do something like `store.site.title = 'Page two'`, Recollect will **not** mutate the store object (the `Proxy` object that wraps the store will block the `.set()` operation). Instead, it will create a new store where the site title is 'Page two'. It will then re-render any React components that need to know about the title, passing this _new_ store.
 
-During that next render cycle, if a React component looks at `prevProps` inside `componentDidUpdate()` it will see the previous version of the store, just like you're used to with state or context (or Redux).
+During that next render cycle, if a React component looks at `prevProps` inside `componentDidUpdate()` it will see the previous version of the store, just like you're used to with state, context, or Redux.
 
-Immediately after the components have re-rendered, the contents of the global `store` object are replaced with the contents of the new store. This is all synchronous so that you can treat the store as though it was mutated.
+Immediately after the components have re-rendered, the contents of the global `store` object are replaced with the contents of the new store. This is all synchronous, so in your code you can treat the store as though it was mutated.
 
-Imagine that we have an array of tasks, none of them done, let's look at what happens when we mark one as done.
+Let's summarise in code:
 
 ```js
-// Mark a task as done
-store.tasks[0].done = true;
+store.site.title = 'Page two';
 
-// You changed a property in the store! Now a whole lotta stuff happens:
-// - the attempted change above is blocked so that the store object is not changed (mutated)
-// - a new store is created where task one is done
-// - React components relying on that task will be re-rendered and passed this new store
+// - the attempted change is blocked
+// - a new store is created 
+// - relevant React components are updated with the new store
 // - the global store object will have its contents replaced with the new store
+// - and then this code will continue to execute...
 
-// ... and then this code will continue to execute
-
-console.log(store.tasks[0].done); // true. Like you would expect
+console.log(store.site.title); // 'Page two'. Like you would expect
 ```
 
 So the end result is exactly the same behaviour as a mutable object.
@@ -147,7 +146,9 @@ Sweet.
 
 Hiding away immutability like this allows for simpler code, but there may be times when you're left scratching your head.
 
-For example:
+But you can see in this fancy footwork that if you used the _global_ store object inside the render method of a component, you'd actually be getting the previous version of the data, because the 'update components' step comes before the 'update the global store' step. 
+
+Another example:
 
 ```js
 const firstTask = store.tasks[0];
