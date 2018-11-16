@@ -32,9 +32,9 @@ export const collect = ComponentToWrap => {
       this.state = {
         // This might be called by React when a parent component has updated with a new store,
         // we want this component (if it's a child) to have that next store as well.
-        store: getNextStore(), // whatever the current state is
+        store: getNextStore(),
       };
-      this._name = componentName; // TODO (davidg): use more obscure name, or symbol
+      this._name = componentName;
       this._isMounted = false;
     }
 
@@ -63,13 +63,6 @@ export const collect = ComponentToWrap => {
 
     render() {
       startRecordingGetsForComponent(this);
-
-      // TODO (davidg): Problem. If you do store.this = 1 and store.that = 2, then
-      // a render will be called twice while data is still being written (synchronously) so
-      // any reads to data while its writing get attributed to this component.
-      // I think the solution is to only do 'setState()' on the next tick after any writing
-      // to the store.
-      // Write a test to demonstrate this. Or is this fixed by getNextStore()?
 
       return <ComponentToWrap {...this.props} store={this.state.store} />;
     }
