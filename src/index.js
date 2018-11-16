@@ -7,6 +7,10 @@ export { afterChange } from './updating';
 export { collect } from './collect';
 export { store } from './store';
 
+if (!window.Proxy) {
+  console.warn('This browser doesn\'t support the Proxy object, which react-recollect needs. See https://caniuse.com/#search=proxy to find out which browsers do support it');
+}
+
 window.__RR__ = {
   getStore,
   getListeners,
