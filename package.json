@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -8,8 +8,18 @@
     "test": "jest --watch",
     "build": "babel src -d dist"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "flux",
+    "react",
+    "redux",
+    "state",
+    "state management"
+  ],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "author": "David Gilbertson",
   "license": "ISC",
   "peerDependencies": {
     "react": ">=15.3"
