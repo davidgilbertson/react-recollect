@@ -1,6 +1,6 @@
 import { createProxy, isProxy, muteProxy, unMuteProxy } from './proxy';
 import { addPathProp } from './general';
-import { PATH_PROP, SEP } from './constants';
+import { PATH_PROP, PROP_PATH_SEP } from './constants';
 
 const rawStore = {};
 
@@ -13,7 +13,7 @@ let nextStore;
 export const updateStoreAtPath = ({ path, value, deleteItem }) => {
   muteProxy();
 
-  const propArray = path.split(SEP);
+  const propArray = path.split(PROP_PATH_SEP);
   propArray.shift(); // we don't need 'store'.
 
   const update = (target, i) => {

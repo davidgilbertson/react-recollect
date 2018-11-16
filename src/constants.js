@@ -1,5 +1,8 @@
-// TODO (davidg): This risks collisions if a user's property name contains whatever
-// my separator string is.
-export const PATH_PROP = Symbol('path'); // TODO (davidg): symbols mean I can't define the path as a string easily
+export const PATH_PROP = Symbol('path');
 
-export const SEP = '.';
+/**
+ * Use a crazy separator. If the separator was a '.', and the user had a prop with a dot in it,
+ * then it could cause false matches in the updated logic.
+ * @type {string}
+ */
+export const PROP_PATH_SEP = '~~~';

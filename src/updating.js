@@ -1,7 +1,8 @@
 import { getCurrentComponent } from './collect';
-import { makePath } from './general';
+import { makePath, makePathUserFriendly } from './general';
 import { log } from './logging';
 import { getStore, setNextStore, setStore } from './store';
+import { PROP_PATH_SEP } from './constants';
 
 let listeners = {
   store: [],
@@ -40,6 +41,7 @@ const updateComponents = ({ components, path, newStore }) => {
 
   // components can have duplicates, so take care to only update once each.
   const updated = [];
+  const userFriendlyPropPath = makePathUserFriendly(path);
 
   if (components) {
     components.forEach(component => {
@@ -48,7 +50,7 @@ const updateComponents = ({ components, path, newStore }) => {
 
       log.info(`---- UPDATE ----`);
       log.info(`UPDATE <${component._name}>:`);
-      log.info(`UPDATE path: ${path}`);
+      log.info(`UPDATE path: ${userFriendlyPropPath}`);
 
       component.update(newStore);
     });
@@ -59,7 +61,7 @@ const updateComponents = ({ components, path, newStore }) => {
   setStore(newStore);
 
   // pass the path too, just useful for testing/debugging
-  manualListeners.forEach(cb => cb(newStore, path, updated, oldStore));
+  manualListeners.forEach(cb => cb(newStore, userFriendlyPropPath, updated, oldStore));
 };
 
 /**
@@ -77,8 +79,8 @@ export const notifyByPath = ({ path, newStore }) => {
   for (const listenerPath in listeners) {
     if (
       path === listenerPath ||
-      path.startsWith(`${listenerPath}.`) ||
-      listenerPath.startsWith(`${path}.`) // TODO (davidg): this is wasteful a lot of the time
+      path.startsWith(`${listenerPath}${PROP_PATH_SEP}`) ||
+      listenerPath.startsWith(`${path}${PROP_PATH_SEP}`) // TODO (davidg): this is wasteful a lot of the time
     ) {
       components = components.concat(listeners[listenerPath]);
     }
