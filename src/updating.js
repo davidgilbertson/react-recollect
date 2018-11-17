@@ -1,6 +1,6 @@
 import { getCurrentComponent } from './collect';
 import { makePath, makePathUserFriendly } from './general';
-import { log } from './logging';
+import { isDebugOn } from './debug';
 import { getStore, setNextStore, setStore } from './store';
 import { PROP_PATH_SEP } from './constants';
 
@@ -65,9 +65,10 @@ const updateComponents = ({ components, path, newStore }) => {
       if (updated.includes(component)) return;
       updated.push(component);
 
-      log.info(`---- UPDATE ----`);
-      log.info(`UPDATE <${component._name}>:`);
-      log.info(`UPDATE path: ${userFriendlyPropPath}`);
+      if (isDebugOn()) {
+        console.info(`UPDATE component:  <${component._name}>`);
+        console.info(`UPDATE property:   ${userFriendlyPropPath}`);
+      }
 
       component.update(newStore);
     });

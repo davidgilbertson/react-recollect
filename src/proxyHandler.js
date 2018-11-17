@@ -1,7 +1,9 @@
-import { log } from './logging';
+import { isDebugOn } from './debug';
 import {
   decorateWithPathAndProxy,
   makePath,
+  makePathUserFriendly,
+  makeUserFriendlyPath,
 } from './general';
 import { isProxyMuted } from './proxy';
 import { getCurrentComponent } from './collect';
@@ -20,10 +22,10 @@ const proxyHandler = {
       return Reflect.get(target, prop);
     }
 
-    log.info(`---- GET ----`);
-    log.info('GET component:', getCurrentComponent()._name);
-    log.info('GET target:', target);
-    log.info('GET prop:', prop);
+    if (isDebugOn()) {
+      console.info(`GET component:  <${getCurrentComponent()._name}>`);
+      console.info('GET property:  ', makeUserFriendlyPath(target, prop));
+    }
 
     if (Array.isArray(target)) {
       // If the TARGET is an array, e.g. if a component
@@ -42,9 +44,10 @@ const proxyHandler = {
     if (isProxyMuted()) return Reflect.has(target, prop);
     // has() also gets called when looping over an array. We don't care about that
     if (!Array.isArray(target)) {
-      log.info(`---- HAS ----`);
-      log.info('HAS target:', target);
-      log.info('HAS prop:', prop);
+      if (isDebugOn()) {
+        console.info(`GET component:  <${getCurrentComponent()._name}>`);
+        console.info('GET property:  ', makeUserFriendlyPath(target, prop));
+      }
 
       addListener(target, prop);
     }
@@ -60,11 +63,11 @@ const proxyHandler = {
     // Add paths to this new value
     const newProxiedValue = decorateWithPathAndProxy(value, path);
 
-    log.info(`---- SET ----`);
-    log.info('SET target:', target);
-    log.info('SET prop:', prop);
-    log.info('SET from:', target[prop]);
-    log.info('SET to:', newProxiedValue);
+    if (isDebugOn()) {
+      console.info('SET property: ', makePathUserFriendly(path));
+      console.info('SET from:     ', target[prop]);
+      console.info('SET to:       ', newProxiedValue);
+    }
 
     const newStore = updateStoreAtPath({
       path,
@@ -82,9 +85,9 @@ const proxyHandler = {
   deleteProperty(target, prop) {
     if (isProxyMuted()) return Reflect.deleteProperty(target, prop);
 
-    log.info(`---- DELETE ----`);
-    log.info('DELETE target:', target);
-    log.info('DELETE prop:', prop);
+    if (isDebugOn()) {
+      console.info('DELETE property: ', makeUserFriendlyPath(target, prop));
+    }
 
     const path = makePath(target, prop);
 

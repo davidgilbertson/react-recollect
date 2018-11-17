@@ -1,5 +1,5 @@
 import React from 'react';
-import { debugOff, debugOn } from './logging';
+import { debugOff, debugOn } from './debug';
 import { afterChange, getListeners } from './updating';
 import { getStore } from './store';
 

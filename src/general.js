@@ -5,6 +5,12 @@ export const isObject = item => item && typeof item === 'object' && item.constru
 
 export const isArray = item => Array.isArray(item);
 
+/**
+ * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done
+ * @param {object} target
+ * @param {string} prop
+ * @returns {string}
+ */
 export const makePath = (target, prop) => {
   if (prop) {
     return [target[PATH_PROP], prop].join(PROP_PATH_SEP);
@@ -13,13 +19,24 @@ export const makePath = (target, prop) => {
 };
 
 /**
- * Convert the internal representation of a path into something readable like store.tasks.1.done
- * @param internalPath {string}
+ * Convert the internal path string into something readable like store.tasks.1.done
+ * @param {string} internalPath
  * @returns {string}
  */
 export const makePathUserFriendly = internalPath => {
   const replacer = new RegExp(PROP_PATH_SEP, 'g');
   return internalPath.replace(replacer, '.');
+};
+
+/**
+ * Convert a target and a prop into a user-friendly string like store.tasks.1.done
+ * @param {object} target
+ * @param {string} prop
+ * @returns {string}
+ */
+export const makeUserFriendlyPath = (target, prop) => {
+  const path = makePath(target, prop);
+  return makePathUserFriendly(path);
 };
 
 export const addPathProp = (item, value) => {
