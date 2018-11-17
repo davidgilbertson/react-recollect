@@ -1,7 +1,7 @@
 {
   "name": "react-recollect",
   "version": "2.2.0",
-  "description": "",
+  "description": "Simple state management for react",
   "main": "dist/index.js",
   "scripts": {
     "preversion": "jest && npm run build",
