@@ -12,6 +12,12 @@ const manualListeners = [];
 
 export const getListeners = () => listeners;
 
+/**
+ * Add a new listener to be notified when a particular value in the store changes
+ * To be used when a component reads from a property
+ * @param target - the Proxy target object
+ * @param prop - the property of the target that was read
+ */
 export const addListener = (target, prop) => {
   if (!getCurrentComponent()) return;
 
@@ -26,6 +32,10 @@ export const addListener = (target, prop) => {
   }
 };
 
+/**
+ * Add a callback to be called every time the store changes
+ * @param cb
+ */
 export const afterChange = cb => {
   manualListeners.push(cb);
 };
@@ -35,6 +45,13 @@ export const afterChange = cb => {
 // if (!store.stories || !store.currentStoryIndex) return null. But I forget why exactly. Write
 // a test for this scenario
 
+/**
+ *
+ * @param {Object} props
+ * @param {Object[]} props.components - the components to update
+ * @param {string} props.path - the property path that triggered this change
+ * @param {Object} props.newStore - the next version of the store, with updates applied
+ */
 const updateComponents = ({ components, path, newStore }) => {
   // This is for other components that might render as a result of these updates.
   setNextStore(newStore);
@@ -69,9 +86,9 @@ const updateComponents = ({ components, path, newStore }) => {
  * - the exact propPath that has been changed. E.g. store.tasks.2
  * - a path further up the object tree. E.g. store.tasks
  * - a path further down the object tree. E.g. store.tasks.2.name (only when
- * @param {object} props
+ * @param {Object} props
  * @param {string} props.path - The path of the prop that changed
- * @param {object} props.newStore - The next version of the store
+ * @param {Object} props.newStore - The next version of the store
  */
 export const notifyByPath = ({ path, newStore }) => {
   let components = [];
