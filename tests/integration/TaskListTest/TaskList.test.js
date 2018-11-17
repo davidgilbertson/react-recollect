@@ -11,16 +11,16 @@ it('should render a loading indicator', () => {
 
 it('should render the tasks once loaded', async () => {
   await waitForElement(() => {
-    return getByText('Task one!');
+    return getByText('Task one');
   });
 });
 
 it('should mark a task as done in a child component', () => {
-  const checkbox = getByLabelText('Task one!');
+  const checkbox = getByLabelText('Task one');
 
   expect(checkbox.checked).toBe(false);
 
-  getByLabelText('Task one!').click();
+  getByLabelText('Task one').click();
 
   expect(checkbox.checked).toBe(true);
 });
@@ -29,14 +29,14 @@ it('should delete a task from a child component', () => {
   getByText('Delete Task one').click();
 
   expect(queryByText('Task one')).toBe(null);
-  getByText('Task two!');
-  getByText('Task three!');
+  getByText('Task two');
+  getByText('Task three');
 });
 
 it('should add a task', () => {
   getByText('Add a task').click();
 
-  getByText('A new task!');
+  getByText('A new task');
 });
 
 it('should delete all tasks', () => {
@@ -52,7 +52,7 @@ it('should accept a task added from an external source', () => {
     done: true,
   });
 
-  const checkbox = getByLabelText('A task added outside the component!');
+  const checkbox = getByLabelText('A task added outside the component');
 
   expect(checkbox.checked).toBe(true);
 

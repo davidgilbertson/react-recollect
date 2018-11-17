@@ -6,7 +6,13 @@ import loadTasks from './loadTasks';
 class TaskList extends Component {
   componentDidMount() {
     loadTasks();
-  };
+  }
+
+  componentDidUpdate() {
+    if (this.props.onTaskListUpdate) {
+      this.props.onTaskListUpdate();
+    }
+  }
 
   render () {
     const { store } = this.props;

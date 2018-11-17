@@ -11,7 +11,7 @@ const Task = ({ task }) => (
           task.done = e.target.checked;
         }}
       />
-      {task.name}!
+      {task.name}
     </label>
 
     <button onClick={() => {
