@@ -21,7 +21,7 @@
     "src"
   ],
   "author": "David Gilbertson",
-  "license": "ISC",
+  "license": "MIT",
   "peerDependencies": {
     "react": ">=15.3"
   },
