@@ -42,5 +42,6 @@
   "jest": {
     "setupTestFrameworkScriptFile": "./jestSetup.js",
     "clearMocks": true
-  }
+  },
+  "types": "./index.d.ts"
 }
