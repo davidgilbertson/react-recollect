@@ -40,6 +40,7 @@
     "react-testing-library": "^5.2.3"
   },
   "jest": {
-    "setupTestFrameworkScriptFile": "./jestSetup.js"
+    "setupTestFrameworkScriptFile": "./jestSetup.js",
+    "clearMocks": true
   }
 }

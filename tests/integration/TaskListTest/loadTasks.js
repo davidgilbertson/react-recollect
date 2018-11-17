@@ -2,7 +2,7 @@ import { store } from '../../../dist';
 
 const loadTasks = () => {
   setTimeout(() => {
-    store.tasks = [
+    store.tasks = (store.tasks || []).concat([
       {
         id: 1,
         name: 'Task one',
@@ -18,7 +18,7 @@ const loadTasks = () => {
         name: 'Task three',
         done: false,
       },
-    ];
+    ]);
   }, 200);
 };
 
