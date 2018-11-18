@@ -36,16 +36,22 @@ export const collect = ComponentToWrap => {
       };
       this._name = componentName;
       this._isMounted = false;
+      this._isMounting = true;
     }
 
     update(newStore) {
-      if (this._isMounted) {
+      // 1. If the component has already unmounted, don't try and set the state
+      // 2. The component might not have mounted YET, but is in the middle of its first
+      //    render cycle.
+      //    For example, if a user sets store.loading to true in App.componentDidMount
+      if (this._isMounted || this._isMounting) {
         this.setState({ store: newStore });
       }
     }
 
     componentDidMount() {
       this._isMounted = true;
+      this._isMounting = false;
 
       // Stop recording. For first render()
       stopRecordingGetsForComponent();
