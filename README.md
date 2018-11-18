@@ -105,7 +105,7 @@ afterChange(store => {
 });
 ```
 
-For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](./docs/reacting-to-changes.md)
+For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/reacting-to-changes.md)
 
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
@@ -116,7 +116,7 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 # Project organization
 
-Please see [/docs/project-organization.md](./docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
+Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
 
 # How Recollect works
 

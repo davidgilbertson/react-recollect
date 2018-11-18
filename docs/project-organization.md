@@ -8,7 +8,7 @@ This page talks about the concept of 'updaters' and 'selectors' (neither of them
 
 **Selectors** contain logic for retrieving data from the store.
 
-**Updaters** contain logic for updating the store (see [updater-pattern.md](./updater-pattern.md) for more). Updaters also handle reading/writing data from outside the app (e.g. loading data over the network or from disk).
+**Updaters** contain logic for updating the store (see [updater-pattern.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/updater-pattern.md) for more). Updaters also handle reading/writing data from outside the app (e.g. loading data over the network or from disk).
 
 ![Cycle of life](./cycle.png)
 
