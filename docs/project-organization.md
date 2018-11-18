@@ -4,7 +4,11 @@ The ideas described on this page aren't part of the Recollect API, they're simpl
 
 ## Concepts
 
-This page talks about the concept of 'updaters' and 'selectors' (neither of them new ideas). _Updaters_ contain logic for updating the store, and _selectors_ contain logic for retrieving data from the store.
+This page talks about the concept of 'updaters' and 'selectors' (neither of them new ideas). _Updaters_ contain logic for updating the store, and _selectors_ contain logic for retrieving data from the store. Updaters also handle reading data from outside the app (e.g. over the network or from disk) and saving data back to storage.
+
+![Cycle of life](./cycle.png)
+
+These concepts don't need to map to directories or files though. For example:
 
 - defining `checked={task.done}` in a checkbox is a tiny little 'selector'
 - executing `task.done = true` when a user clicks that checkbox is a tiny little 'updater'
