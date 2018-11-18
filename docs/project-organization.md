@@ -37,9 +37,9 @@ Here's a simple starting point for a directory structure that should suit many s
 
 Everything to do with UI is in one directory. Everything to do with data in another. Then inevitably you'll have things like utils and constants and so on.
 
-But if your app has several distinct areas with very little shared code, or hundreds of components, you may want to group components/selectors/updaters together for each of these distinct areas.
+But if your app has several distinct areas with some shared code, or hundreds of components, you may want to group components/selectors/updaters together for each of these distinct areas.
 
-For example, if you site had 'admin' and 'products' sections with not much shared, you might break it up like so:
+For example, if your site had 'admin' and 'products' sections, you might break it up like so:
 
 ```
 /my-app
