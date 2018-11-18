@@ -36,7 +36,7 @@ And since these are just plain functions, they're composable. If you want an upd
 Let's create an updater that loads some tasks from an api when our app mounts. It will need to:
 
 1. set a loading indicator to true
-2. fetch the tasks from a server
+2. fetch some tasks from a server
 3. save the data to the store
 4. set the loading indicator to false
 
@@ -49,8 +49,6 @@ export const loadTasksFromServer = async () => {
   store.loading = false;
 };
 ```
-
-Not much to it.
 
 You might call this function like so:
 
@@ -72,10 +70,12 @@ class TaskList extends React.Component {
 
 Did you notice that we've already covered the super-complex topic of asynchronicity?
 
-Just do whatever you need to do and update the store when you're ready, there is no `react-recollect-thunk-saga` :)
+You didn't even need to install `react-recollect-thunk-saga-helper` :)
 
-## Testing
-Let's call our updater and assert that it put the correct data in the store. The updater function is async, so our test will be async too:
+Recollect aims to be very uninteresting, and most of the time you shouldn't even be thinking about it. Just do whatever you need to do and update the store when you're ready.
+
+## Testing an updater
+Let's write a unit test to call our updater and assert that it put the correct data in the store. The function we're testing is async, so our test will be async too:
 
 ```js
 test('loadTasksFromServer should update the store', async () => {
@@ -98,9 +98,9 @@ test('loadTasksFromServer should update the store', async () => {
 
 Pretty easy, right?
 
-But we can make it less easy. Maybe we want to know that `loading` was set to `true`, and then later set to `false`. Just looking at the end state doesn't give us this assurance.
+But we can make it less easy. Maybe we want to assert that `loading` was set to `true`, then the tasks loaded, and then `loading` was set to `false` again.
 
-Luckily, Recollect exports an `afterChange` function that can call a callback every time the store changes. We can pass it a Jest mock function and Jest will conveniently keep a record of each change to the store for us.
+Well, Recollect exports an `afterChange` function that can call a callback every time the store changes. If we pass it a Jest mock function, Jest will conveniently keep a record of each change to the store for us.
 
 Also, no one likes half an example, so here's the entire test file:
 
@@ -149,4 +149,3 @@ test('loadTasksFromServer should update the store', async () => {
   }));
 });
 ```
-
