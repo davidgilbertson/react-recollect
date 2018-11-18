@@ -13,22 +13,54 @@ These concepts don't need to map to directories or files though. For example:
 - defining `checked={task.done}` in a checkbox is a tiny little 'selector'
 - executing `task.done = true` when a user clicks that checkbox is a tiny little 'updater'
 
-As you can see, in a simple application you don't need to explicitly think about updaters or selectors.
+As you can see, in a simple application you don't need to explicitly think in terms of updaters and selectors.
 
-But it's important to keep your components focused on UI — you don't want 200 lines of logic in the `onClick` event of a button. So there will come a point where moving code out of your components into dedicated files is necessary, and these two concepts will go a long way toward keeping your code base under control.
+But it's important to keep your components focused on UI — you don't want 200 lines of logic in the `onClick` event of a button. So there will come a point where moving code out of your components into dedicated files is necessary, and these two concepts will go a long way toward keeping your codebase under control.
 
 ## Directory structure
 
-Here's an example directory structure:
+Here's a simple starting point for a directory structure:
 
 ```
-/ my-app
- ├─/ src
-   ├─/ components
-   ├─/ store
-     ├─/ selectors
-     ├─/ updaters
+/my-app
+ └─ src
+    ├─ components
+    ├─ store
+    │  ├─ selectors
+    │  └─ updaters
+    └─ utils
 ```
+
+Everything to do with UI is in one directory. Everything to do with data in another. Then inevitably you'll have things like utils and constants and so on.
+
+This will work well for small-to-medium sized apps. But if your app has several distinct areas with very little shared code, or hundreds of components, you may want to group components/selectors/updaters together for each of these distinct areas.
+
+For example, if a site had 'admin' and 'products' sections with not much shared, we might break it up like so:
+
+```
+/my-app
+└─ src
+   ├─ admin
+   │  ├─ components
+   │  ├─ store
+   │  │  ├─ selectors
+   │  │  └─ updaters
+   │  └─ utils
+   ├─ common
+   │  ├─ components
+   │  ├─ store
+   │  │  ├─ selectors
+   │  │  └─ updaters
+   │  └─ utils
+   └─ products
+      ├─ components
+      ├─ store
+      │  ├─ selectors
+      │  └─ updaters
+      └─ utils
+```
+
+Ultimately, it's more important to be consistent across your codebase than it is to be consistent with the examples on this page.
 
 ## Selectors
 
