@@ -114,6 +114,10 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 - Type `__RR__.debugOff()` and see what happens
 - `__RR__.getStore()` returns a 'live' reference to the store. For example, typing `__RR__.getStore().tasks[1].done = true` in the console would update the store, and Recollect would instruct React to re-render the appropriate components.
 
+# Project organization
+
+Please see [/docs/project-organization.md](./docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
+
 # How Recollect works
 
 > This section is for the curious, you don't need to know any of this to use Recollect.
