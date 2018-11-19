@@ -293,5 +293,4 @@ For inspiration, these brave websites have dropped the hammer and now show a mes
 - [ ] Work on minimising renders
 - [ ] More tests
 - [ ] .gitignore dist (but still publish source to npm)
-- [ ] A readme section for patterns. Or a blog post. 'selectors', 'updaters', general best practices and elaboration of gotchas.
 - [ ] Minify/strip comments on build
