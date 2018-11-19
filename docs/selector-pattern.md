@@ -96,7 +96,7 @@ Now, when a user changes the dropdown, the component state will update, a re-ren
 
 So far none of this has anything to do with Recollect. But there's some interesting stuff happening here that's worth discussing.
 
-## Shallow cloning
+## Keeping references to objects in the store
 Do you remember when we did this?
 
 ```js
@@ -116,13 +116,15 @@ And our friend `sort` _does_ mutate the original array.
 
 But we don't want to change the order of tasks in the store — some other part of the app might be using them. So we `slice()` the array to create a shallow copy. 'Shallow' means that the tasks in the resulting array are still a reference to the actual tasks in the store. So if we call `task.done = true` on one of them, the store will update.
 
-Or more accurately, Recollect will orchestrate immutably updating the store and re-render any React components that had read that task's `done` property during their last render.
+Or more accurately, when you do `task.done = true` Recollect will orchestrate immutably updating the store and re-render any React components that had read that task's `done` property during their last render.
 
-It all works out quite nicely.
+So, it's important that if you return an object from a selector (e.g. a task), and you want to set a property on that object later (e.g. mark it as done), then you need to make sure you're returning a reference to an item in the store, not a copy.
+
+As long as you don't use `Object.assign()` or spread operators or some deep clone tool, you'll be fine.
 
 ## Always pass the store to selectors
 
-For reasons explained in the main readme, you _must_ pass the store to selectors, and it _must_ be the store that was passed to the component as a prop (not the one you can import directly from `react-recollect`).
+For the same reason as above, you _must_ pass the store to selectors, and it _must_ be the store that was passed to the component as a prop (not the one you can import directly from `react-recollect`).
 
 The reason is complex but the rule is simple: if you're reading it during the render cycle, it must be the store passed in as a prop.
 
