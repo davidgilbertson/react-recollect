@@ -6,7 +6,7 @@ The ideas described on this page aren't part of the Recollect API, they're simpl
 
 This page talks about the concept of 'updaters' and 'selectors' (neither of them new ideas).
 
-**Selectors** contain logic for retrieving data from the store.
+**Selectors** contain logic for retrieving data from the store (see [selector-pattern.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/selector-pattern.md) for more).
 
 **Updaters** contain logic for updating the store (see [updater-pattern.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/updater-pattern.md) for more). Updaters also handle reading/writing data from outside the app (e.g. loading data over the network or from disk).
 
@@ -65,3 +65,7 @@ For example, if your site had 'admin' and 'products' sections, you might break i
 ```
 
 Ultimately, it's more important to be consistent across your codebase than it is to be consistent with the examples on this page.
+
+---
+
+Fun fact: _selector_ ends in 'or' because 'select' is derived from latin, while _updater_ ends in 'er' because it was made up in 1941 and 'or' had gone out of style.
