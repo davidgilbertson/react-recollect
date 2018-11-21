@@ -107,6 +107,54 @@ afterChange(store => {
 
 For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/reacting-to-changes.md)
 
+# Advanced usage
+
+## Passing a ref to a `collect`ed component
+The `collect` function takes a second parameter — an options object with one property, `forwardRef`. When you supply this property, you will be able to provide a `ref` to the wrapped component, which will be made available on that component as `props.forwardedRef`.
+
+The component that you're wrapping in `collect` would then look like this:
+
+```jsx
+const MyInput = props => (
+  <label>
+    Some input
+    <input ref={props.forwardedRef} />
+  </label>
+);
+
+export default collect(MyComponent, { forwardRef: true });
+```
+
+And passing it a ref would look the same as passing a ref to any other component
+
+```jsx
+class MyParentComponent extends Component {
+  constructor(props) {
+    super(props);
+
+    this.inputRef = React.createRef();
+  }
+
+  render () {
+    return (
+      <div>
+        <MyInput ref={this.inputRef}/>
+
+        <button
+          onClick={() => {
+            this.inputRef.current.focus()
+          }}
+        >
+          Focus the input for some reason
+        </button>
+      </div>
+    );
+  }
+}
+```
+
+You can forward a ref to class-based components or stateless functional components.
+
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
