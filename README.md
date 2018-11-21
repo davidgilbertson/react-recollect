@@ -260,8 +260,6 @@ In the `/tests` directory you'll find:
 
 Recollect has a peer dependency of React, and needs at least version 15.3 (when `PureComponent` was released).
 
-Recollect has no dependencies. :boom:
-
 # Alternatives
 
 If you want a library that guides you in structuring your app, use Redux.

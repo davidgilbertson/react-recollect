@@ -1,4 +1,5 @@
 import React from 'react';
+import hoistNonReactStatics from 'hoist-non-react-statics';
 import { getNextStore } from './store';
 import { removeListenersForComponent } from './updating';
 
@@ -73,6 +74,8 @@ export const collect = ComponentToWrap => {
       return <ComponentToWrap {...this.props} store={this.state.store} />;
     }
   }
+
+  hoistNonReactStatics(WrappedComponent, ComponentToWrap);
 
   WrappedComponent.displayName = `Collected(${componentName})`;
 
