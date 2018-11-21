@@ -118,6 +118,34 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
 
+# Usage with TypeScript
+## Your store
+Define the shape of your recollect `store` like this:
+```
+declare module 'react-recollect' {
+  interface Store {
+    someProp?: string[];
+    somethingElse?: string;
+  }
+}
+```
+Put this in a declarations file such as `src/types/RecollectStore.ts`.
+
+## Using collect
+Components wrapped in `collect` must define `store` in `props` - 
+use the `WithStoreProp` interface for this:
+```
+import { collect, WithStoreProp } from 'react-recollect';
+
+interface Props extends WithStoreProp {
+  someComponentProp: string;
+}
+const TaskList: React.SFC<Props> = ({ store, someComponentProp }) => (
+  // < your awesome JSX here>
+);
+export default collect(TaskList);
+```
+
 # How Recollect works
 
 > This section is for the curious, you don't need to know any of this to use Recollect.

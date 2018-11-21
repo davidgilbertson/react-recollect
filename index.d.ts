@@ -1,21 +1,39 @@
 import * as React from 'react';
 
-interface WithStoreProp {
-  store: object;
+/**
+ * Define the shape of your store in your project - see README.
+ */
+export interface Store {
 }
 
-interface CollectorComponent extends React.PureComponent {
-  update(store: object): void,
+/**
+ * Extend or intersect component `props` with `WithStoreProp`
+ * when using `connect`
+ */
+export interface WithStoreProp {
+  store: Store;
+}
+
+export interface CollectorComponent extends React.Component {
+  update(store: Store): void,
   _name: string,
 }
 
-export function collect<P extends object>(Component: React.ComponentType<P>): React.PureComponent<P & WithStoreProp>;
+// `collect` uses Exclude so that TS doesn't complain
+// about undefined store prop when you use your component
+// Exclude requires TypeScript > 2.8
+/**
+ * Provide the `store: Store` object as a prop to wrapped component
+ */
+export function collect<P extends WithStoreProp>(
+  Component: React.ComponentType<P>
+): React.ComponentType<Pick<P, Exclude<keyof P, keyof WithStoreProp>>>;
 
-export const store: object;
+export const store: Store;
 
 export function afterChange(callback: (
-  newStore: object,
+  store: Store,
   propPath: string,
   updated: CollectorComponent[],
-  oldStore: object
+  oldStore: Store
 ) => void): void;
