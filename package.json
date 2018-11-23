@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "Simple state management for react",
   "main": "dist/index.js",
   "scripts": {
