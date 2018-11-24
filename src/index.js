@@ -5,15 +5,17 @@ import { getStore } from './store';
 
 export { afterChange } from './updating';
 export { collect } from './collect';
-export { store } from './store';
+export { store, initStore } from './store';
 
-if (!window.Proxy) {
-  console.warn('This browser doesn\'t support the Proxy object, which react-recollect needs. See https://caniuse.com/#search=proxy to find out which browsers do support it');
+if (typeof window !== 'undefined') {
+  if ('Proxy' in window) {
+    window.__RR__ = {
+      getStore,
+      getListeners,
+      debugOn,
+      debugOff,
+    };
+  } else {
+    console.warn('This browser doesn\'t support the Proxy object, which react-recollect needs. See https://caniuse.com/#search=proxy to find out which browsers do support it');
+  }
 }
-
-window.__RR__ = {
-  getStore,
-  getListeners,
-  debugOn,
-  debugOff,
-};

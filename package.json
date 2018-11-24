@@ -4,10 +4,10 @@
   "description": "Simple state management for react",
   "main": "dist/index.js",
   "scripts": {
-    "preversion": "jest && npm run build",
+    "preversion": "npm run build && jest",
     "test": "jest --watch",
     "build": "babel src -d dist",
-    "start": "babel src -d dist --watch"
+    "build:watch": "babel src -d dist --watch"
   },
   "keywords": [
     "flux",

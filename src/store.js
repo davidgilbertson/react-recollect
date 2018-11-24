@@ -8,6 +8,22 @@ addPathProp(rawStore, 'store');
 
 export const store = createProxy(rawStore);
 
+const resetStore = () => {
+  Object.keys(store).forEach(prop => {
+    delete store[prop];
+  });
+};
+
+export const initStore = data => {
+  resetStore();
+
+  if (data) {
+    Object.entries(data).forEach(([prop, value]) => {
+      store[prop] = value;
+    });
+  }
+};
+
 let nextStore;
 
 export const updateStoreAtPath = ({ path, value, deleteItem }) => {
@@ -75,9 +91,7 @@ export const getStore = () => store;
  */
 export const setStore = next => {
   muteProxy();
-  Object.keys(store).forEach(prop => {
-    delete store[prop];
-  });
+  resetStore();
 
   Object.keys(next).forEach(prop => {
     store[prop] = next[prop];

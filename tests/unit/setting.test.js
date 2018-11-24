@@ -1,12 +1,10 @@
-import { store, afterChange } from '../../dist';
+import { store, afterChange, initStore } from '../../dist';
 
 const handleChange = jest.fn();
 afterChange(handleChange);
 
 afterEach(() => {
-  for (const prop in store) {
-    delete store[prop];
-  }
+  initStore(); // empty the store
 
   handleChange.mockClear();
 });

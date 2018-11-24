@@ -31,6 +31,18 @@ export function collect<P extends WithStoreProp>(
 
 export const store: Store;
 
+/**
+ * Empty the Recollect store and replace it with new data.
+ * Use this in conjunction with server rendering.
+ * E.g. set window.__PRELOADED_STATE__ on the server, then
+ * initStore(window.__PRELOADED_STATE__) just before calling
+ * React.hydrate(<YourApp /> ...)
+ */
+export function initStore(data: Store);
+
+/**
+ * afterChange will be called each time the Recollect store changes
+ */
 export function afterChange(callback: (
   store: Store,
   propPath: string,
