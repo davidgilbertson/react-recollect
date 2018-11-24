@@ -13,24 +13,24 @@ it('should add a string', () => {
   store.newString = 'test';
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newString).toBe('test');
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newString).toBe('test');
 });
 
 it('should add null', () => {
   store.newNull = null;
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newNull).toBe(null);
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newNull).toBe(null);
 });
 
 it('should add undefined', () => {
   store.newUndefined = undefined;
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newUndefined).toBe(undefined);
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newUndefined).toBe(undefined);
 });
 
 it('should add an object', () => {
@@ -39,8 +39,8 @@ it('should add an object', () => {
   };
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newObject).toEqual(expect.objectContaining({
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newObject).toEqual(expect.objectContaining({
     someProp: 'someValue',
   }));
 });
@@ -49,24 +49,24 @@ it('should add an array', () => {
   store.newArray = [];
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newArray).toEqual([]);
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newArray).toEqual([]);
 });
 
 it('should add an array with numbers', () => {
   store.newArray = [1];
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newArray).toEqual([1]);
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newArray).toEqual([1]);
 });
 
 it('should add an array that\'s a real mixed bag', () => {
   store.newMixedArray = [1, 2, undefined, null, 'cats', false, true, { prop: 'val'} ];
   expect(handleChange).toHaveBeenCalledTimes(1);
 
-  const newStore = handleChange.mock.calls[0][0];
-  expect(newStore.newMixedArray).toEqual([1, 2, undefined, null, 'cats', false, true, { prop: 'val'} ]);
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.store.newMixedArray).toEqual([1, 2, undefined, null, 'cats', false, true, { prop: 'val'} ]);
 });
 
 it('should update an object in an array', () => {
@@ -125,8 +125,9 @@ it('should set an empty array, then add items to the array', () => {
   expect(store.emptyArray[0]).toBe(1);
   // push() calls set with the new item, then sets the length
   expect(handleChange).toHaveBeenCalledTimes(2);
-  expect(handleChange.mock.calls[0][1]).toBe('store.emptyArray.0');
-  expect(handleChange.mock.calls[1][1]).toBe('store.emptyArray.length');
+
+  expect(handleChange.mock.calls[0][0].propPath).toBe('store.emptyArray.0');
+  expect(handleChange.mock.calls[1][0].propPath).toBe('store.emptyArray.length');
 });
 
 it('should not allow setting of a deleted thing', () => {
@@ -167,5 +168,5 @@ it('calls listeners with the changed path', () => {
   secondItem.name = 'Sam';
 
   expect(handleChange).toHaveBeenCalledTimes(1);
-  expect(handleChange.mock.calls[0][1]).toBe('store.test.objectProp.arr.2.name');
+  expect(handleChange.mock.calls[0][0].propPath).toBe('store.test.objectProp.arr.2.name');
 });

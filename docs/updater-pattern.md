@@ -125,16 +125,19 @@ test('loadTasksFromServer should update the store', async () => {
   // Execute our updater
   await loadTasksFromServer();
 
-  // afterChangeHandler will be called with the new version of the store as the first parameter
-  // and the 'path' of the updated property as the second.
-  expect(afterChangeHandler.mock.calls[0][1]).toBe('store.loading');
-  expect(afterChangeHandler.mock.calls[0][0].loading).toBe(true);
+  // afterChangeHandler will be called with the new version of the store and the path that was changed
+  const firstChange = afterChangeHandler.mock.calls[0][0];
+  const secondChange = afterChangeHandler.mock.calls[1][0];
+  const thirdChange = afterChangeHandler.mock.calls[2][0];
+  
+  expect(firstChange.propPath).toBe('store.loading');
+  expect(firstChange.store.loading).toBe(true);
 
-  expect(afterChangeHandler.mock.calls[1][1]).toBe('store.tasks');
-  expect(afterChangeHandler.mock.calls[1][0].tasks.length).toBe(1);
+  expect(secondChange.propPath).toBe('store.tasks');
+  expect(secondChange.store.tasks.length).toBe(1);
 
-  expect(afterChangeHandler.mock.calls[2][1]).toBe('store.loading');
-  expect(afterChangeHandler.mock.calls[2][0].loading).toBe(false);
+  expect(thirdChange.propPath).toBe('store.loading');
+  expect(thirdChange.store.loading).toBe(false);
 
   // Check that the final state of the store is what we expected
   expect(store).toEqual(expect.objectContaining({

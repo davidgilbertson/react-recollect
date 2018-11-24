@@ -43,9 +43,9 @@ export function initStore(data: Store);
 /**
  * afterChange will be called each time the Recollect store changes
  */
-export function afterChange(callback: (
+export function afterChange(callback: (changeEvent: {
   store: Store,
   propPath: string,
-  updated: CollectorComponent[],
-  oldStore: Store
-) => void): void;
+  components: CollectorComponent[],
+  prevStore: Store
+}) => void): void;

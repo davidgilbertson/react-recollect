@@ -100,12 +100,55 @@ Pass a function to `afterChange` to have it called whenever the store updates. F
 ```js
 import { afterChange } from 'react-recollect';
 
-afterChange(store => {
-  localStorage.setItem('site-data', JSON.stringify(store));
+afterChange(({ store }) => {
+  localStorage.siteData = JSON.stringify(store);
 });
 ```
 
-For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/reacting-to-changes.md)
+Your callback will be called with an object, which has four properties:
+
+* `store` — the store
+* `propPath` — the 'path' of the property that changed. E.g. `'store.tasks.2.done'`
+* `components` — an array of the components that were updated
+* `prevStore` — the previous version of the store
+
+Those last two might be interesting if you want to implement time travel, for example:
+
+```js
+const thePast = [];
+const theFuture = [];
+
+window.TIME_TRAVEL = {
+  back() {
+    if (!thePast.length) return;
+
+    const event = thePast.pop();
+    theFuture.push(event);
+
+    event.components.forEach(component => {
+      component.update(event.prevStore);
+    });
+
+    console.log('Replayed the change made to', event.propPath);
+  },
+  forward() {
+    if (!theFuture.length) return;
+
+    const event = theFuture.pop();
+    thePast.push(event);
+
+    event.components.forEach(component => {
+      component.update(event.store);
+    });
+
+    console.log('Replayed the change made to', event.propPath);
+  },
+};
+
+afterChange(changeEvent => {
+  if (changeEvent.components.length) thePast.push(changeEvent);
+});
+```
 
 ## Peeking into Recollect's innards
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
