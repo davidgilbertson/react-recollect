@@ -138,11 +138,11 @@ app.get('/', async (req, res) => {
   // Fetch some data
   const tasks = await fetchTasksForUser(req.query.userId);
 
-  // Populate the Recollect store (and reset any previous state)
+  // Populate the Recollect store (discarding any previous state)
   initStore({tasks});
 
   // Render the app. Components will read from the Recollect store as usual
-  const appMarkup = ReactDOMServer.renderToStaticMarkup(<App />);
+  const appMarkup = ReactDOMServer.renderToString(<App />);
 
   // Serialize the store (replacing left tags for security)
   const safeStoreString = JSON.stringify(store).replace(/</g, '\\u003c');
@@ -159,15 +159,17 @@ app.get('/', async (req, res) => {
 });
 ``` 
 
-It's important that you populate the store using `initStore`, and do so right before rendering your app.
+It's important that you populate the store using `initStore`, and do so right before rendering your app with `ReactDOMServer.renderToString()`.
 
 This is because your Node server might receive several requests from several users at the same time. All of these requests share the same global state, including the `store` object.
 
-So, you want to make sure that for each request, you a) reset the store state, b) populate the store with the relevant data for the current request, and c) render the page — all in one go. And by 'all in one go', I mean _synchronously_.
+So, you must make sure that for each request, you populate the store and render the markup at the same time. And by 'at the same time', I mean _synchronously_.
 
 ### In the browser
 
-In the entry point to your app, right before you call `ReactDOM.hydrate`, call `initStore` with the data that you sent from the server:
+In the entry point to your app, right before you call `ReactDOM.hydrate()`, call `initStore()` with the data that you sent from the server:
+
+To recap: on the server, you initialize the store with some data, render the markup, and embed the store data in the page. Then in the browser, you get that data from the page, initialize the store with it, and render your React components.
 
 ```jsx
 import { initStore } from 'react-recollect';
