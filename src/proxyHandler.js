@@ -10,9 +10,16 @@ import { getCurrentComponent } from './collect';
 import { addListener, notifyByPath } from './updating';
 import { updateStoreAtPath } from './store';
 
+// TODO (davidg): share this with debug.js but I'm having trouble with circular references.
+// Time to switch to Rollup or Webpack. Also does React export canUseDOM?
+// Also this is only a function so it's executed after the module loads so the tests pass.
+// If I'm importing this then I can mock it in serverRendering.test.js and test both cases
+const isInBrowser = () => typeof window !== 'undefined';
+
 const proxyHandler = {
   get(target, prop) {
     if (
+      !isInBrowser() ||
       isProxyMuted() ||
       !getCurrentComponent() ||
       typeof prop === 'symbol' ||
@@ -41,7 +48,7 @@ const proxyHandler = {
   },
 
   has(target, prop) {
-    if (isProxyMuted()) return Reflect.has(target, prop);
+    if (isProxyMuted() || !isInBrowser()) return Reflect.has(target, prop);
     // has() also gets called when looping over an array. We don't care about that
     if (!Array.isArray(target)) {
       if (isDebugOn()) {
@@ -56,7 +63,7 @@ const proxyHandler = {
   },
 
   set(target, prop, value) {
-    if (isProxyMuted()) return Reflect.set(target, prop, value);
+    if (isProxyMuted() || !isInBrowser()) return Reflect.set(target, prop, value);
 
     const path = makePath(target, prop);
 
@@ -83,7 +90,7 @@ const proxyHandler = {
   },
 
   deleteProperty(target, prop) {
-    if (isProxyMuted()) return Reflect.deleteProperty(target, prop);
+    if (isProxyMuted() || !isInBrowser()) return Reflect.deleteProperty(target, prop);
 
     if (isDebugOn()) {
       console.info('DELETE property: ', makeUserFriendlyPath(target, prop));

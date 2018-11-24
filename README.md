@@ -114,14 +114,84 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 - Type `__RR__.debugOff()` and see what happens
 - `__RR__.getStore()` returns a 'live' reference to the store. For example, typing `__RR__.getStore().tasks[1].done = true` in the console would update the store, and Recollect would instruct React to re-render the appropriate components.
 
+## Server-side rendering
+
+When you're only using Recollect in the browser, you may have noticed that you never need to 'create' or 'initialize' a store. You just write to and read from a global `store` object.
+
+When you server-render though, you _do_ need to initialize the store, because unlike a browser, a server is shared between many users.
+
+Enter the `initStore` function, which you use on the server and in the browser.
+
+### On the server
+
+Here's a minimal implementation of server-side rendering with Express and Recollect.
+
+```jsx
+// Create an express app instance
+const app = express();
+
+// Read the HTML template on start up (this is the create-react-app output)
+const htmlTemplate = fs.readFileSync(path.resolve(__dirname, '../../build/index.html'), 'utf8');
+
+// We'll serve our page to requests at '/'
+app.get('/', async (req, res) => {
+  // Fetch some data
+  const tasks = await fetchTasksForUser(req.query.userId);
+
+  // Populate the Recollect store (discarding any previous state)
+  initStore({tasks});
+
+  // Render the app. Components will read from the Recollect store as usual
+  const appMarkup = ReactDOMServer.renderToString(<App />);
+
+  // Serialize the store (replacing left tags for security)
+  const safeStoreString = JSON.stringify(store).replace(/</g, '\\u003c');
+
+  // Insert the markup and the data into the template
+  const htmlWithBody = htmlTemplate.replace(
+    '<div id="root"></div>',
+    `<div id="root">${appMarkup}</div>
+    <script>window.__PRELOADED_STATE__ = ${safeStoreString};</script>`
+  );
+
+  // Return the rendered page to the user
+  res.send(htmlWithBody);
+});
+``` 
+
+It's important that you populate the store using `initStore`, and do so right before rendering your app with `ReactDOMServer.renderToString()`.
+
+This is because your Node server might receive several requests from several users at the same time. All of these requests share the same global state, including the `store` object.
+
+So, you must make sure that for each request, you populate the store and render the markup at the same time. And by 'at the same time', I mean _synchronously_.
+
+### In the browser
+
+In the entry point to your app, right before you call `ReactDOM.hydrate()`, call `initStore()` with the data that you sent from the server:
+
+To recap: on the server, you initialize the store with some data, render the markup, and embed the store data in the page. Then in the browser, you get that data from the page, initialize the store with it, and render your React components.
+
+```jsx
+import { initStore } from 'react-recollect';
+
+// other stuff
+
+initStore(window.__PRELOADED_STATE__);
+
+ReactDOM.hydrate(<App />, document.getElementById('root'));
+```
+
+This will take the data that you saved in the DOM on the server and fill up the Recollect store with it. You should only init the store once, before the initial render.
+
 # Project organization
 
 Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
 
 # Usage with TypeScript
 ## Your store
+
 Define the shape of your recollect `store` like this:
-```
+```ts
 declare module 'react-recollect' {
   interface Store {
     someProp?: string[];
@@ -132,9 +202,10 @@ declare module 'react-recollect' {
 Put this in a declarations file such as `src/types/RecollectStore.ts`.
 
 ## Using collect
+
 Components wrapped in `collect` must define `store` in `props` - 
 use the `WithStoreProp` interface for this:
-```
+```ts
 import { collect, WithStoreProp } from 'react-recollect';
 
 interface Props extends WithStoreProp {
