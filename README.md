@@ -116,13 +116,13 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 ## Server-side rendering
 
-SSR is pretty straightforward, but there's one more function that you need to know about: `initStore`.
-
-When you're only using Recollect on the client, you may have noticed that you never need to 'create' or 'initialize' a store. You just stick stuff in a global `store` object that's always there.
+When you're only using Recollect in the browser, you may have noticed that you never need to 'create' or 'initialize' a store. You just write to and read from a global `store` object.
 
 When you server-render though, you _do_ need to initialize the store, because unlike a browser, a server is shared between many users.
 
-### On the server: the `initStore` function
+Enter the `initStore` function, which you use on the server and in the browser.
+
+### On the server
 
 Here's a minimal implementation of server-side rendering with Express and Recollect.
 
@@ -130,7 +130,7 @@ Here's a minimal implementation of server-side rendering with Express and Recoll
 // Create an express app instance
 const app = express();
 
-// Read the HTML template once, on start up (this is the create-react-app output)
+// Read the HTML template on start up (this is the create-react-app output)
 const htmlTemplate = fs.readFileSync(path.resolve(__dirname, '../../build/index.html'), 'utf8');
 
 // We'll serve our page to requests at '/'
@@ -161,15 +161,19 @@ app.get('/', async (req, res) => {
 
 It's important that you populate the store using `initStore`, and do so right before rendering your app.
 
-To understand why, remember that your Node server might receive several requests from several users all at the same time. All of these requests share the same global state, including the `store` object.
+This is because your Node server might receive several requests from several users at the same time. All of these requests share the same global state, including the `store` object.
 
-So, you want to make sure that for each request, you reset the store state, populate the store with the relevant data for the current request, and render the page all in one go. And by 'all in one go', I mean _synchr``````onously_.
+So, you want to make sure that for each request, you a) reset the store state, b) populate the store with the relevant data for the current request, and c) render the page — all in one go. And by 'all in one go', I mean _synchronously_.
 
-### In the browser: the `initStore` function again
+### In the browser
 
 In the entry point to your app, right before you call `ReactDOM.hydrate`, call `initStore` with the data that you sent from the server:
 
 ```jsx
+import { initStore } from 'react-recollect';
+
+// other stuff
+
 initStore(window.__PRELOADED_STATE__);
 
 ReactDOM.hydrate(<App />, document.getElementById('root'));
