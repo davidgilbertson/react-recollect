@@ -47,5 +47,10 @@
   "types": "./index.d.ts",
   "dependencies": {
     "hoist-non-react-statics": "^3.1.0"
-  }
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/davidgilbertson/react-recollect"
+  },
+  "bugs": "https://github.com/davidgilbertson/react-recollect/issues"
 }
