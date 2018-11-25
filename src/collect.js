@@ -24,7 +24,7 @@ const stopRecordingGetsForComponent = () => {
   unsetCurrentComponent();
 };
 
-export const collect = ComponentToWrap => {
+export const collect = (ComponentToWrap, { forwardRef } = {}) => {
   const componentName = ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
   class WrappedComponent extends React.PureComponent {
@@ -75,9 +75,15 @@ export const collect = ComponentToWrap => {
     }
   }
 
-  hoistNonReactStatics(WrappedComponent, ComponentToWrap);
-
   WrappedComponent.displayName = `Collected(${componentName})`;
 
-  return WrappedComponent;
+  if (forwardRef) {
+    const WrappedWithRef = React.forwardRef((props, ref) => (
+      <WrappedComponent {...props} forwardedRef={ref} />
+    ));
+
+    return hoistNonReactStatics(WrappedWithRef, ComponentToWrap);
+  }
+
+  return hoistNonReactStatics(WrappedComponent, ComponentToWrap);
 };
