@@ -57,13 +57,13 @@ const updateComponents = ({ components, path, newStore }) => {
   setNextStore(newStore);
 
   // components can have duplicates, so take care to only update once each.
-  const updated = [];
+  const updatedComponents = [];
   const userFriendlyPropPath = makePathUserFriendly(path);
 
   if (components) {
     components.forEach(component => {
-      if (updated.includes(component)) return;
-      updated.push(component);
+      if (updatedComponents.includes(component)) return;
+      updatedComponents.push(component);
 
       if (isDebugOn()) {
         console.info(`UPDATE component:  <${component._name}>`);
@@ -78,8 +78,12 @@ const updateComponents = ({ components, path, newStore }) => {
 
   setStore(newStore);
 
-  // pass the path too, just useful for testing/debugging
-  manualListeners.forEach(cb => cb(newStore, userFriendlyPropPath, updated, oldStore));
+  manualListeners.forEach(cb => cb({
+    store: newStore,
+    propPath: userFriendlyPropPath,
+    prevStore: oldStore,
+    components: updatedComponents
+  }));
 };
 
 /**
