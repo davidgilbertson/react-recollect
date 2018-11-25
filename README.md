@@ -91,23 +91,66 @@ store = 'tasks'; // NOPE! (Can't reassign a constant)
 
 Congratulations my friend, you just finished learning Recollect. I am very proud of you.
 
-But there's just one more thing you might like to know...
+Go have a play, and when you're ready for more readme, come back to read about ...
 
-### The `afterChange` function
+# Advanced usage
+
+## The `afterChange` function
 
 Pass a function to `afterChange` to have it called whenever the store updates. For example, if you wanted to sync your store to local storage, you could do the following (anywhere in your app).
 
 ```js
 import { afterChange } from 'react-recollect';
 
-afterChange(store => {
-  localStorage.setItem('site-data', JSON.stringify(store));
+afterChange(({ store }) => {
+  localStorage.siteData = JSON.stringify(store);
 });
 ```
 
-For a deeper dive into `afterChange`, check out the time travel example in [/docs/reacting-to-changes.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/reacting-to-changes.md)
+Your callback will be called with an object, which has four properties:
 
-# Advanced usage
+* `store` — the store
+* `propPath` — the 'path' of the property that changed. E.g. `'store.tasks.2.done'`
+* `components` — an array of the components that were updated
+* `prevStore` — the previous version of the store
+
+Those last two might be interesting if you want to implement time travel, for example:
+
+```js
+const thePast = [];
+const theFuture = [];
+
+window.TIME_TRAVEL = {
+  back() {
+    if (!thePast.length) return;
+
+    const event = thePast.pop();
+    theFuture.push(event);
+
+    event.components.forEach(component => {
+      component.update(event.prevStore);
+    });
+
+    console.log('Replayed the change made to', event.propPath);
+  },
+  forward() {
+    if (!theFuture.length) return;
+
+    const event = theFuture.pop();
+    thePast.push(event);
+
+    event.components.forEach(component => {
+      component.update(event.store);
+    });
+
+    console.log('Replayed the change made to', event.propPath);
+  },
+};
+
+afterChange(changeEvent => {
+  if (changeEvent.components.length) thePast.push(changeEvent);
+});
+```
 
 ## Passing a ref to a `collect`ed component
 The `collect` function takes a second parameter — an options object with one property, `forwardRef`. When you supply this property, you will be able to provide a `ref` to the wrapped component, which will be made available on that component as `props.forwardedRef`.
@@ -231,12 +274,9 @@ ReactDOM.hydrate(<App />, document.getElementById('root'));
 
 This will take the data that you saved in the DOM on the server and fill up the Recollect store with it. You should only init the store once, before the initial render.
 
-# Project organization
+## Usage with TypeScript
 
-Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
-
-# Usage with TypeScript
-## Your store
+### Your store
 
 Define the shape of your recollect `store` like this:
 ```ts
@@ -249,7 +289,7 @@ declare module 'react-recollect' {
 ```
 Put this in a declarations file such as `src/types/RecollectStore.ts`.
 
-## Using collect
+### Using collect
 
 Components wrapped in `collect` must define `store` in `props` - 
 use the `WithStoreProp` interface for this:
@@ -264,6 +304,10 @@ const TaskList: React.SFC<Props> = ({ store, someComponentProp }) => (
 );
 export default collect(TaskList);
 ```
+
+# Project organization
+
+Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
 
 # How Recollect works
 
