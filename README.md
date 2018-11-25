@@ -1,12 +1,14 @@
 # React Recollect
 
-**Featureless state management for React.**
+Recollect is a state management library that aims to solve two problems with the traditional React/Redux approach:
 
-What does 'featureless' mean? It means that Recollect doesn't do much, and you don't need to know much to use it.
+1. Immutability is complicated and prone to bugs
+2. Components can be re-rendered as a result of a store change, even if they don't use the data that changed 
 
-Recollect can replace Redux or MobX or similar state management libraries.
+The solutions to these two problems are:
 
-Have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
+1. The Recollect store is immutable, but the implementation is hidden, so you can interact with it as though it was a plain JavaScript object.
+2. Recollect keeps a record of which components use which properties from the store. When a property in your store changes, only the appropriate components are targeted for an update.
 
 ## Warnings
 
@@ -14,7 +16,44 @@ This tool is in its early days, so please test thoroughly and raise any issues y
 
 There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 
-# Usage
+You can have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
+
+# Contents
+
+Don't be put off by the long list, you only need to know `collect` and `store` to get started.
+
+- [Basic usage](#basic-usage)
+  - [Installation](#installation)
+  - [API](#api)
+    - [The `collect` function](#the-collect-function)
+    - [The `store` object](#the-store-object)
+- [Advanced usage](#advanced-usage)
+  - [The `afterChange` function](#the-afterchange-function)
+  - [Passing a ref to a `collect`ed component](#passing-a-ref-to-a-collected-component)
+  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+  - [Server-side rendering](#server-side-rendering)
+    - [On the server](#on-the-server)
+    - [In the browser](#in-the-browser)
+  - [Usage with TypeScript](#usage-with-typescript)
+    - [Your store](#your-store)
+    - [Using collect](#using-collect)
+- [Project organization](#project-organization)
+- [How Recollect works](#how-recollect-works)
+- [Questions](#questions)
+  - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
+  - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
+  - [Will component state still work?](#will-component-state-still-work)
+  - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
+  - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
+  - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
+  - [Can I use this with `Context`?](#can-i-use-this-with-context)
+  - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [Tell me about your tests](#tell-me-about-your-tests)
+- [Dependencies](#dependencies)
+- [Alternatives](#alternatives)
+- [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
+
+# Basic usage
 
 ## Installation
 
@@ -24,7 +63,7 @@ npm i react-recollect
 
 ## API
 
-To use Recollect, you need to know about two things: the `store` object and the `collect` function.
+To get started with Recollect, you need to know about two things: the `store` object and the `collect` function.
 
 ### The `collect` function
 
