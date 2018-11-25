@@ -37,8 +37,16 @@ Don't be put off by the long list, you only need to know `collect` and `store` t
   - [Usage with TypeScript](#usage-with-typescript)
     - [Your store](#your-store)
     - [Using collect](#using-collect)
-- [Project organization](#project-organization)
 - [How Recollect works](#how-recollect-works)
+- [Project structure guidelines](#project-structure-guidelines)
+  - [Concepts](#concepts)
+  - [Selectors](#selectors)
+    - [Keeping references to objects in the store](#keeping-references-to-objects-in-the-store)
+    - [Always pass the store to selectors](#always-pass-the-store-to-selectors)
+  - [Updaters](#updaters)
+    - [Loading data with an updater](#loading-data-with-an-updater)
+    - [Asynchronous updaters](#asynchronous-updaters)
+    - [Testing an updater](#testing-an-updater)
 - [Questions](#questions)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
@@ -52,6 +60,7 @@ Don't be put off by the long list, you only need to know `collect` and `store` t
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
+
 
 # Basic usage
 
@@ -344,10 +353,6 @@ const TaskList: React.SFC<Props> = ({ store, someComponentProp }) => (
 export default collect(TaskList);
 ```
 
-# Project organization
-
-Please see [/docs/project-organization.md](https://github.com/davidgilbertson/react-recollect/blob/master/docs/project-organization.md) if you're interested in hearing some suggested patterns for working with Recollect in large projects.
-
 # How Recollect works
 
 > This section is for the curious, you don't need to know any of this to use Recollect.
@@ -419,6 +424,326 @@ This sucks a bit - no one likes confusing things - but it's necessary to allow R
 Just remember:
  - you are safe if you read from the `store` object, you will get the most recent version of the store always.
  - deep references to items in the store may be broken if you modify the store. I'd be interested to hear about cases where this is proving unpleasant. Please feel free to open an issue with a code snippet, even if you think it's something that can't be fixed.
+
+# Project structure guidelines
+
+The ideas described in this section aren't part of the Recollect API, they're simply a guide.
+
+## Concepts
+
+Two concepts are discussed in this section (neither of them new):
+
+* **Selectors** contain logic for retrieving and data from the store.
+
+* **Updaters** contain logic for updating the store. Updaters also handle reading/writing data from outside the browser (e.g. loading data over the network or from disk).
+
+![Cycle of life](cycle.png)
+
+In a simple application, you don't need to explicitly think in terms of updaters and selectors. For example:
+
+- defining `checked={task.done}` in a checkbox is a tiny little 'selector'
+- executing `task.done = true` when a user clicks that checkbox is a tiny little 'updater'
+
+But as your app grows, it's important to keep your components focused on UI — you don't want 200 lines of logic in the `onClick` event of a button.
+
+So there will come a point where moving code out of your components into dedicated files is necessary, and at this point, updaters and selectors will serve as useful concepts for organization.
+
+In the examples below, I'll use a directory structure like this:
+
+```
+/my-app
+ └─ src
+    ├─ components
+    ├─ store
+    │  ├─ selectors
+    │  └─ updaters
+    └─ utils
+```
+
+(Fun fact: _selector_ ends in 'or' because 'select' is derived from latin, while _updater_ ends in 'er' because it was made up in 1941 and 'or' had gone out of style.)
+
+## Selectors
+
+A simple case for a selector would be to return all incomplete tasks, sorted by due date.
+
+```js
+export const getIncompleteTasksSortedByDueDate = store => {
+  const tasks = store.tasks.slice();
+
+  return tasks.sort((a, b) => a.dueDate - b.dueDate)
+    .filter(task => !task.done);
+};
+```
+
+You would then use this function by importing it:
+
+```js
+import { getIncompleteTasksSortedByDueDate } from '../store/selectors/taskSelectors';
+```
+
+And referencing it in your component:
+
+```jsx
+const TaskList = ({ store }) => {
+  const tasks = getIncompleteTasksSortedByDueDate(store);
+
+  return (
+    <div>
+      {tasks.map(task => (
+        <Task key={task.id} task={task}/>
+      ))}
+    </div>
+  );
+};
+```
+
+Apologies for the long variable name if you're reading this on mobile.
+
+Maybe we want to conditionally show either all tasks or only incomplete tasks. Let's create a second selector. And while we're at it, move repeated sorting code out into its own function:
+
+```js
+const getTasksSortedByDate = tasks => {
+  const sortedTasks = tasks.slice();
+
+  return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
+};
+
+export const getAllTasksSortedByDueDate = store => (
+  getTasksSortedByDate(store.tasks)
+);
+
+export const getIncompleteTasksSortedByDueDate = store => (
+  getTasksSortedByDate(store.tasks)
+  .filter(task => !task.done)
+);
+```
+
+And here's a more complex component with local state and a dropdown to show either all tasks or just those that aren't done:
+
+```jsx
+class TaskList extends PureComponent {
+  state = {
+    filter: 'all',
+  };
+
+  render () {
+    const { store } = this.props;
+
+    const tasks = this.state.filter === 'all'
+      ? getAllTasksSortedByDueDate(store)
+      : getIncompleteTasksSortedByDueDate(store);
+
+    return (
+      <div>
+        {tasks.map(task => (
+          <Task key={task.id} task={task}/>
+        ))}
+
+        <select
+          value={this.state.filter}
+          onChange={e => {
+            this.setState({ filter: e.target.value })
+          }}
+        >
+          <option value="all">All tasks</option>
+          <option value="incomplete">Incomplete tasks</option>
+        </select>
+      </div>
+    );
+  }
+}
+```
+
+Now, when a user changes the dropdown, the component state will update, a re-render will be triggered, and as a result, a different selector will be used.
+
+So far none of this has anything to do with Recollect. But there's some interesting stuff happening here that's worth discussing.
+
+### Keeping references to objects in the store
+Do you remember when we did this?
+
+```js
+const getTasksSortedByDate = tasks => {
+  const sortedTasks = tasks.slice();
+
+  return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
+};
+```
+
+
+That `tasks.slice()` part is very important, but first, a history lesson.
+
+When the people that made JavaScript were coming up with array methods, for each one they would do a shot of tequila and flip a coin to decide whether or not it should mutate the original array. So `splice` mutates an array, `slice` does not, `push` does, `concat` does not.
+
+And our friend `sort` _does_ mutate the original array.
+
+But we don't want to change the order of tasks in the store — some other part of the app might be using them. So we `slice()` the array to create a shallow copy. 'Shallow' means that the tasks in the resulting array are still a reference to the actual tasks in the store. So if we call `task.done = true` on one of them, the store will update.
+
+Or more accurately, when you do `task.done = true` Recollect will orchestrate immutably updating the store and re-render any React components that had read that task's `done` property during their last render.
+
+So, it's important that if you return an object from a selector (e.g. a task), and you want to set a property on that object later (e.g. mark it as done), then you need to make sure you're returning a reference to an item in the store, not a copy.
+
+As long as you don't use `Object.assign()` or spread operators or some deep clone function, you'll be fine.
+
+### Always pass the store to selectors
+
+For the same reason as above, you _must_ pass the store to selectors, and it _must_ be the store that was passed to the component as a prop (not the one you can import directly from `react-recollect`).
+
+The reason is complex but the rule is simple: if you're reading the store when rendering a component, it must be the store passed in as a prop.
+
+## Updaters
+
+An 'updater' is a function that updates the store in some way.
+
+A simple case for an updater would be to mark all tasks as done in a todo app:
+
+```js
+export const markAllTasksAsDone = () => {
+  store.tasks.forEach(task => {
+    task.done = true;
+  });
+};
+```
+
+(Remember, this _looks_ like it's mutating the store, but it ain't.)
+
+You would reference this from a component by importing it:
+
+```js
+import { markAllTasksAsDone } from '../store/updaters/taskUpdaters';
+```
+
+Then calling it in response to some user action:
+```jsx
+<button onClick={markAllTasksAsDone}>
+  Mark all as done
+</button>
+```
+
+You don't need to 'dispatch' an 'action' from an 'action creator' to a 'reducer'; you're just calling a function that updates the store.
+
+And since these are just plain functions, they're 'composable'. Or in other words, if you want an updater that calls three other updaters, go nuts.
+
+### Loading data with an updater
+
+Let's create an updater that loads some tasks from an api when our app mounts. It will need to:
+
+1. Set a loading indicator to true
+2. Fetch some tasks from a server
+3. Save the data to the store
+4. Set the loading indicator to false
+
+```js
+export const loadTasksFromServer = async () => {
+  store.loading = true;
+
+  store.tasks = await fetchJson('/api/get-my-tasks');
+
+  store.loading = false;
+};
+```
+
+You might call this function like so:
+
+```js
+import { loadTasksFromServer } from '../store/updaters/taskUpdaters';
+
+class TaskList extends React.Component {
+  componentDidMount() {
+    loadTasksFromServer();
+  }
+
+  render () {
+    // just render stuff
+  }
+}
+```
+
+### Asynchronous updaters
+
+Did you notice that we've already covered the super-complex topic of asynchronicity?
+
+And you didn't even need to install `react-recollect-immutable-thunk-saga-helper` :)
+
+### Testing an updater
+Let's write a unit test to call our updater and assert that it put the correct data in the store. The function we're testing is async, so our test will be async too:
+
+```js
+test('loadTasksFromServer should update the store', async () => {
+  // Execute the updater
+  await loadTasksFromServer();
+
+  // Check that the final state of the store is what we expected
+  expect(store).toEqual(expect.objectContaining({
+    loading: false,
+    tasks: [
+      {
+        id: 1,
+        name: 'Fetched task',
+        done: false,
+      }
+    ]
+  }));
+});
+```
+
+Pretty easy, right?
+
+We can make it less easy.
+
+Maybe we want to assert that `loading` was set to `true`, then the tasks loaded, and then `loading` was set to `false` again.
+
+Well, Recollect exports an `afterChange` function designed to call a callback every time the store changes. If we pass it a Jest mock function, Jest will conveniently keep a record of each time the store changed.
+
+Also, no one likes half an example, so here's the entire test file:
+
+```js
+import { afterChange, store } from 'react-recollect';
+import { loadTasksFromServer } from './taskUpdaters';
+
+jest.mock('../../utils/fetchJson', () => async () => ([{
+  id: 1,
+  name: 'Fetched task',
+  done: false,
+}]));
+
+test('loadTasksFromServer should update the store', async () => {
+  // Create a mock
+  const afterChangeHandler = jest.fn();
+
+  // Pass the mock to afterChange. Jest will record calls to this function
+  // and therefore record calls to update the store.
+  afterChange(afterChangeHandler);
+
+  // Execute our updater
+  await loadTasksFromServer();
+
+  // afterChangeHandler will be called with the new version of the store and the path that was changed
+  const firstChange = afterChangeHandler.mock.calls[0][0];
+  const secondChange = afterChangeHandler.mock.calls[1][0];
+  const thirdChange = afterChangeHandler.mock.calls[2][0];
+  
+  expect(firstChange.propPath).toBe('store.loading');
+  expect(firstChange.store.loading).toBe(true);
+
+  expect(secondChange.propPath).toBe('store.tasks');
+  expect(secondChange.store.tasks.length).toBe(1);
+
+  expect(thirdChange.propPath).toBe('store.loading');
+  expect(thirdChange.store.loading).toBe(false);
+
+  // Check that the final state of the store is what we expected
+  expect(store).toEqual(expect.objectContaining({
+    loading: false,
+    tasks: [
+      {
+        id: 1,
+        name: 'Fetched task',
+        done: false,
+      }
+    ]
+  }));
+});
+```
 
 # Questions
 
