@@ -5,10 +5,11 @@ import {
   makePathUserFriendly,
   makeUserFriendlyPath,
 } from './general';
-import { isProxyMuted } from './proxy';
+import { isProxyMuted, muteProxy, unMuteProxy } from './proxy';
 import { getCurrentComponent } from './collect';
 import { addListener, notifyByPath } from './updating';
-import { updateStoreAtPath } from './store';
+import { getNextStore, updateStoreAtPath } from './store';
+import { PROP_PATH_SEP } from './constants';
 
 // TODO (davidg): share this with debug.js but I'm having trouble with circular references.
 // Time to switch to Rollup or Webpack. Also does React export canUseDOM?
@@ -18,6 +19,29 @@ const isInBrowser = () => typeof window !== 'undefined';
 
 const proxyHandler = {
   get(target, prop) {
+    if (
+      isInBrowser() &&
+      !getCurrentComponent() &&
+      typeof prop !== 'symbol' &&
+      prop !== 'constructor' &&
+      !isProxyMuted()
+    ) {
+      // This is an attempt to get something from the store, outside the render cycle.
+      // In this case, we should always return from nextStore. See setStoreTwiceInOnClick.test.js
+      muteProxy();
+
+      let targetValue = getNextStore();
+
+      makePath(target, prop).split(PROP_PATH_SEP).forEach(prop => {
+        if (prop === 'store') return;
+        targetValue = targetValue[prop];
+      });
+
+      unMuteProxy();
+
+      return targetValue;
+    }
+
     if (
       !isInBrowser() ||
       isProxyMuted() ||
