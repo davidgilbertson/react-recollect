@@ -5,18 +5,18 @@ Recollect is a state management library that aims to solve two problems with the
 1. Immutability is complicated and prone to bugs
 2. Components can be re-rendered as a result of a store change, even if they don't use the data that changed 
 
-The solutions to these two problems are:
+Recollect solves these like so:
 
-1. The Recollect store is immutable, but the implementation is hidden, so you can interact with it as though it was a plain JavaScript object.
+1. The Recollect store is immutable, but the implementation is hidden. So, you can interact with the store as though it was a plain JavaScript object. No need to worry about accidentally mutating the store. With Recollect that's impossible.
 2. Recollect keeps a record of which components use which properties from the store. When a property in your store changes, only the appropriate components are targeted for an update.
+
+Take it for a spin in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ## Warnings
 
 This tool is in its early days, so please test thoroughly and raise any issues you find.
 
 There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
-
-You can have a play in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
 # Contents
 
@@ -57,6 +57,7 @@ Don't be put off by the long list, you only need to know `collect` and `store` t
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
   - [Tell me about your tests](#tell-me-about-your-tests)
+  - [How big is it?](#how-big-it-it)
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
@@ -811,13 +812,15 @@ In the `/tests` directory you'll find:
 - Unit tests that test the behaviour of the store directly
 - Integration tests that simulate a user interacting with React components that use `store` and `collect` - these might be interesting to you if you want to see examples of `store`/`collect` being used.
 
+## How big is it?
+
+It's about 4 KB. If you were to replace `redux`, `redux-thunk`, and `react-redux` with this library, you'd shed a bit over 2 KB. But if you've got a decent sized app you'll save much more than that just by getting rid of all your reducers.
+
 # Dependencies
 
 Recollect has a peer dependency of React, and needs at least version 15.3 (when `PureComponent` was released).
 
 # Alternatives
-
-If you want a library that guides you in structuring your app, use Redux.
 
 If you want IE support, use Redux.
 
