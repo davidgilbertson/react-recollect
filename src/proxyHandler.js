@@ -89,6 +89,9 @@ const proxyHandler = {
   set(target, prop, value) {
     if (isProxyMuted() || !isInBrowser()) return Reflect.set(target, prop, value);
 
+    // If the value didn't change, we can safely do nothing
+    if (target[prop] === value) return true;
+
     const path = makePath(target, prop);
 
     // Add paths to this new value
