@@ -25,14 +25,6 @@ it('should add null', () => {
   expect(changeEvent.store.newNull).toBe(null);
 });
 
-it('should add undefined', () => {
-  store.newUndefined = undefined;
-  expect(handleChange).toHaveBeenCalledTimes(1);
-
-  const changeEvent = handleChange.mock.calls[0][0];
-  expect(changeEvent.store.newUndefined).toBe(undefined);
-});
-
 it('should add an object', () => {
   store.newObject = {
     someProp: 'someValue',
