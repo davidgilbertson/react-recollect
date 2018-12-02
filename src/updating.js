@@ -89,7 +89,9 @@ const updateComponents = ({ components, path, newStore }) => {
 /**
  * Updates any component listening to:
  * - the exact propPath that has been changed. E.g. store.tasks.2
- * - a path further up the object tree. E.g. store.tasks
+ * - a path further up the object tree. E.g. store.tasks - this is because a component in an array
+ *   will typically get its values from its parent component. Not directly from the store
+ *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name (only when
  * @param {Object} props
  * @param {string} props.path - The path of the prop that changed
@@ -100,9 +102,9 @@ export const notifyByPath = ({ path, newStore }) => {
 
   for (const listenerPath in listeners) {
     if (
-      path === listenerPath ||
-      path.startsWith(`${listenerPath}${PROP_PATH_SEP}`) ||
-      listenerPath.startsWith(`${path}${PROP_PATH_SEP}`) // TODO (davidg): this is wasteful a lot of the time
+      path === listenerPath || // direct match
+      path.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent path
+      listenerPath.startsWith(`${path}${PROP_PATH_SEP}`) // listener for child path
     ) {
       components = components.concat(listeners[listenerPath]);
     }
