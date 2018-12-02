@@ -5,7 +5,7 @@ Recollect is a state management library that aims to solve two problems with the
 1. Immutability is complicated and prone to bugs
 2. Components can be re-rendered as a result of a store change, even if they don't use the data that changed 
 
-Recollect solves these like so:
+Recollect solves these problems like so:
 
 1. The Recollect store is immutable, but the implementation is hidden. So, you can interact with the store as though it was a plain JavaScript object. No need to worry about accidentally mutating the store. With Recollect that's impossible.
 2. Recollect keeps a record of which components use which properties from the store. When a property in your store changes, only the appropriate components are targeted for an update.
@@ -14,7 +14,7 @@ Take it for a spin in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ## Warnings
 
-This tool is in its early days, so please test thoroughly and raise any issues you find.
+This tool is in its early days, so please test thoroughly and raise any issues you find (although there's a pretty extensive test suite in `/tests`).
 
 There is no support for any version of IE, Opera mini, or Android browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 
@@ -114,7 +114,9 @@ Let's talk some more about...
 
 ### The `store` object
 
-You can import, read from, and write to the store in any file. Or, as you saw above, access it as a prop in a component wrapped in `collect`. It's all the same store.
+You can import, read from, and write to the store in any file. Or, as you saw above, access it as a prop in a component wrapped in `collect`.
+
+You don't need to 'create' or 'initialize' this store, it's just there, ready when you are.
 
 And you can treat the `store` object just like you'd treat any JavaScript object.
 
@@ -256,7 +258,7 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 ## Server-side rendering
 
-When you're only using Recollect in the browser, you may have noticed that you never need to 'create' or 'initialize' a store. You just write to and read from a global `store` object.
+When you're only using Recollect in the browser, you don't need to 'create' or 'initialize' the store.
 
 When you server-render though, you _do_ need to initialize the store, because unlike a browser, a server is shared between many users.
 
