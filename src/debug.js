@@ -1,7 +1,7 @@
 const DEBUG_ON = 'on';
 const DEBUG_OFF = 'off';
 
-const isInBrowser = typeof window !== 'undefined' && window.localStorage !== 'undefined';
+const isInBrowser = typeof window !== 'undefined' && window.localStorage !== undefined;
 
 let DEBUG = isInBrowser
   ? (window.localStorage.RECOLLECT__DEBUG || DEBUG_OFF)
