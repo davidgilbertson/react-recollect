@@ -2,7 +2,7 @@
  * Child components that render items in an array should not need to be wrapped in collect()
  */
 import React from 'react';
-import { render } from 'react-testing-library';
+import { render } from '@testing-library/react';
 import { afterChange, collect, store } from '../../dist';
 
 store.tasks = [

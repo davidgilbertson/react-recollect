@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { render } from 'react-testing-library';
+import { render } from '@testing-library/react';
 import { collect, store } from '../../dist';
 
 const Task = props => (
