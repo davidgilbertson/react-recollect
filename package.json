@@ -24,30 +24,30 @@
   "author": "David Gilbertson",
   "license": "MIT",
   "dependencies": {
-    "hoist-non-react-statics": "^3.1.0"
+    "hoist-non-react-statics": "^3.3.2"
   },
   "peerDependencies": {
     "react": ">=15.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.0.0",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-jest": "^23.6.0",
-    "babel-loader": "^8.0.4",
-    "enzyme": "^3.7.0",
-    "jest": "^23.6.0",
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-react": "^7.8.3",
+    "babel-jest": "^25.1.0",
+    "babel-loader": "^8.0.6",
+    "enzyme": "^3.11.0",
+    "jest": "^25.1.0",
     "jest-dom": "^2.1.1",
-    "react": "^16.6.0",
-    "react-dom": "^16.6.0",
-    "react-testing-library": "^5.2.3",
-    "webpack": "^4.26.1",
-    "webpack-cli": "^3.1.2"
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-testing-library": "^5.9.0",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
   },
   "jest": {
-    "setupTestFrameworkScriptFile": "./jestSetup.js",
+    "setupFilesAfterEnv": [
+      "./jestSetup.js"
+    ],
     "clearMocks": true
   },
   "types": "./index.d.ts",
