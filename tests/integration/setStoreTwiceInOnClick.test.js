@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect } from '../../dist';
+import { collect } from '../../src';
 
 const TestComponent = collect(({ store }) => (
   <div>
@@ -42,6 +42,9 @@ const { getByText } = render(<TestComponent />);
 it('should allow the user to set the store twice in one callback without a re-render', () => {
   getByText('You have no tasks');
 
+  // This click will do store.tasks = [], which is added to the nextStore
+  // Immediately followed by store.tasks.push().
+  // That second call should be routed to the next store
   getByText('Add a task').click();
 
   getByText('A new task');

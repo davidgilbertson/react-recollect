@@ -1,68 +1,98 @@
 import { createProxy, isProxy, muteProxy, unMuteProxy } from './proxy';
-import { addPathProp } from './general';
-import { PATH_PROP, PROP_PATH_SEP } from './constants';
+import { addPathProp, makePath } from './general';
+import { PATH_PROP } from './constants';
+import * as utils from './utils';
 
 const rawStore = {};
 
-addPathProp(rawStore, 'store');
+addPathProp(rawStore, ['store']); // TODO (davidg): why is store ever here?
 
 export const store = createProxy(rawStore);
 
 let nextStore;
 
-export const updateStoreAtPath = ({ path, value, deleteItem }) => {
+const cloneAnything = anything => {
+  let result;
+
+  if (utils.isArray(anything)) {
+    // TODO (davidg): there's a need for a cloneWithPath shortcut
+    result = createProxy(anything.slice());
+    addPathProp(result, anything[PATH_PROP]);
+  } else if (utils.isMap(anything)) {
+    result = createProxy(utils.cloneMap(anything));
+    addPathProp(result, anything[PATH_PROP]);
+  } else if (utils.isSet(anything)) {
+    result = createProxy(utils.cloneSet(anything));
+    addPathProp(result, anything[PATH_PROP]);
+  } else if (utils.isPlainObject(anything)) {
+    result = Object.assign({}, anything);
+    if (isProxy(anything) && !isProxy(result)) {
+      result = createProxy(result);
+    }
+    addPathProp(result, anything[PATH_PROP]);
+  } else {
+    console.log('> did not expect this:', anything);
+  }
+
+  return result;
+};
+
+/**
+ * This function immutably updates a target in the store, returning the new store.
+ * It doesn't update the target directly, but calls an update() function which
+ *  will perform the update.
+ *
+ * @param props
+ * @param {*} props.target - the target in the current store
+ * @param {function} props.updater - a function that will be passed the target
+ * @return {*}
+ */
+export const updateStoreAtPath = ({ target, updater }) => {
+  // TODO (davidg): @callback for the updater
+  // TODO (davidg): "updateTargetInStore"
   muteProxy();
 
-  const propArray = path.split(PROP_PATH_SEP);
-  propArray.shift(); // we don't need 'store'.
+  // Note that this function doesn't know anything about the prop being set. It just finds the
+  // target (the parent of the prop) and calls updater() with it.
+  const propArray = target[PATH_PROP].slice(1);
 
-  const update = (target, i) => {
-    if (i === propArray.length) return createProxy(value); // value might be [] or {}
-    const isLastProp = i === propArray.length - 1;
+  // Shallow clone the existing store. We will clone all the way down to the target object
+  const newStore = Object.assign({}, store);
 
-    let thisProp = propArray[i];
-    let targetClone;
+  // This walks down into the object, returning the target.
+  // On the way in clones each level so as not to mutate the original store.
+  const finalTarget = propArray.reduce((target, prop, i) => {
+    // If we're updating a prop at data.tasks[2].done, we need to shallow clone every step on
+    // the way down so that we're not mutating them.
+    let targetClone = cloneAnything(target);
 
+    let nextLevelDown;
 
-    // We'll be cloning proxied objects with non-enumerable props
-    // So we need to add these things back after cloning
-    if (Array.isArray(target)) {
-      targetClone = createProxy(target.slice());
-      addPathProp(targetClone, target[PATH_PROP]);
-
-      // If this is adding something to an array
-      if (isLastProp && thisProp >= target.length) {
-        // const isObjectOrArray = Array.isArray(value) || isObject(value);
-        // targetClone[thisProp] = isObjectOrArray ? createProxy(value) : value;
-        targetClone[thisProp] = createProxy(value);
-        // TODO (davidg): add path?
-        return targetClone;
-      }
+    if (utils.isMap(target)) {
+      // TODO (davidg): isn't it an error if this doesn't exist?
+      nextLevelDown = target.has(prop) ? target.get(prop) : {};
+      targetClone.set(prop, nextLevelDown);
+    } else if (utils.isSet(target)) {
+      nextLevelDown = target.has(prop) ? target.get(prop) : {};
+      targetClone.add(nextLevelDown);
     } else {
-      targetClone = Object.assign({}, target);
-      if (isProxy(target) && !isProxy(targetClone)) {
-        targetClone = createProxy(targetClone);
-      }
-      addPathProp(targetClone, target[PATH_PROP]);
+      // When a prop doesn't exist, create a new object, so we can deep set a value.
+      nextLevelDown = prop in target ? target[prop] : {};
+      targetClone[prop] = nextLevelDown;
     }
 
-    if (i === propArray.length - 1 && deleteItem) {
-      delete targetClone[thisProp];
-      return targetClone;
-    }
+    return nextLevelDown;
+  }, newStore);
 
-    const next = target[thisProp] === undefined ? {} : target[thisProp];
-    targetClone[thisProp] = update(next, i + 1);
+  // TODO (davidg): of course this doesn't work! It mutates the object!
+  // use utils.deepUpdate
+  updater(finalTarget);
 
-    return targetClone;
-  };
-
-  const newStore = update(store, 0);
-
-  addPathProp(newStore, 'store');
+  addPathProp(newStore, ['store']);
 
   unMuteProxy();
 
+  // TODO (davidg): store is already a proxy by this point
   return createProxy(newStore);
 };
 
@@ -72,6 +102,9 @@ const resetStore = () => {
   });
 };
 
+// Calling this directly doesn't mute the proxy
+// So items added are wrapped in a proxy. Perhaps there's a better way to do this
+// (I want to mute the proxy emitting, but DO want new items wrapped in a proxy)
 export const initStore = data => {
   resetStore();
 
@@ -101,6 +134,27 @@ export const setNextStore = next => {
   nextStore = next;
 };
 
-// TODO (davidg):  should getStore() just do nextStore || store?
+// TODO (davidg): should getStore() just do nextStore || store?
 // will getStore ever be called to get the last one?
 export const getNextStore = () => nextStore || store;
+
+export const getFromNextStore = (target, targetProp) => {
+  muteProxy();
+
+  let result;
+
+  const propPath = makePath(target, targetProp);
+
+  // TODO (davidg): reduce
+  propPath.forEach(propName => {
+    if (propName === 'store') {
+      result = getNextStore()
+    } else {
+      result = utils.getValue(result, propName);
+    }
+  });
+
+  unMuteProxy();
+
+  return result;
+};
