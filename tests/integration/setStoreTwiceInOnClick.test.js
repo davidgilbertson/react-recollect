@@ -4,21 +4,17 @@ import { collect } from '../../src';
 
 const TestComponent = collect(({ store }) => (
   <div>
-    {store.tasks && store.tasks.map(task => (
-      <div key={task.name}>
-        {task.name}
-      </div>
-    ))}
+    {store.tasks &&
+      store.tasks.map(task => <div key={task.name}>{task.name}</div>)}
 
-    {!!store.tasks || (
-      <h1>You have no tasks</h1>
-    )}
+    {!!store.tasks || <h1>You have no tasks</h1>}
 
     <button
       onClick={() => {
         delete store.tasks;
       }}
-    >Delete all tasks
+    >
+      Delete all tasks
     </button>
 
     <button

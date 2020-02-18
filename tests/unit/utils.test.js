@@ -1,30 +1,30 @@
-import {deepUpdate} from '../../src/utils';
+import { deepUpdate } from '../../src/utils';
 
 it('should mutate the object', () => {
   const original = {
     level1: [
       {
         name: 'Task one',
-        data: {done: true, date: 1234}
+        data: { done: true, date: 1234 },
       },
       {
         name: 'Task two',
-        data: {done: true, date: 5678}
+        data: { done: true, date: 5678 },
       },
     ],
     level2: {
       deep: {
-        data: 'the result'
-      }
-    }
+        data: 'the result',
+      },
+    },
   };
 
   const clone = deepUpdate({
     object: original,
     path: ['level1', 0, 'data'],
-    updater: target => {
-      target.done = false;
-    }
+    updater: mutableTarget => {
+      mutableTarget.done = false;
+    },
   });
 
   expect(original.level1[0].data.done).toBe(true);
@@ -45,9 +45,9 @@ it('should mutate the object', () => {
 it('should mutate a Map', () => {
   const original = {
     mapOne: new Map([
-      ['123', {name: 'Task one', done: true}],
-      [123, {name: 'Task one (number key)', done: true}],
-      ['two', {name: 'Task two', done: true}],
+      ['123', { name: 'Task one', done: true }],
+      [123, { name: 'Task one (number key)', done: true }],
+      ['two', { name: 'Task two', done: true }],
     ]),
     mapTwo: new Map(),
   };
@@ -55,9 +55,9 @@ it('should mutate a Map', () => {
   const clone = deepUpdate({
     object: original,
     path: ['mapOne', 123],
-    updater: target => {
-      target.name = 'A new name';
-    }
+    updater: mutableTarget => {
+      mutableTarget.name = 'A new name';
+    },
   });
 
   expect(original.mapOne.get(123).name).toBe('Task one (number key)');

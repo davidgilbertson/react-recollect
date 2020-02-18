@@ -1,4 +1,4 @@
-import { store } from '../../../dist';
+import { store } from '../../../src';
 
 const loadTasks = () => {
   setTimeout(() => {

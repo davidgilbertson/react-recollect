@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, store as globalStore } from '../../dist';
+import { collect, store as globalStore } from '../../src';
 
 globalStore.hiddenMessage = '';
 
@@ -10,11 +10,7 @@ const TestChildComponent = collect(({ store }) => (
 
 const TestParentComponent = collect(({ store }) => (
   <div>
-    {!!store.hiddenMessage ? (
-      <TestChildComponent />
-    ) : (
-      <p>Details are hidden</p>
-    )}
+    {store.hiddenMessage ? <TestChildComponent /> : <p>Details are hidden</p>}
     <button
       onClick={() => {
         store.hiddenMessage = 'New hidden message';

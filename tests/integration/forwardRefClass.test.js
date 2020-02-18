@@ -1,6 +1,8 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect } from '../../dist/index';
+import { collect } from '../../src';
 
 class RawCleverInput extends React.PureComponent {
   render() {
@@ -23,7 +25,7 @@ class RawComponentWithRef extends Component {
     this.inputRef = React.createRef();
   }
 
-  render () {
+  render() {
     return (
       <div>
         <button
@@ -34,7 +36,7 @@ class RawComponentWithRef extends Component {
           Empty the input
         </button>
 
-        <CleverInput defaultValue='some text' ref={this.inputRef}/>
+        <CleverInput defaultValue="some text" ref={this.inputRef} />
       </div>
     );
   }

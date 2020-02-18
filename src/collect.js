@@ -34,7 +34,8 @@ const stopRecordingGetsForComponent = () => {
 };
 
 export const collect = (ComponentToWrap, { forwardRef } = {}) => {
-  const componentName = ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
+  const componentName =
+    ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
   class WrappedComponent extends React.PureComponent {
     constructor() {
@@ -47,16 +48,6 @@ export const collect = (ComponentToWrap, { forwardRef } = {}) => {
       this._name = componentName;
       this._isMounted = false;
       this._isMounting = true;
-    }
-
-    update(newStore) {
-      // 1. If the component has already unmounted, don't try and set the state
-      // 2. The component might not have mounted YET, but is in the middle of its first
-      //    render cycle.
-      //    For example, if a user sets store.loading to true in App.componentDidMount
-      if (this._isMounted || this._isMounting) {
-        this.setState({ store: newStore });
-      }
     }
 
     componentDidMount() {
@@ -75,6 +66,16 @@ export const collect = (ComponentToWrap, { forwardRef } = {}) => {
     componentWillUnmount() {
       removeListenersForComponent(this);
       this._isMounted = false;
+    }
+
+    update(newStore) {
+      // 1. If the component has already unmounted, don't try and set the state
+      // 2. The component might not have mounted YET, but is in the middle of its first
+      //    render cycle.
+      //    For example, if a user sets store.loading to true in App.componentDidMount
+      if (this._isMounted || this._isMounting) {
+        this.setState({ store: newStore });
+      }
     }
 
     render() {

@@ -7,28 +7,24 @@ let parentCompRenderCount = 0;
 let comp1RenderCount = 0;
 let comp2RenderCount = 0;
 
-const Comp1 = collect(({store}) => {
+const Comp1 = collect(({ store }) => {
   comp1RenderCount++;
 
-  return (
-    <h1>Comp1 count: {store.count}</h1>
-  );
+  return <h1>Comp1 count: {store.count}</h1>;
 });
 
-const Comp2 = collect(({store}) => {
+const Comp2 = collect(({ store }) => {
   comp2RenderCount++;
 
-  return (
-    <h1>Comp2 count: {store.count}</h1>
-  );
+  return <h1>Comp2 count: {store.count}</h1>;
 });
 
 const ParentComponent = () => {
   parentCompRenderCount++;
   return (
     <div>
-      <Comp1/>
-      <Comp2/>
+      <Comp1 />
+      <Comp2 />
     </div>
   );
 };

@@ -1,10 +1,10 @@
+/* eslint-disable react/prop-types */
 /**
  * Child components that render items in an array should not need to be wrapped in collect()
  */
 import React from 'react';
-import { render, prettyDOM } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { afterChange, collect, store as globalStore } from '../../src';
-import { debugOn } from '../../src/debug';
 
 globalStore.tasks = [
   { name: 'task 0', done: true },
@@ -29,7 +29,8 @@ const Task = React.memo(({ task }) => {
       <input
         type="checkbox"
         checked={task.done}
-        onChange={(e) => {
+        onChange={e => {
+          // eslint-disable-next-line no-param-reassign
           task.done = e.target.checked;
         }}
       />
@@ -39,13 +40,13 @@ const Task = React.memo(({ task }) => {
   );
 });
 
-const TaskList = ({store}) => {
+const TaskList = ({ store }) => {
   taskListRenderCount++;
 
   return (
     <div>
       {store.tasks.map(task => (
-        <Task key={task.name} task={task}/>
+        <Task key={task.name} task={task} />
       ))}
     </div>
   );
@@ -54,7 +55,7 @@ const TaskList = ({store}) => {
 const CollectedTaskList = collect(TaskList);
 
 it('should update a parent component when a prop is changed on a child component', () => {
-  const {getByText, getByLabelText} = render(<CollectedTaskList />);
+  const { getByText, getByLabelText } = render(<CollectedTaskList />);
 
   expect(taskListRenderCount).toBe(1);
   expect(taskRenderCount).toBe(2);

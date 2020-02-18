@@ -66,8 +66,12 @@ export const addPathProp = (item, propPath) => {
 export const decorateWithPathAndProxy = (parentObject, parentPath) => {
   const decorateObject = (item, path) => {
     // TODO (davidg): canBeProxied() exists
-    if (utils.isArray(item) || utils.isPlainObject(item) || utils.isMap(item) || utils.isSet(item)) {
-
+    if (
+      utils.isArray(item) ||
+      utils.isPlainObject(item) ||
+      utils.isMap(item) ||
+      utils.isSet(item)
+    ) {
       if (utils.isArray(item)) {
         const nextArray = item.map((itemEntry, i) => {
           return createProxy(decorateObject(itemEntry, [...path, i]));
@@ -98,9 +102,8 @@ export const decorateWithPathAndProxy = (parentObject, parentPath) => {
       addPathProp(newObject, path);
 
       return createProxy(newObject);
-    } else {
-      return item;
     }
+    return item;
   };
 
   return decorateObject(parentObject, parentPath);

@@ -1,4 +1,4 @@
-import { store, afterChange } from '../../dist';
+import { store, afterChange } from '../../src';
 
 const handleChange = jest.fn();
 afterChange(handleChange);
@@ -19,6 +19,7 @@ it('should only update the items that change', () => {
 
   // Simulate marking all tasks as done
   store.tasks.forEach(task => {
+    // eslint-disable-next-line no-param-reassign
     task.done = true;
   });
 

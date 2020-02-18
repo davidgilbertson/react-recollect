@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { collect } from '../../dist';
+import { collect } from '../../src';
 
 class RawComponentWithStatic extends Component {
   static returnCats() {
     return 'cats';
   }
 
-  render () {
+  render() {
     return <h1>Hi</h1>;
   }
 }

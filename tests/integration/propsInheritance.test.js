@@ -1,22 +1,28 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store } from '../../dist';
+import { collect, store } from '../../src';
 
 const ChildComponent = props => (
   <div>This component should be {props.visibility}</div>
 );
 
+// eslint-disable-next-line react/prefer-stateless-function
 class RawClassComponent extends Component {
-  render () {
+  render() {
     return (
       <div>
-        <button onClick={() => {
-          store.clickCount++;
-        }}>
+        <button
+          onClick={() => {
+            store.clickCount++;
+          }}
+        >
           Click me
         </button>
 
-        <ChildComponent visibility={store.clickCount === 0 ? 'hidden' : 'shown'}/>
+        <ChildComponent
+          visibility={store.clickCount === 0 ? 'hidden' : 'shown'}
+        />
       </div>
     );
   }
