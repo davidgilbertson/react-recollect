@@ -147,13 +147,14 @@ it('should sort()', () => {
   store.arrayToSort.sort();
 
   expect(store.arrayToSort).toEqual([1, 2, 3, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
+  // We don't know the order or these (in practice, Node 10 is different to Node 12)
+  expect(propPathChanges(handleChange)).toEqual(expect.arrayContaining([
     'store.arrayToSort',
     'store.arrayToSort.0',
     'store.arrayToSort.1',
     'store.arrayToSort.2',
     'store.arrayToSort.3',
-  ]);
+  ]));
 });
 
 it('should pop()', () => {
