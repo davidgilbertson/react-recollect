@@ -62,7 +62,7 @@ export const afterChange = cb => {
 // a test for this scenario
 
 /**
- * // TODO (davidg): bad name (or architecture?), this triggers afterChange, too
+ * // TODO (davidg): bad name (or architecture?), this triggers afterChange
  * @param {Object} props
  * @param {Array<Object>} props.components - the components to update
  * @param {Array<*>} props.path - the property path that triggered this change
