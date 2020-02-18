@@ -1,31 +1,37 @@
-import { PATH_PROP, PROP_PATH_SEP } from './constants';
+import { PATH_PROP } from './constants';
 import { createProxy } from './proxy';
-
-export const isObject = item => item && typeof item === 'object' && item.constructor === Object;
-
-export const isArray = item => Array.isArray(item);
+import * as utils from './utils';
 
 /**
  * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done
  * @param {object} target
  * @param {string} prop
- * @returns {string}
+ * @returns {Array<*>}
  */
 export const makePath = (target, prop) => {
-  if (prop) {
-    return [target[PATH_PROP], prop].join(PROP_PATH_SEP);
+  // TODO (davidg): "extendPath"
+  if (typeof prop !== 'undefined') {
+    return [...target[PATH_PROP], prop];
   }
   return target[PATH_PROP];
 };
 
 /**
  * Convert the internal path string into something readable like store.tasks.1.done
- * @param {string} internalPath
+ * @param {Array<*>} internalPath
  * @returns {string}
  */
-export const makePathUserFriendly = internalPath => {
-  const replacer = new RegExp(PROP_PATH_SEP, 'g');
-  return internalPath.replace(replacer, '.');
+export const makePathUserFriendly2 = internalPath => {
+  // TODO (davidg): this would require a major version bump, but outputs the lodash-style string.
+  //  This could then be used by the user if required? And just be more readable
+  //  However it has to make the assumption that any number-only prop is array access
+  // 'one~two~3~four'
+  //   .split('~')
+  //   .map(item => isNaN(Number(item)) ? `.${item}` : `[${item}]`)
+  //   .join('')
+  //   .replace(/^\./, '');
+  // === one.two[3].four
+  return internalPath.join('.');
 };
 
 /**
@@ -36,33 +42,57 @@ export const makePathUserFriendly = internalPath => {
  */
 export const makeUserFriendlyPath = (target, prop) => {
   const path = makePath(target, prop);
-  return makePathUserFriendly(path);
+  return makePathUserFriendly2(path);
 };
 
-export const addPathProp = (item, value) => {
+/**
+ *
+ * @param item
+ * @param {Array<*>} propPath
+ */
+export const addPathProp = (item, propPath) => {
   Object.defineProperty(item, PATH_PROP, {
-    value,
+    value: propPath,
     writable: true, // paths can be updated. E.g. store.tasks.2 could become store.tasks.1
   });
 };
 
+/**
+ *
+ * @param {*} parentObject
+ * @param parentPath
+ * @return {*}
+ */
 export const decorateWithPathAndProxy = (parentObject, parentPath) => {
   const decorateObject = (item, path) => {
-    if (isArray(item) || isObject(item)) {
+    // TODO (davidg): canBeProxied() exists
+    if (utils.isArray(item) || utils.isPlainObject(item) || utils.isMap(item) || utils.isSet(item)) {
 
-      if (isArray(item)) {
+      if (utils.isArray(item)) {
         const nextArray = item.map((itemEntry, i) => {
-          return createProxy(decorateObject(itemEntry, `${path}${PROP_PATH_SEP}${i}`));
+          return createProxy(decorateObject(itemEntry, [...path, i]));
         });
 
         addPathProp(nextArray, path);
         return createProxy(nextArray);
       }
 
+      if (utils.isMap(item)) {
+        addPathProp(item, path);
+        return createProxy(item);
+      }
+
+      if (utils.isSet(item)) {
+        addPathProp(item, path);
+        return createProxy(item);
+      }
+
       const newObject = {}; // TODO (davidg): reduce
 
+      // TODO (davidg): is this necessary? Does the proxy not look after itself when calling set
+      //  on children
       Object.entries(item).forEach(([prop, value]) => {
-        newObject[prop] = createProxy(decorateObject(value, `${path}${PROP_PATH_SEP}${prop}`));
+        newObject[prop] = createProxy(decorateObject(value, [...path, prop]));
       });
 
       addPathProp(newObject, path);

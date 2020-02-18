@@ -1,8 +1,15 @@
 import { getCurrentComponent } from './collect';
-import { makePath, makePathUserFriendly } from './general';
+import { makePath } from './general';
 import { isDebugOn } from './debug';
 import { getStore, setNextStore, setStore } from './store';
-import { PROP_PATH_SEP } from './constants';
+
+/**
+ * To convert the path array to a string for the listener keys
+ * Use a crazy separator. If the separator was a '.', and the user had a prop with a dot in it,
+ * then it could cause false matches in the updated logic.
+ * @type {string}
+ */
+const PROP_PATH_SEP = '~~~';
 
 let listeners = {
   store: [],
@@ -21,14 +28,23 @@ export const getListeners = () => listeners;
 export const addListener = (target, prop) => {
   if (!getCurrentComponent()) return;
 
-  const path = makePath(target, prop);
+  // We use a string instead of an array because it's much easier to match
+  const pathString = makePath(target, prop).join(PROP_PATH_SEP);
 
-  if (listeners[path]) {
-    // TODO (davidg): consider Set or WeakSet instead of array? Easier to delete a component?
-    // And no need to check for duplicates?
-    listeners[path].push(getCurrentComponent());
+  // TODO (davidg): consider Map instead of array? Easier to delete a component?
+  //  could be like this, but as a Map
+  // const listeners = {
+  //   'path~~~as~~~string': {
+  //     pathArray: ['path', 'as', 'string'],
+  //     components: [],
+  //   }
+  // }
+
+
+  if (listeners[pathString]) {
+    listeners[pathString].push(getCurrentComponent());
   } else {
-    listeners[path] = [getCurrentComponent()];
+    listeners[pathString] = [getCurrentComponent()];
   }
 };
 
@@ -46,10 +62,10 @@ export const afterChange = cb => {
 // a test for this scenario
 
 /**
- *
+ * // TODO (davidg): bad name (or architecture?), this triggers afterChange, too
  * @param {Object} props
- * @param {Object[]} props.components - the components to update
- * @param {string} props.path - the property path that triggered this change
+ * @param {Array<Object>} props.components - the components to update
+ * @param {Array<*>} props.path - the property path that triggered this change
  * @param {Object} props.newStore - the next version of the store, with updates applied
  */
 const updateComponents = ({ components, path, newStore }) => {
@@ -58,7 +74,7 @@ const updateComponents = ({ components, path, newStore }) => {
 
   // components can have duplicates, so take care to only update once each.
   const updatedComponents = [];
-  const userFriendlyPropPath = makePathUserFriendly(path);
+  const userFriendlyPropPath = path.join('.');
 
   if (components) {
     components.forEach(component => {
@@ -66,10 +82,13 @@ const updateComponents = ({ components, path, newStore }) => {
       updatedComponents.push(component);
 
       if (isDebugOn()) {
-        console.info(`UPDATE component:  <${component._name}>`);
-        console.info(`UPDATE property:   ${userFriendlyPropPath}`);
+        console.group(`UPDATE component:  <${component._name}>`);
+        console.info(`Changed property:   ${userFriendlyPropPath}`);
+        console.groupEnd();
       }
 
+      // TODO (davidg): could I push these to an array, then wait a tick and flush it?
+      //  This would require major changes to the prev/next store logic.
       component.update(newStore);
     });
   }
@@ -78,6 +97,8 @@ const updateComponents = ({ components, path, newStore }) => {
 
   setStore(newStore);
 
+  // In addition to calling .update() on components, we also trigger any manual listeners.
+  // E.g. something registered with afterEach()
   manualListeners.forEach(cb => cb({
     store: newStore,
     propPath: userFriendlyPropPath,
@@ -94,17 +115,18 @@ const updateComponents = ({ components, path, newStore }) => {
  *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name (only when
  * @param {Object} props
- * @param {string} props.path - The path of the prop that changed
+ * @param {Array<*>} props.path - The path of the prop that changed
  * @param {Object} props.newStore - The next version of the store
  */
 export const notifyByPath = ({ path, newStore }) => {
   let components = [];
+  const pathString = path.join(PROP_PATH_SEP);
 
   for (const listenerPath in listeners) {
     if (
-      path === listenerPath || // direct match
-      path.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent path
-      listenerPath.startsWith(`${path}${PROP_PATH_SEP}`) // listener for child path
+      pathString === listenerPath || // direct match
+      pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
+      listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
     ) {
       components = components.concat(listeners[listenerPath]);
     }

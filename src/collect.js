@@ -2,16 +2,27 @@ import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { getNextStore } from './store';
 import { removeListenersForComponent } from './updating';
+import { isDebugOn } from './debug';
 
 let currentComponent;
 
 export const getCurrentComponent = () => currentComponent;
 
 export const setCurrentComponent = component => {
+  if (isDebugOn()) {
+    console.group(`RENDER: <${component._name}>`);
+    console.info(`<${component._name}>`);
+  }
+
   currentComponent = component;
 };
 
 export const unsetCurrentComponent = () => {
+  if (isDebugOn()) {
+    console.info(`</${currentComponent._name}>`);
+    console.groupEnd();
+  }
+
   currentComponent = null;
 };
 

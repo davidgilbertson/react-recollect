@@ -1,12 +1,18 @@
-import { isObject } from './general';
-import proxyHandler from './proxyHandler';
+import {objectOrArrayProxyHandler, mapOrSetProxyHandler} from './proxyHandlers';
+import * as utils from './utils';
 
 const proxies = new WeakSet();
 let muted = false;
 
 export const isProxy = obj => proxies.has(obj);
 
-const canBeProxied = item => (isObject(item) || Array.isArray(item)) && !isProxy(item);
+const canBeProxied = item => (
+  utils.isPlainObject(item) ||
+  utils.isArray(item) ||
+  utils.isMap(item) ||
+  utils.isSet(item) ||
+  utils.isFunction(item) // TODO (davidg): do I ever generically do this?
+) && !isProxy(item);
 
 /**
  * This will _maybe_ create a proxy. If an item can't be proxied, it will be returned as is.
@@ -16,7 +22,14 @@ const canBeProxied = item => (isObject(item) || Array.isArray(item)) && !isProxy
 export const createProxy = (obj) => {
   if (!canBeProxied(obj)) return obj;
 
-  const proxy = new Proxy(obj, proxyHandler);
+  let handler;
+  if (utils.isMapOrSet(obj)) {
+    handler = mapOrSetProxyHandler;
+  } else {
+    handler = objectOrArrayProxyHandler;
+  }
+
+  const proxy = new Proxy(obj, handler);
   proxies.add(proxy);
   return proxy;
 };
