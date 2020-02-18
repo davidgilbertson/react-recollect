@@ -1,3 +1,5 @@
+![Node.js CI](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
+
 # React Recollect
 
 Recollect is a state management library that aims to solve two problems with the traditional React/Redux approach:
