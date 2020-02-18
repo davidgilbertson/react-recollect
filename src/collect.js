@@ -10,8 +10,7 @@ export const getCurrentComponent = () => currentComponent;
 
 export const setCurrentComponent = component => {
   if (isDebugOn()) {
-    console.group(`RENDER: <${component._name}>`);
-    console.info(`<${component._name}>`);
+    console.groupCollapsed(`RENDER: <${component._name}>`);
   }
 
   currentComponent = component;
@@ -19,7 +18,6 @@ export const setCurrentComponent = component => {
 
 export const unsetCurrentComponent = () => {
   if (isDebugOn()) {
-    console.info(`</${currentComponent._name}>`);
     console.groupEnd();
   }
 

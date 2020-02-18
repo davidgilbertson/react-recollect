@@ -82,7 +82,7 @@ const updateComponents = ({ components, path, newStore }) => {
       updatedComponents.push(component);
 
       if (isDebugOn()) {
-        console.group(`UPDATE component:  <${component._name}>`);
+        console.groupCollapsed(`QUEUE UPDATE:  <${component._name}>`);
         console.info(`Changed property:   ${userFriendlyPropPath}`);
         console.groupEnd();
       }
