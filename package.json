@@ -7,7 +7,7 @@
     "preversion": "npm run build && jest",
     "test": "jest --watch",
     "test:ci": "jest --ci",
-    "lint": "eslint src tests --fix --cache",
+    "lint": "eslint src tests --fix --cache --ext js,jsx",
     "build": "webpack",
     "build:watch": "webpack --watch --mode=\"development\""
   },
