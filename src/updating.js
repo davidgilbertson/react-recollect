@@ -1,7 +1,8 @@
-import { getCurrentComponent } from 'src/collect';
-import { makePath } from 'src/general';
-import { isDebugOn } from 'src/debug';
 import { getStore, setNextStore, setStore } from 'src/store';
+import { getCurrentComponent } from 'src/collect';
+
+import { makePath } from 'src/utils/general';
+import { isDebugOn } from 'src/utils/debug';
 
 /**
  * To convert the path array to a string for the listener keys

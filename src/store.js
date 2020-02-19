@@ -1,13 +1,19 @@
-import { createProxy, isProxy, muteProxy, unMuteProxy } from 'src/proxy';
-import { addPathProp, makePath } from 'src/general';
-import { PATH_PROP } from 'src/constants';
-import * as utils from 'src/utils';
+import { createProxy, decorateWithPathAndProxy, isProxy } from 'src/proxy';
+import { getHandlerForObject } from 'src/proxyHandlers';
+import { muteProxy, unMuteProxy } from 'src/state';
+
+import { addPathProp, makePath } from 'src/utils/general';
+import { PATH_PROP } from 'src/utils/constants';
+import * as utils from 'src/utils/utils';
 
 const rawStore = {};
 
 addPathProp(rawStore, ['store']); // TODO (davidg): why is store ever here?
 
-export const store = createProxy(rawStore);
+const createProxyWithHandler = obj =>
+  createProxy(obj, getHandlerForObject(obj));
+
+export const store = createProxyWithHandler(rawStore);
 
 let nextStore;
 
@@ -16,18 +22,18 @@ const cloneAnything = anything => {
 
   if (utils.isArray(anything)) {
     // TODO (davidg): there's a need for a cloneWithPath shortcut
-    result = createProxy(anything.slice());
+    result = createProxyWithHandler(anything.slice());
     addPathProp(result, anything[PATH_PROP]);
   } else if (utils.isMap(anything)) {
-    result = createProxy(utils.cloneMap(anything));
+    result = createProxyWithHandler(utils.cloneMap(anything));
     addPathProp(result, anything[PATH_PROP]);
   } else if (utils.isSet(anything)) {
-    result = createProxy(utils.cloneSet(anything));
+    result = createProxyWithHandler(utils.cloneSet(anything));
     addPathProp(result, anything[PATH_PROP]);
   } else if (utils.isPlainObject(anything)) {
     result = { ...anything };
     if (isProxy(anything) && !isProxy(result)) {
-      result = createProxy(result);
+      result = createProxyWithHandler(result);
     }
     addPathProp(result, anything[PATH_PROP]);
   } else {
@@ -44,12 +50,15 @@ const cloneAnything = anything => {
  *
  * @param props
  * @param {*} props.target - the target in the current store
+ * @param {*} props.value - the target in the current store
+ * @param {*} props.prop - the target in the current store
  * @param {function} props.updater - a function that will be passed the target
  * @return {*}
  */
-export const updateStoreAtPath = ({ target, updater }) => {
+export const updateStoreAtPath = ({ target, value, prop, updater }) => {
   // TODO (davidg): @callback for the updater
   // TODO (davidg): "updateTargetInStore"
+
   muteProxy();
 
   // Note that this function doesn't know anything about the prop being set. It just finds the
@@ -61,7 +70,7 @@ export const updateStoreAtPath = ({ target, updater }) => {
 
   // This walks down into the object, returning the target.
   // On the way in clones each level so as not to mutate the original store.
-  const finalTarget = propArray.reduce((mutableTarget, prop) => {
+  const finalTarget = propArray.reduce((mutableTarget, propName) => {
     // If we're updating a prop at data.tasks[2].done, we need to shallow clone every step on
     // the way down so that we're not mutating them.
     const targetClone = cloneAnything(mutableTarget);
@@ -70,30 +79,43 @@ export const updateStoreAtPath = ({ target, updater }) => {
 
     if (utils.isMap(mutableTarget)) {
       // TODO (davidg): isn't it an error if this doesn't exist?
-      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
-      targetClone.set(prop, nextLevelDown);
+      nextLevelDown = mutableTarget.has(propName)
+        ? mutableTarget.get(propName)
+        : {};
+      targetClone.set(propName, nextLevelDown);
     } else if (utils.isSet(mutableTarget)) {
-      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
+      nextLevelDown = mutableTarget.has(propName)
+        ? mutableTarget.get(propName)
+        : {};
       targetClone.add(nextLevelDown);
     } else {
       // When a prop doesn't exist, create a new object, so we can deep set a value.
-      nextLevelDown = prop in mutableTarget ? mutableTarget[prop] : {};
-      targetClone[prop] = nextLevelDown;
+      nextLevelDown = propName in mutableTarget ? mutableTarget[propName] : {};
+      targetClone[propName] = nextLevelDown;
     }
 
     return nextLevelDown;
   }, newStore);
 
+  // If this is updating with a new value (rather than deleting)
+  // We prepare that value now
+  let newValue = null;
+  if (prop !== 'undefined' && value !== 'undefined') {
+    const newValuePath = makePath(target, prop);
+    const handler = getHandlerForObject(value);
+    newValue = decorateWithPathAndProxy(value, newValuePath, handler);
+  }
+
   // TODO (davidg): of course this doesn't work! It mutates the object!
   // use utils.deepUpdate
-  updater(finalTarget);
+  updater(finalTarget, newValue);
 
   addPathProp(newStore, ['store']);
 
   unMuteProxy();
 
   // TODO (davidg): store is already a proxy by this point
-  return createProxy(newStore);
+  return createProxyWithHandler(newStore);
 };
 
 const resetStore = () => {

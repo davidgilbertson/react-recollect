@@ -2,13 +2,13 @@ import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { getNextStore } from 'src/store';
 import { removeListenersForComponent } from 'src/updating';
-import { isDebugOn } from 'src/debug';
+import { isDebugOn } from 'src/utils/debug';
 
 let currentComponent;
 
 export const getCurrentComponent = () => currentComponent;
 
-export const setCurrentComponent = component => {
+const setCurrentComponent = component => {
   if (isDebugOn()) {
     console.groupCollapsed(`RENDER: <${component._name}>`);
   }
@@ -16,7 +16,7 @@ export const setCurrentComponent = component => {
   currentComponent = component;
 };
 
-export const unsetCurrentComponent = () => {
+const unsetCurrentComponent = () => {
   if (isDebugOn()) {
     console.groupEnd();
   }
@@ -32,6 +32,24 @@ const startRecordingGetsForComponent = component => {
 const stopRecordingGetsForComponent = () => {
   unsetCurrentComponent();
 };
+
+// const startRecordingGetsForComponent = component => {
+//   removeListenersForComponent(component);
+//
+//   if (isDebugOn()) {
+//     console.groupCollapsed(`RENDER: <${component._name}>`);
+//   }
+//
+//   setCurrentComponent(component);
+// };
+//
+// const stopRecordingGetsForComponent = () => {
+//   if (isDebugOn()) {
+//     console.groupEnd();
+//   }
+//
+//   setCurrentComponent(null);
+// };
 
 export const collect = (ComponentToWrap, { forwardRef } = {}) => {
   const componentName =

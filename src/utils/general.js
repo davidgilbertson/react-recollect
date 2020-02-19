@@ -1,6 +1,4 @@
-import { PATH_PROP } from 'src/constants';
-import { createProxy } from 'src/proxy';
-import * as utils from 'src/utils';
+import { PATH_PROP } from 'src/utils/constants';
 
 /**
  * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done
@@ -55,56 +53,4 @@ export const addPathProp = (item, propPath) => {
     value: propPath,
     writable: true, // paths can be updated. E.g. store.tasks.2 could become store.tasks.1
   });
-};
-
-/**
- *
- * @param {*} parentObject
- * @param parentPath
- * @return {*}
- */
-export const decorateWithPathAndProxy = (parentObject, parentPath) => {
-  const decorateObject = (item, path) => {
-    // TODO (davidg): canBeProxied() exists
-    if (
-      utils.isArray(item) ||
-      utils.isPlainObject(item) ||
-      utils.isMap(item) ||
-      utils.isSet(item)
-    ) {
-      if (utils.isArray(item)) {
-        const nextArray = item.map((itemEntry, i) => {
-          return createProxy(decorateObject(itemEntry, [...path, i]));
-        });
-
-        addPathProp(nextArray, path);
-        return createProxy(nextArray);
-      }
-
-      if (utils.isMap(item)) {
-        addPathProp(item, path);
-        return createProxy(item);
-      }
-
-      if (utils.isSet(item)) {
-        addPathProp(item, path);
-        return createProxy(item);
-      }
-
-      const newObject = {}; // TODO (davidg): reduce
-
-      // TODO (davidg): is this necessary? Does the proxy not look after itself when calling set
-      //  on children
-      Object.entries(item).forEach(([prop, value]) => {
-        newObject[prop] = createProxy(decorateObject(value, [...path, prop]));
-      });
-
-      addPathProp(newObject, path);
-
-      return createProxy(newObject);
-    }
-    return item;
-  };
-
-  return decorateObject(parentObject, parentPath);
 };

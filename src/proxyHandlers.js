@@ -1,15 +1,15 @@
-import { isDebugOn } from 'src/debug';
-import {
-  decorateWithPathAndProxy,
-  makePath,
-  makePathUserFriendly2,
-  makeUserFriendlyPath,
-} from 'src/general';
-import { isProxyMuted } from 'src/proxy';
 import { getCurrentComponent } from 'src/collect';
 import { addListener, notifyByPath } from 'src/updating';
 import { getFromNextStore, updateStoreAtPath } from 'src/store';
-import * as utils from 'src/utils';
+import { isProxyMuted } from 'src/state';
+
+import { isDebugOn } from 'src/utils/debug';
+import {
+  makePath,
+  makePathUserFriendly2,
+  makeUserFriendlyPath,
+} from 'src/utils/general';
+import * as utils from 'src/utils/utils';
 
 const shouldBypassProxy = prop =>
   isProxyMuted() ||
@@ -52,9 +52,6 @@ const handleSet = ({ target, prop, value, updater }) => {
   const currentValue = utils.getValue(target, prop);
   const newValuePath = makePath(target, prop);
 
-  // Add paths to this new value
-  const newValueProxy = decorateWithPathAndProxy(value, newValuePath);
-
   if (isDebugOn()) {
     console.groupCollapsed(`SET: ${makePathUserFriendly2(newValuePath)}`);
     console.info('From:', currentValue);
@@ -64,11 +61,13 @@ const handleSet = ({ target, prop, value, updater }) => {
 
   const newStore = updateStoreAtPath({
     target,
-    updater: mutableTarget => {
+    value,
+    prop,
+    updater: (mutableTarget, newValue) => {
       if (updater) {
-        updater(mutableTarget, newValueProxy);
+        updater(mutableTarget, newValue);
       } else {
-        mutableTarget[prop] = newValueProxy;
+        mutableTarget[prop] = newValue;
       }
     },
   });
@@ -294,7 +293,6 @@ export const objectOrArrayProxyHandler = {
     const newStore = updateStoreAtPath({
       target,
       updater: finalTarget => {
-        // Could I not just pass `args` and `reflection`?
         Reflect.deleteProperty(finalTarget, prop);
       },
     });
@@ -307,3 +305,6 @@ export const objectOrArrayProxyHandler = {
     return true;
   },
 };
+
+export const getHandlerForObject = obj =>
+  utils.isMapOrSet(obj) ? mapOrSetProxyHandler : objectOrArrayProxyHandler;
