@@ -1,24 +1,23 @@
-import { isDebugOn } from './debug';
+import { isDebugOn } from 'src/debug';
 import {
   decorateWithPathAndProxy,
   makePath,
   makePathUserFriendly2,
   makeUserFriendlyPath,
-} from './general';
-import { isProxyMuted } from './proxy';
-import { getCurrentComponent } from './collect';
-import { addListener, notifyByPath } from './updating';
-import { getFromNextStore, updateStoreAtPath } from './store';
-import * as utils from './utils';
+} from 'src/general';
+import { isProxyMuted } from 'src/proxy';
+import { getCurrentComponent } from 'src/collect';
+import { addListener, notifyByPath } from 'src/updating';
+import { getFromNextStore, updateStoreAtPath } from 'src/store';
+import * as utils from 'src/utils';
 
-const shouldBypassProxy = prop => (
+const shouldBypassProxy = prop =>
   isProxyMuted() ||
   !utils.isInBrowser() ||
   !getCurrentComponent() ||
   utils.isSymbol(prop) ||
   prop === 'constructor' ||
-  prop === 'toJSON'
-);
+  prop === 'toJSON';
 
 /**
  * Is this an attempt to get something from the store outside the render cycle?
@@ -27,13 +26,12 @@ const shouldBypassProxy = prop => (
  * @see setStoreTwiceInOnClick.test.js
  * @param {*} prop
  */
-const isGettingPropOutsideOfRenderCycle = prop => (
+const isGettingPropOutsideOfRenderCycle = prop =>
   !getCurrentComponent() &&
   utils.isInBrowser() &&
   !utils.isSymbol(prop) &&
   prop !== 'constructor' && // TODO (davidg): maybe 'is exotic'? Check hasOwnProps? Slow?
-  !isProxyMuted()
-);
+  !isProxyMuted();
 
 /**
  * This function takes an instruction to update the store. For simple properties, it will update
@@ -48,7 +46,7 @@ const isGettingPropOutsideOfRenderCycle = prop => (
  * @param {function} props.updater
  * @return {boolean}
  */
-const handleSet = ({target, prop, value, updater}) => {
+const handleSet = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
   //  call updateStoreAtPath() from two places below
   const currentValue = utils.getValue(target, prop);
@@ -66,12 +64,11 @@ const handleSet = ({target, prop, value, updater}) => {
 
   const newStore = updateStoreAtPath({
     target,
-    updater: (finalTarget) => {
+    updater: mutableTarget => {
       if (updater) {
-        updater(finalTarget, newValueProxy);
+        updater(mutableTarget, newValueProxy);
       } else {
-        debugger;
-        finalTarget[prop] = newValueProxy;
+        mutableTarget[prop] = newValueProxy;
       }
     },
   });
@@ -116,54 +113,57 @@ export const mapOrSetProxyHandler = {
       // TODO is this slow? I'm wrapping the set result in a Proxy every time?
       //  Should I do this when first creating it?
       return new Proxy(result, {
-        apply(func, target, [key, value]) {
-          if (target.get(key) === value) return; // No change, no need to carry on
+        apply(func, applyTarget, [key, value]) {
+          if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
           return handleSet({
-            target,
+            target: applyTarget,
             prop: key,
             value,
             updater: (finalTarget, newProxiedValue) => {
               // We call the set now, but with the new args
-              Reflect.apply(finalTarget[prop], finalTarget, [key, newProxiedValue]);
-            }
+              Reflect.apply(finalTarget[prop], finalTarget, [
+                key,
+                newProxiedValue,
+              ]);
+            },
           });
-        }
+        },
       });
     }
 
     // Adding to a Set
     if (prop === 'add') {
       return new Proxy(result, {
-        apply(func, target, [value]) {
-          if (target.has(value)) return; // Would be a no op
+        apply(func, applyTarget, [value]) {
+          if (applyTarget.has(value)) return true; // Would be a no op
 
           return handleSet({
-            target,
+            target: applyTarget,
             prop: value,
-            value: value,
+            value,
             updater: (finalTarget, newProxiedValue) => {
               Reflect.apply(finalTarget[prop], finalTarget, [newProxiedValue]);
-            }
+            },
           });
-        }
+        },
       });
     }
 
     // On either a Set or Map
     if (prop === 'clear' || prop === 'delete') {
       return new Proxy(result, {
-        apply(func, target, [key]) {
-          if (prop === 'delete' && !target.has(key)) return result; // Would not be a change
+        apply(func, applyTarget, [key]) {
+          if (prop === 'delete' && !applyTarget.has(key)) return result; // Would not be a change
 
           return handleSet({
-            target,
+            target: applyTarget,
             prop,
-            updater: (finalTarget) => {
+            updater: finalTarget => {
               Reflect.apply(finalTarget[prop], finalTarget, [key]);
-            }
+            },
           });
-        }
+        },
       });
     }
 
@@ -171,7 +171,11 @@ export const mapOrSetProxyHandler = {
     if (!getCurrentComponent()) return result;
 
     // For `size` or any getter method, subscribe to size changes and return
-    if (['size', 'get', 'entries', 'forEach', 'has', 'keys', 'values'].includes(prop)) {
+    if (
+      ['size', 'get', 'entries', 'forEach', 'has', 'keys', 'values'].includes(
+        prop
+      )
+    ) {
       addListener(target, 'size');
       // TODO (davidg): do I not log the get on some Map or Set reads?
       return result;
@@ -179,7 +183,6 @@ export const mapOrSetProxyHandler = {
 
     // TODO (davidg): does 'size' need to be below this? Would I be getting the wrong size?
     if (isGettingPropOutsideOfRenderCycle(prop)) {
-      console.log('> getting from outside render cycle:', prop);
       return getFromNextStore(target, prop);
     }
 
@@ -191,25 +194,27 @@ let isInBulkOperation = false;
 
 export const objectOrArrayProxyHandler = {
   get(target, prop) {
-    let result = Reflect.get(target, prop);
+    const result = Reflect.get(target, prop);
     if (isInBulkOperation) return result;
 
     // TODO (davidg): array.pop() when empty can bail. But that's not easy
     if (
       Array.isArray(target) &&
       typeof target[prop] === 'function' &&
-      ['sort', 'reverse', 'shift', 'splice', 'unshift', 'copyWithin'].includes(prop)
+      ['sort', 'reverse', 'shift', 'splice', 'unshift', 'copyWithin'].includes(
+        prop
+      )
     ) {
       // These methods can rearrange an array over multiple steps. We don't want to trigger
       // any renders during this operation, so we set isInBulkOperation
       return new Proxy(result, {
-        apply(target, prop, args) {
+        apply(applyTarget, applyProp, args) {
           isInBulkOperation = true;
-          const result = Reflect.apply(target, prop, args);
+          const applyResult = Reflect.apply(applyTarget, applyProp, args);
           isInBulkOperation = false;
-          return result;
-        }
-      })
+          return applyResult;
+        },
+      });
     }
 
     if (utils.isFunction(target[prop])) return result;
@@ -259,7 +264,8 @@ export const objectOrArrayProxyHandler = {
     // a set() on 'length' (helpful!) which tells us we need to update.
     if (prop !== 'length' && target[prop] === value) return true;
 
-    if (isProxyMuted() || !utils.isInBrowser()) return Reflect.set(target, prop, value);
+    if (isProxyMuted() || !utils.isInBrowser())
+      return Reflect.set(target, prop, value);
 
     return handleSet({
       target,
@@ -273,7 +279,8 @@ export const objectOrArrayProxyHandler = {
 
   deleteProperty(target, prop) {
     // TODO (davidg): use shouldBypassProxy? Or not for delete?
-    if (isProxyMuted() || !utils.isInBrowser()) return Reflect.deleteProperty(target, prop);
+    if (isProxyMuted() || !utils.isInBrowser())
+      return Reflect.deleteProperty(target, prop);
 
     if (isDebugOn()) {
       console.groupCollapsed(`DELETE: ${makeUserFriendlyPath(target, prop)}`);
@@ -298,5 +305,5 @@ export const objectOrArrayProxyHandler = {
     });
 
     return true;
-  }
+  },
 };

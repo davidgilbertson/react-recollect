@@ -5,22 +5,22 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { store } from 'src';
 import App from './App';
-import { store } from '../../../dist';
 
 store.site = {
   title: 'The task list site',
 };
 
-store.tasks = [{
-  id: 1,
-  name: 'The first task in the isolation test',
-  done: false,
-}];
-
-store.notifications = [
-  'You have no unread messages at all',
+store.tasks = [
+  {
+    id: 1,
+    name: 'The first task in the isolation test',
+    done: false,
+  },
 ];
+
+store.notifications = ['You have no unread messages at all'];
 
 const props = {
   onAppUpdate: jest.fn(),

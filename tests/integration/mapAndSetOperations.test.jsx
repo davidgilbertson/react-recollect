@@ -1,13 +1,15 @@
-import React  from 'react';
+/* eslint-disable react/prop-types */
+import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, afterChange, initStore, store as globalStore } from '../../dist';
+import { collect, afterChange, initStore, store as globalStore } from 'src';
 
 let renderCount;
 
 const handleChange = jest.fn();
 afterChange(handleChange);
 
-const propPathChanges = handleChangeMock => handleChangeMock.mock.calls.map(call => call[0].propPath);
+const propPathChanges = handleChangeMock =>
+  handleChangeMock.mock.calls.map(call => call[0].propPath);
 
 beforeEach(() => {
   initStore({
@@ -21,7 +23,7 @@ beforeEach(() => {
 
 const log = jest.fn();
 
-const RawComponent = ({store}) => {
+const RawComponent = ({ store }) => {
   renderCount++;
 
   return (
@@ -30,33 +32,41 @@ const RawComponent = ({store}) => {
       <p data-testid="map-size">Size: {store.map.size}</p>
       <p data-testid="map-one">One: {store.map.get('one') || 'nothing!'}</p>
 
-      <button onClick={() => {
-        store.map.set('two', 'the value of two');
-        log(store.map.size);
-      }}>
+      <button
+        onClick={() => {
+          store.map.set('two', 'the value of two');
+          log(store.map.size);
+        }}
+      >
         Add two to Map
       </button>
 
-      <button onClick={() => {
-        store.map.delete('two');
-      }}>
+      <button
+        onClick={() => {
+          store.map.delete('two');
+        }}
+      >
         Delete two from Map
       </button>
 
       <p data-testid="map-two">Two: {store.map.get('two') || 'nothing!'}</p>
 
-      <button onClick={() => {
-        store.map.clear();
-      }}>
+      <button
+        onClick={() => {
+          store.map.clear();
+        }}
+      >
         Clear Map
       </button>
 
       <p data-testid="map-keys">{Array.from(store.map.keys()).join(', ')}</p>
 
-      <button onClick={() => {
-        store.map.set('three', 'the value of three');
-        store.map.set('four', 'the value of four');
-      }}>
+      <button
+        onClick={() => {
+          store.map.set('three', 'the value of three');
+          store.map.set('four', 'the value of four');
+        }}
+      >
         Add two things to Map
       </button>
 
@@ -64,32 +74,40 @@ const RawComponent = ({store}) => {
       <p data-testid="set-size">Size: {store.set.size}</p>
       <p data-testid="set-one">Has one?: {store.set.has('one').toString()}</p>
 
-      <button onClick={() => {
-        store.set.add('two');
-      }}>
+      <button
+        onClick={() => {
+          store.set.add('two');
+        }}
+      >
         Add two to set
       </button>
 
-      <button onClick={() => {
-        store.set.delete('two');
-      }}>
+      <button
+        onClick={() => {
+          store.set.delete('two');
+        }}
+      >
         Delete two from set
       </button>
 
       <p data-testid="set-two">Has two?: {store.set.has('two').toString()}</p>
 
-      <button onClick={() => {
-        store.set.clear();
-      }}>
+      <button
+        onClick={() => {
+          store.set.clear();
+        }}
+      >
         Clear set
       </button>
 
       <p data-testid="set-keys">{Array.from(store.set.keys()).join(', ')}</p>
 
-      <button onClick={() => {
-        store.set.add('three');
-        store.set.add('four');
-      }}>
+      <button
+        onClick={() => {
+          store.set.add('three');
+          store.set.add('four');
+        }}
+      >
         Add two things to set
       </button>
     </div>
@@ -99,7 +117,6 @@ const RawComponent = ({store}) => {
 const Component = collect(RawComponent);
 
 it('should operate on a Map', () => {
-
   const { getByText, getByTestId } = render(<Component />);
   expect(renderCount).toBe(1);
   expect(globalStore.map.size).toBe(1);
@@ -141,7 +158,6 @@ it('should operate on a Map', () => {
 });
 
 it('should operate on a Set', () => {
-
   const { getByText, getByTestId } = render(<Component />);
   expect(renderCount).toBe(1);
   expect(getByTestId('set-size')).toHaveTextContent('Size: 1');
@@ -212,9 +228,7 @@ it('should work with numeric keys', () => {
 
 // The below test operates directly on the store, not via the component
 it('should handle a Map', () => {
-  globalStore.testMap = new Map([
-    ['david', {name: 'David', age: 100}],
-  ]);
+  globalStore.testMap = new Map([['david', { name: 'David', age: 100 }]]);
   globalStore.testMap.set('erica', {
     name: 'Erica',
     age: 45,
@@ -239,23 +253,21 @@ it('should handle a Map', () => {
   handleChange.mockClear();
 
   // Should read some data without triggering changes
-  expect(globalStore.testMap.get('david')).toEqual({name: 'David', age: 100});
+  expect(globalStore.testMap.get('david')).toEqual({ name: 'David', age: 100 });
   expect(globalStore.testMap.get('nope')).toBeUndefined();
   expect(globalStore.testMap.has('david')).toBe(true);
   expect(globalStore.testMap.has('nope')).toBe(false);
 
-  expect(Array.from(globalStore.testMap.keys())).toEqual([
-    'david',
-    'erica',
-  ]);
+  expect(Array.from(globalStore.testMap.keys())).toEqual(['david', 'erica']);
 
   const entries = Array.from(globalStore.testMap.entries());
   expect(entries).toEqual([
-    ['david', {name: 'David', age: 100}],
-    ['erica', {name: 'Erica', age: 45}],
+    ['david', { name: 'David', age: 100 }],
+    ['erica', { name: 'Erica', age: 45 }],
   ]);
 
   const forOfResult = [];
+  // eslint-disable-next-line no-restricted-syntax
   for (const item of globalStore.testMap) {
     forOfResult.push(item);
   }
@@ -264,8 +276,8 @@ it('should handle a Map', () => {
 
   const values = Array.from(globalStore.testMap.values());
   expect(values).toEqual([
-    {name: 'David', age: 100},
-    {name: 'Erica', age: 45},
+    { name: 'David', age: 100 },
+    { name: 'Erica', age: 45 },
   ]);
 
   const forEachResult = [];
@@ -279,30 +291,24 @@ it('should handle a Map', () => {
   expect(handleChange).not.toHaveBeenCalled();
 
   globalStore.testMap.delete('david');
-  expect(propPathChanges(handleChange)).toEqual([
-    'store.testMap.delete',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['store.testMap.delete']);
   expect(globalStore.testMap.get('david')).toBeUndefined();
   expect(globalStore.testMap.size).toBe(1);
 
   handleChange.mockClear();
   globalStore.testMap.set(0, 'a numeric key');
-  expect(propPathChanges(handleChange)).toEqual([
-    'store.testMap.0',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['store.testMap.0']);
   expect(globalStore.testMap.get(0)).toBe('a numeric key');
   expect(globalStore.testMap.size).toBe(2);
 
   handleChange.mockClear();
   globalStore.testMap.clear();
-  expect(propPathChanges(handleChange)).toEqual([
-    'store.testMap.clear',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['store.testMap.clear']);
   expect(globalStore.testMap.get(0)).toBeUndefined();
   expect(globalStore.testMap.size).toBe(0);
 
   handleChange.mockClear();
-  const objectKey = {an: 'object'};
+  const objectKey = { an: 'object' };
   globalStore.testMap.set(objectKey, 'an object!');
   expect(propPathChanges(handleChange)).toEqual([
     // TODO (davidg): it's not great that the keys aren't unique if they're objects.
@@ -318,7 +324,9 @@ it('should handle a Map', () => {
   expect(propPathChanges(handleChange)).toEqual([
     'store.testMap.[object Object]',
   ]);
-  expect(globalStore.testMap.get(objectKey).get('string key')).toBe('the value');
+  expect(globalStore.testMap.get(objectKey).get('string key')).toBe(
+    'the value'
+  );
 
   expect(globalStore.testMap.size).toBe(1);
 });

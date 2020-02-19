@@ -1,6 +1,6 @@
-import { PATH_PROP } from './constants';
-import { createProxy } from './proxy';
-import * as utils from './utils';
+import { PATH_PROP } from 'src/constants';
+import { createProxy } from 'src/proxy';
+import * as utils from 'src/utils';
 
 /**
  * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done
@@ -66,8 +66,12 @@ export const addPathProp = (item, propPath) => {
 export const decorateWithPathAndProxy = (parentObject, parentPath) => {
   const decorateObject = (item, path) => {
     // TODO (davidg): canBeProxied() exists
-    if (utils.isArray(item) || utils.isPlainObject(item) || utils.isMap(item) || utils.isSet(item)) {
-
+    if (
+      utils.isArray(item) ||
+      utils.isPlainObject(item) ||
+      utils.isMap(item) ||
+      utils.isSet(item)
+    ) {
       if (utils.isArray(item)) {
         const nextArray = item.map((itemEntry, i) => {
           return createProxy(decorateObject(itemEntry, [...path, i]));
@@ -98,9 +102,8 @@ export const decorateWithPathAndProxy = (parentObject, parentPath) => {
       addPathProp(newObject, path);
 
       return createProxy(newObject);
-    } else {
-      return item;
     }
+    return item;
   };
 
   return decorateObject(parentObject, parentPath);

@@ -1,10 +1,12 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import { store } from 'src';
 import TaskList from './TaskList';
-import { store } from '../../../dist';
 
 it('TaskList', async () => {
-  const { findByText, getByText, queryByText, getByLabelText } = render(<TaskList />);
+  const { findByText, getByText, queryByText, getByLabelText } = render(
+    <TaskList />
+  );
 
   // it should render a loading indicator
   getByText('Loading...');

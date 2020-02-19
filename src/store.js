@@ -1,7 +1,7 @@
-import { createProxy, isProxy, muteProxy, unMuteProxy } from './proxy';
-import { addPathProp, makePath } from './general';
-import { PATH_PROP } from './constants';
-import * as utils from './utils';
+import { createProxy, isProxy, muteProxy, unMuteProxy } from 'src/proxy';
+import { addPathProp, makePath } from 'src/general';
+import { PATH_PROP } from 'src/constants';
+import * as utils from 'src/utils';
 
 const rawStore = {};
 
@@ -25,13 +25,13 @@ const cloneAnything = anything => {
     result = createProxy(utils.cloneSet(anything));
     addPathProp(result, anything[PATH_PROP]);
   } else if (utils.isPlainObject(anything)) {
-    result = Object.assign({}, anything);
+    result = { ...anything };
     if (isProxy(anything) && !isProxy(result)) {
       result = createProxy(result);
     }
     addPathProp(result, anything[PATH_PROP]);
   } else {
-    console.log('> did not expect this:', anything);
+    console.warn('> did not expect this:', anything);
   }
 
   return result;
@@ -57,27 +57,27 @@ export const updateStoreAtPath = ({ target, updater }) => {
   const propArray = target[PATH_PROP].slice(1);
 
   // Shallow clone the existing store. We will clone all the way down to the target object
-  const newStore = Object.assign({}, store);
+  const newStore = { ...store };
 
   // This walks down into the object, returning the target.
   // On the way in clones each level so as not to mutate the original store.
-  const finalTarget = propArray.reduce((target, prop, i) => {
+  const finalTarget = propArray.reduce((mutableTarget, prop) => {
     // If we're updating a prop at data.tasks[2].done, we need to shallow clone every step on
     // the way down so that we're not mutating them.
-    let targetClone = cloneAnything(target);
+    const targetClone = cloneAnything(mutableTarget);
 
     let nextLevelDown;
 
-    if (utils.isMap(target)) {
+    if (utils.isMap(mutableTarget)) {
       // TODO (davidg): isn't it an error if this doesn't exist?
-      nextLevelDown = target.has(prop) ? target.get(prop) : {};
+      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
       targetClone.set(prop, nextLevelDown);
-    } else if (utils.isSet(target)) {
-      nextLevelDown = target.has(prop) ? target.get(prop) : {};
+    } else if (utils.isSet(mutableTarget)) {
+      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
       targetClone.add(nextLevelDown);
     } else {
       // When a prop doesn't exist, create a new object, so we can deep set a value.
-      nextLevelDown = prop in target ? target[prop] : {};
+      nextLevelDown = prop in mutableTarget ? mutableTarget[prop] : {};
       targetClone[prop] = nextLevelDown;
     }
 
@@ -148,7 +148,7 @@ export const getFromNextStore = (target, targetProp) => {
   // TODO (davidg): reduce
   propPath.forEach(propName => {
     if (propName === 'store') {
-      result = getNextStore()
+      result = getNextStore();
     } else {
       result = utils.getValue(result, propName);
     }

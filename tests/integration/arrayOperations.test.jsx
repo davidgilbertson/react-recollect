@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store as globalStore } from '../../src';
+import { collect, store as globalStore } from 'src';
 
 let renderCount;
 let taskNumber;
@@ -15,53 +16,60 @@ beforeEach(() => {
   log.mockReset();
 });
 
-const Task = props => (
-  <div>{props.task.name}</div>
-);
+const Task = props => <div>{props.task.name}</div>;
 
+// eslint-disable-next-line react/prefer-stateless-function
 class RawTaskList extends Component {
-  render () {
+  render() {
     renderCount++;
-    const {store} = this.props;
+    const { store } = this.props;
 
     return (
       <div>
-        <button onClick={() => {
-          store.tasks.push({
-            id: taskId--, // we go backwards with IDs so that .sort() triggers a change
-            name: `Task number ${taskNumber++}`,
-          });
-          log(store.tasks.length);
-        }}>
+        <button
+          onClick={() => {
+            store.tasks.push({
+              id: taskId--, // we go backwards with IDs so that .sort() triggers a change
+              name: `Task number ${taskNumber++}`,
+            });
+            log(store.tasks.length);
+          }}
+        >
           Add task
         </button>
 
-        <button onClick={() => {
-          store.tasks.sort((a, b) => a.id - b.id);
-        }}>
+        <button
+          onClick={() => {
+            store.tasks.sort((a, b) => a.id - b.id);
+          }}
+        >
           Sort tasks
         </button>
 
-        <button onClick={() => {
-          store.tasks.pop();
-        }}>
+        <button
+          onClick={() => {
+            store.tasks.pop();
+          }}
+        >
           Remove last task
         </button>
 
-        <button onClick={() => {
-          delete store.tasks;
-        }}>
+        <button
+          onClick={() => {
+            delete store.tasks;
+          }}
+        >
           Remove all tasks
         </button>
 
         {!!store.tasks && !!store.tasks.length && (
-          <React.Fragment>
+          <>
             <h1>Task list</h1>
 
             {store.tasks.map(task => (
               <Task task={task} key={task.id} />
             ))}
-          </React.Fragment>
+          </>
         )}
       </div>
     );
@@ -125,9 +133,9 @@ it('should sort an array', () => {
   expect(getByText('Task number 2'));
   expect(getByText('Task number 1'));
   expect(globalStore.tasks).toEqual([
-    {id: -3, name: `Task number 3`},
-    {id: -2, name: `Task number 2`},
-    {id: -1, name: `Task number 1`},
+    { id: -3, name: 'Task number 3' },
+    { id: -2, name: 'Task number 2' },
+    { id: -1, name: 'Task number 1' },
   ]);
 
   // Should not change the second time

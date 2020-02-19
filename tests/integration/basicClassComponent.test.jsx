@@ -1,16 +1,20 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store } from '../../dist';
+import { collect, store } from 'src';
 
+// eslint-disable-next-line react/prefer-stateless-function
 class RawClassComponent extends Component {
-  render () {
+  render() {
     return (
       <div>
         <h1>{this.props.store.title}</h1>
         <p>Button was pressed {this.props.store.clickCount} times</p>
-        <button onClick={() => {
-          this.props.store.clickCount++;
-        }}>
+        <button
+          onClick={() => {
+            this.props.store.clickCount++;
+          }}
+        >
           Click me
         </button>
       </div>

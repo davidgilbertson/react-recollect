@@ -1,9 +1,10 @@
-import { store, afterChange, initStore } from '../../dist';
+import { store, afterChange, initStore } from 'src';
 
 const handleChange = jest.fn();
 afterChange(handleChange);
 
-const propPathChanges = handleChangeMock => handleChangeMock.mock.calls.map(call => call[0].propPath);
+const propPathChanges = handleChangeMock =>
+  handleChangeMock.mock.calls.map(call => call[0].propPath);
 
 afterEach(() => {
   initStore(); // empty the store
@@ -34,9 +35,11 @@ it('should add an object', () => {
   expect(handleChange).toHaveBeenCalledTimes(1);
 
   const changeEvent = handleChange.mock.calls[0][0];
-  expect(changeEvent.store.newObject).toEqual(expect.objectContaining({
-    someProp: 'someValue',
-  }));
+  expect(changeEvent.store.newObject).toEqual(
+    expect.objectContaining({
+      someProp: 'someValue',
+    })
+  );
 });
 
 it('should add an array', () => {
@@ -55,12 +58,30 @@ it('should add an array with numbers', () => {
   expect(changeEvent.store.newArray).toEqual([1]);
 });
 
-it('should add an array that\'s a real mixed bag', () => {
-  store.newMixedArray = [1, 2, undefined, null, 'cats', false, true, { prop: 'val'} ];
+it("should add an array that's a real mixed bag", () => {
+  store.newMixedArray = [
+    1,
+    2,
+    undefined,
+    null,
+    'cats',
+    false,
+    true,
+    { prop: 'val' },
+  ];
   expect(handleChange).toHaveBeenCalledTimes(1);
 
   const changeEvent = handleChange.mock.calls[0][0];
-  expect(changeEvent.store.newMixedArray).toEqual([1, 2, undefined, null, 'cats', false, true, { prop: 'val'} ]);
+  expect(changeEvent.store.newMixedArray).toEqual([
+    1,
+    2,
+    undefined,
+    null,
+    'cats',
+    false,
+    true,
+    { prop: 'val' },
+  ]);
 });
 
 it('should update an item in an array', () => {
@@ -108,7 +129,6 @@ it('should delete a string', () => {
   ]);
 });
 
-
 it('should perform read operations without triggering changes', () => {
   store.arrayToRead = [1, 2, 3, 4];
   handleChange.mockReset();
@@ -148,13 +168,15 @@ it('should sort()', () => {
 
   expect(store.arrayToSort).toEqual([1, 2, 3, 4]);
   // We don't know the order or these (in practice, Node 10 is different to Node 12)
-  expect(propPathChanges(handleChange)).toEqual(expect.arrayContaining([
-    'store.arrayToSort',
-    'store.arrayToSort.0',
-    'store.arrayToSort.1',
-    'store.arrayToSort.2',
-    'store.arrayToSort.3',
-  ]));
+  expect(propPathChanges(handleChange)).toEqual(
+    expect.arrayContaining([
+      'store.arrayToSort',
+      'store.arrayToSort.0',
+      'store.arrayToSort.1',
+      'store.arrayToSort.2',
+      'store.arrayToSort.3',
+    ])
+  );
 });
 
 it('should pop()', () => {

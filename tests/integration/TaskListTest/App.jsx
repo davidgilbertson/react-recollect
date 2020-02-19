@@ -1,5 +1,6 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import { collect, store } from '../../../dist';
+import { collect } from 'src';
 import TaskList from './TaskList';
 import Notifications from './Notifications';
 
@@ -11,13 +12,13 @@ class App extends Component {
   render() {
     return (
       <div>
-        <header>
-          {this.props.store.site.title}
-        </header>
+        <header>{this.props.store.site.title}</header>
 
-        <TaskList onTaskListUpdate={this.props.onTaskListUpdate}/>
+        <TaskList onTaskListUpdate={this.props.onTaskListUpdate} />
 
-        <Notifications onNotificationsUpdate={this.props.onNotificationsUpdate}/>
+        <Notifications
+          onNotificationsUpdate={this.props.onNotificationsUpdate}
+        />
       </div>
     );
   }

@@ -12,10 +12,14 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.(js|jsx)$/,
         use: 'babel-loader',
       },
     ],
+  },
+  resolve: {
+    extensions: ['.js', '.jsx'],
+    modules: [__dirname, 'node_modules'],
   },
   externals: Object.keys(peerDependencies),
 };

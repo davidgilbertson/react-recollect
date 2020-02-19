@@ -1,10 +1,11 @@
 const DEBUG_ON = 'on';
 const DEBUG_OFF = 'off';
 
-const hasLocalStorage = typeof window !== 'undefined' && window.localStorage !== undefined;
+const hasLocalStorage =
+  typeof window !== 'undefined' && window.localStorage !== undefined;
 
 let DEBUG = hasLocalStorage
-  ? (window.localStorage.RECOLLECT__DEBUG || DEBUG_OFF)
+  ? window.localStorage.RECOLLECT__DEBUG || DEBUG_OFF
   : DEBUG_OFF;
 
 export const debugOn = () => {

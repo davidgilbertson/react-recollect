@@ -1,4 +1,4 @@
-import { store, initStore } from '../../dist';
+import { store, initStore } from 'src';
 
 it('should replace the contents of the store', () => {
   store.propertyOne = 'the first property';

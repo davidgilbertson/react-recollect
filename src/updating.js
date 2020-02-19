@@ -1,7 +1,7 @@
-import { getCurrentComponent } from './collect';
-import { makePath } from './general';
-import { isDebugOn } from './debug';
-import { getStore, setNextStore, setStore } from './store';
+import { getCurrentComponent } from 'src/collect';
+import { makePath } from 'src/general';
+import { isDebugOn } from 'src/debug';
+import { getStore, setNextStore, setStore } from 'src/store';
 
 /**
  * To convert the path array to a string for the listener keys
@@ -11,7 +11,7 @@ import { getStore, setNextStore, setStore } from './store';
  */
 const PROP_PATH_SEP = '~~~';
 
-let listeners = {
+const listeners = {
   store: [],
 };
 
@@ -39,7 +39,6 @@ export const addListener = (target, prop) => {
   //     components: [],
   //   }
   // }
-
 
   if (listeners[pathString]) {
     listeners[pathString].push(getCurrentComponent());
@@ -93,18 +92,20 @@ const updateComponents = ({ components, path, newStore }) => {
     });
   }
 
-  const oldStore = Object.assign({}, getStore());
+  const oldStore = { ...getStore() };
 
   setStore(newStore);
 
   // In addition to calling .update() on components, we also trigger any manual listeners.
   // E.g. something registered with afterEach()
-  manualListeners.forEach(cb => cb({
-    store: newStore,
-    propPath: userFriendlyPropPath,
-    prevStore: oldStore,
-    components: updatedComponents
-  }));
+  manualListeners.forEach(cb =>
+    cb({
+      store: newStore,
+      propPath: userFriendlyPropPath,
+      prevStore: oldStore,
+      components: updatedComponents,
+    })
+  );
 };
 
 /**
@@ -122,15 +123,15 @@ export const notifyByPath = ({ path, newStore }) => {
   let components = [];
   const pathString = path.join(PROP_PATH_SEP);
 
-  for (const listenerPath in listeners) {
+  Object.entries(listeners).forEach(([listenerPath, listenerComponents]) => {
     if (
       pathString === listenerPath || // direct match
       pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
       listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
     ) {
-      components = components.concat(listeners[listenerPath]);
+      components = components.concat(listenerComponents);
     }
-  }
+  });
 
   updateComponents({
     components,
@@ -140,7 +141,9 @@ export const notifyByPath = ({ path, newStore }) => {
 };
 
 export const removeListenersForComponent = component => {
-  for (const path in listeners) {
-    listeners[path] = listeners[path].filter(listeningComponent => listeningComponent !== component);
-  }
+  Object.entries(listeners).forEach(([listenerPath, listenerComponents]) => {
+    listeners[listenerPath] = listenerComponents.filter(
+      listeningComponent => listeningComponent !== component
+    );
+  });
 };

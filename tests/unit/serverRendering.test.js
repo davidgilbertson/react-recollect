@@ -1,5 +1,4 @@
-import React from 'react';
-import { afterChange, store } from '../../dist';
+import { afterChange, store } from 'src';
 
 delete global.window;
 

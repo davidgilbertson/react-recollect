@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store } from '../../dist';
+import { collect, store } from 'src';
 
 class RawClassComponent extends Component {
   componentDidUpdate(prevProps) {
@@ -9,13 +10,15 @@ class RawClassComponent extends Component {
     }
   }
 
-  render () {
+  render() {
     return (
       <div>
         <p>User ID: {this.props.store.userId}</p>
-        <button onClick={() => {
-          this.props.store.userId++;
-        }}>
+        <button
+          onClick={() => {
+            this.props.store.userId++;
+          }}
+        >
           Switch user
         </button>
       </div>
