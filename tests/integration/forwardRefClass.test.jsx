@@ -2,7 +2,7 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect } from '../../src';
+import { collect } from 'src';
 
 class RawCleverInput extends React.PureComponent {
   render() {

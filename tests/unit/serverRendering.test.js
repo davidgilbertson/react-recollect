@@ -1,4 +1,4 @@
-import { afterChange, store } from '../../src';
+import { afterChange, store } from 'src';
 
 delete global.window;
 

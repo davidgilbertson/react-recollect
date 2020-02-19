@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import { collect } from '../../../src';
+import { collect } from 'src';
 import Task from './Task';
 import loadTasks from './loadTasks';
 

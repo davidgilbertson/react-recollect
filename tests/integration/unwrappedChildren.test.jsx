@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { render } from '@testing-library/react';
-import { afterChange, collect, store as globalStore } from '../../src';
+import { afterChange, collect, store as globalStore } from 'src';
 
 globalStore.tasks = [
   { name: 'task 0', done: true },

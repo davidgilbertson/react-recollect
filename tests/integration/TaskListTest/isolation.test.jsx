@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { store } from 'src';
 import App from './App';
-import { store } from '../../../src';
 
 store.site = {
   title: 'The task list site',

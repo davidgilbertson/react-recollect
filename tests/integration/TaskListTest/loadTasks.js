@@ -1,4 +1,4 @@
-import { store } from '../../../src';
+import { store } from 'src';
 
 const loadTasks = () => {
   setTimeout(() => {

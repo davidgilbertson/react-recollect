@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, store as globalStore } from '../../src';
+import { collect, store as globalStore } from 'src';
 
 globalStore.count = 1;
 let parentCompRenderCount = 0;

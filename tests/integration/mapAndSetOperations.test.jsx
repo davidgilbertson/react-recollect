@@ -1,12 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { render } from '@testing-library/react';
-import {
-  collect,
-  afterChange,
-  initStore,
-  store as globalStore,
-} from '../../src';
+import { collect, afterChange, initStore, store as globalStore } from 'src';
 
 let renderCount;
 

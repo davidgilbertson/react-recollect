@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store as globalStore } from '../../src';
+import { collect, store as globalStore } from 'src';
 
 let renderCount;
 let taskNumber;
@@ -133,9 +133,9 @@ it('should sort an array', () => {
   expect(getByText('Task number 2'));
   expect(getByText('Task number 1'));
   expect(globalStore.tasks).toEqual([
-    { id: -3, name: `Task number 3` },
-    { id: -2, name: `Task number 2` },
-    { id: -1, name: `Task number 1` },
+    { id: -3, name: 'Task number 3' },
+    { id: -2, name: 'Task number 2' },
+    { id: -1, name: 'Task number 1' },
   ]);
 
   // Should not change the second time

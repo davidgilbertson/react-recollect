@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import { store } from 'src';
 import TaskList from './TaskList';
-import { store } from '../../../src';
 
 it('TaskList', async () => {
   const { findByText, getByText, queryByText, getByLabelText } = render(

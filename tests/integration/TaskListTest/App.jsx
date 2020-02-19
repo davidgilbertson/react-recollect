@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import { collect } from '../../../src';
+import { collect } from 'src';
 import TaskList from './TaskList';
 import Notifications from './Notifications';
 

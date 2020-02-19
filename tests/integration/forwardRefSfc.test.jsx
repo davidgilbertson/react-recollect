@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect } from '../../src';
+import { collect } from 'src';
 
 const RawCleverInput = props => (
   <label>

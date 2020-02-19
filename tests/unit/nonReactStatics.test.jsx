@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { collect } from '../../src';
+import { collect } from 'src';
 
 class RawComponentWithStatic extends Component {
   static returnCats() {

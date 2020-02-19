@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store } from '../../src';
+import { collect, store } from 'src';
 
 const ChildComponent = props => (
   <div>This component should be {props.visibility}</div>

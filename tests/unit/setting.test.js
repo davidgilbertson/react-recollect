@@ -1,4 +1,4 @@
-import { store, afterChange, initStore } from '../../src';
+import { store, afterChange, initStore } from 'src';
 
 const handleChange = jest.fn();
 afterChange(handleChange);
