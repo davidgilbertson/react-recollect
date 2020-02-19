@@ -1,15 +1,17 @@
-import { getCurrentComponent } from 'src/collect';
-import { addListener, notifyByPath } from 'src/updating';
 import { getFromNextStore, updateStoreAtPath } from 'src/store';
-import { isProxyMuted } from 'src/state';
 
-import { isDebugOn } from 'src/utils/debug';
+import { debug } from 'src/shared/debug';
+import {
+  getCurrentComponent,
+  isProxyMuted,
+  addListener,
+} from 'src/shared/state';
 import {
   makePath,
   makePathUserFriendly2,
   makeUserFriendlyPath,
-} from 'src/utils/general';
-import * as utils from 'src/utils/utils';
+} from 'src/shared/general';
+import * as utils from 'src/shared/utils';
 
 const shouldBypassProxy = prop =>
   isProxyMuted() ||
@@ -50,16 +52,16 @@ const handleSet = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
   //  call updateStoreAtPath() from two places below
   const currentValue = utils.getValue(target, prop);
-  const newValuePath = makePath(target, prop);
+  const path = makePath(target, prop);
 
-  if (isDebugOn()) {
-    console.groupCollapsed(`SET: ${makePathUserFriendly2(newValuePath)}`);
+  debug(() => {
+    console.groupCollapsed(`SET: ${makePathUserFriendly2(path)}`);
     console.info('From:', currentValue);
     console.info('To:  ', value); // The user doesn't care about the proxied version
     console.groupEnd();
-  }
+  });
 
-  const newStore = updateStoreAtPath({
+  updateStoreAtPath({
     target,
     value,
     prop,
@@ -70,11 +72,6 @@ const handleSet = ({ target, prop, value, updater }) => {
         mutableTarget[prop] = newValue;
       }
     },
-  });
-
-  notifyByPath({
-    path: newValuePath,
-    newStore,
   });
 
   return true;
@@ -175,7 +172,7 @@ export const mapOrSetProxyHandler = {
         prop
       )
     ) {
-      addListener(target, 'size');
+      addListener(makePath(target, 'size'));
       // TODO (davidg): do I not log the get on some Map or Set reads?
       return result;
     }
@@ -224,14 +221,14 @@ export const objectOrArrayProxyHandler = {
 
     if (shouldBypassProxy(prop)) return result;
 
-    if (isDebugOn()) {
+    debug(() => {
       console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
       console.info(`Component: <${getCurrentComponent()._name}>`);
       console.info('Value:', result);
       console.groupEnd();
-    }
+    });
 
-    addListener(target, prop);
+    addListener(makePath(target, prop));
 
     return result;
   },
@@ -245,13 +242,13 @@ export const objectOrArrayProxyHandler = {
       return Reflect.has(target, prop);
     }
 
-    if (isDebugOn()) {
+    debug(() => {
       console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
       console.info(`Component: <${getCurrentComponent()._name}>`);
       console.groupEnd();
-    }
+    });
 
-    addListener(target, prop);
+    addListener(makePath(target, prop));
 
     return Reflect.has(target, prop);
   },
@@ -281,25 +278,20 @@ export const objectOrArrayProxyHandler = {
     if (isProxyMuted() || !utils.isInBrowser())
       return Reflect.deleteProperty(target, prop);
 
-    if (isDebugOn()) {
+    debug(() => {
       console.groupCollapsed(`DELETE: ${makeUserFriendlyPath(target, prop)}`);
       console.info('Property: ', makeUserFriendlyPath(target, prop));
       console.groupEnd();
-    }
+    });
 
     // TODO (davidg): this duplicates handleSet() a bit. Better to generalise that function
-    const path = makePath(target, prop);
 
-    const newStore = updateStoreAtPath({
+    updateStoreAtPath({
       target,
+      prop,
       updater: finalTarget => {
         Reflect.deleteProperty(finalTarget, prop);
       },
-    });
-
-    notifyByPath({
-      path,
-      newStore,
     });
 
     return true;

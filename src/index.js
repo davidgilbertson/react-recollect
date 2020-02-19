@@ -1,9 +1,9 @@
 import { getStore } from 'src/store';
-import { getListeners } from 'src/updating';
 
-import { debugOff, debugOn } from 'src/utils/debug';
+import { debugOff, debugOn } from 'src/shared/debug';
+import { getListeners } from 'src/shared/state';
 
-export { collect } from 'src/collect';
+export { default as collect } from 'src/collect';
 export { afterChange } from 'src/updating';
 export { store, initStore } from 'src/store';
 

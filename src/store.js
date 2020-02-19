@@ -1,10 +1,11 @@
 import { createProxy, decorateWithPathAndProxy, isProxy } from 'src/proxy';
 import { getHandlerForObject } from 'src/proxyHandlers';
-import { muteProxy, unMuteProxy } from 'src/state';
 
-import { addPathProp, makePath } from 'src/utils/general';
-import { PATH_PROP } from 'src/utils/constants';
-import * as utils from 'src/utils/utils';
+import { muteProxy, unMuteProxy } from 'src/shared/state';
+import { addPathProp, makePath } from 'src/shared/general';
+import { PATH_PROP } from 'src/shared/constants';
+import * as utils from 'src/shared/utils';
+import { notifyByPath } from 'src/updating';
 
 const rawStore = {};
 
@@ -50,12 +51,12 @@ const cloneAnything = anything => {
  *
  * @param props
  * @param {*} props.target - the target in the current store
- * @param {*} props.value - the target in the current store
  * @param {*} props.prop - the target in the current store
+ * @param {*} [props.value] - the target in the current store
  * @param {function} props.updater - a function that will be passed the target
  * @return {*}
  */
-export const updateStoreAtPath = ({ target, value, prop, updater }) => {
+export const updateStoreAtPath = ({ target, prop, value, updater }) => {
   // TODO (davidg): @callback for the updater
   // TODO (davidg): "updateTargetInStore"
 
@@ -99,15 +100,18 @@ export const updateStoreAtPath = ({ target, value, prop, updater }) => {
 
   // If this is updating with a new value (rather than deleting)
   // We prepare that value now
-  let newValue = null;
-  if (prop !== 'undefined' && value !== 'undefined') {
-    const newValuePath = makePath(target, prop);
+  const path = makePath(target, prop);
+
+  let newValue = value;
+
+  // If there's a value, wrap it in a proxy
+  if (value !== 'undefined') {
     const handler = getHandlerForObject(value);
-    newValue = decorateWithPathAndProxy(value, newValuePath, handler);
+    newValue = decorateWithPathAndProxy(value, path, handler);
   }
 
   // TODO (davidg): of course this doesn't work! It mutates the object!
-  // use utils.deepUpdate
+  // use utils.deepUpdate() instead
   updater(finalTarget, newValue);
 
   addPathProp(newStore, ['store']);
@@ -115,7 +119,11 @@ export const updateStoreAtPath = ({ target, value, prop, updater }) => {
   unMuteProxy();
 
   // TODO (davidg): store is already a proxy by this point
-  return createProxyWithHandler(newStore);
+
+  notifyByPath({
+    path,
+    newStore: createProxyWithHandler(newStore),
+  });
 };
 
 const resetStore = () => {

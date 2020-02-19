@@ -1,4 +1,4 @@
-import { deepUpdate } from 'src/utils/utils';
+import { deepUpdate } from 'src/shared/utils';
 
 it('should mutate the object', () => {
   const original = {

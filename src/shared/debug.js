@@ -18,4 +18,6 @@ export const debugOff = () => {
   if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
 };
 
-export const isDebugOn = () => DEBUG === DEBUG_ON;
+export const debug = cb => {
+  if (DEBUG === DEBUG_ON) cb();
+};

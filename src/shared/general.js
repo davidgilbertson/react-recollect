@@ -1,4 +1,4 @@
-import { PATH_PROP } from 'src/utils/constants';
+import { PATH_PROP } from 'src/shared/constants';
 
 /**
  * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done

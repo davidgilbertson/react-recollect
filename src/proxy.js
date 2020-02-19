@@ -1,5 +1,5 @@
-import * as utils from 'src/utils/utils';
-import { addPathProp } from 'src/utils/general';
+import * as utils from 'src/shared/utils';
+import { addPathProp } from 'src/shared/general';
 
 const proxies = new WeakSet();
 

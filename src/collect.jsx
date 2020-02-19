@@ -1,57 +1,31 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
+
 import { getNextStore } from 'src/store';
 import { removeListenersForComponent } from 'src/updating';
-import { isDebugOn } from 'src/utils/debug';
 
-let currentComponent;
-
-export const getCurrentComponent = () => currentComponent;
-
-const setCurrentComponent = component => {
-  if (isDebugOn()) {
-    console.groupCollapsed(`RENDER: <${component._name}>`);
-  }
-
-  currentComponent = component;
-};
-
-const unsetCurrentComponent = () => {
-  if (isDebugOn()) {
-    console.groupEnd();
-  }
-
-  currentComponent = null;
-};
+import { setCurrentComponent } from 'src/shared/state';
+import { debug } from 'src/shared/debug';
 
 const startRecordingGetsForComponent = component => {
   removeListenersForComponent(component);
+
+  debug(() => {
+    console.groupCollapsed(`RENDER: <${component._name}>`);
+  });
+
   setCurrentComponent(component);
 };
 
 const stopRecordingGetsForComponent = () => {
-  unsetCurrentComponent();
+  debug(() => {
+    console.groupEnd();
+  });
+
+  setCurrentComponent(null);
 };
 
-// const startRecordingGetsForComponent = component => {
-//   removeListenersForComponent(component);
-//
-//   if (isDebugOn()) {
-//     console.groupCollapsed(`RENDER: <${component._name}>`);
-//   }
-//
-//   setCurrentComponent(component);
-// };
-//
-// const stopRecordingGetsForComponent = () => {
-//   if (isDebugOn()) {
-//     console.groupEnd();
-//   }
-//
-//   setCurrentComponent(null);
-// };
-
-export const collect = (ComponentToWrap, { forwardRef } = {}) => {
+const collect = (ComponentToWrap, { forwardRef } = {}) => {
   const componentName =
     ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
@@ -115,3 +89,5 @@ export const collect = (ComponentToWrap, { forwardRef } = {}) => {
 
   return hoistNonReactStatics(WrappedComponent, ComponentToWrap);
 };
+
+export default collect;

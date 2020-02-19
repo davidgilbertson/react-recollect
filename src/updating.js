@@ -1,59 +1,19 @@
 import { getStore, setNextStore, setStore } from 'src/store';
-import { getCurrentComponent } from 'src/collect';
 
-import { makePath } from 'src/utils/general';
-import { isDebugOn } from 'src/utils/debug';
-
-/**
- * To convert the path array to a string for the listener keys
- * Use a crazy separator. If the separator was a '.', and the user had a prop with a dot in it,
- * then it could cause false matches in the updated logic.
- * @type {string}
- */
-const PROP_PATH_SEP = '~~~';
-
-const listeners = {
-  store: [],
-};
-
-const manualListeners = [];
-
-export const getListeners = () => listeners;
-
-/**
- * Add a new listener to be notified when a particular value in the store changes
- * To be used when a component reads from a property
- * @param target - the Proxy target object
- * @param prop - the property of the target that was read
- */
-export const addListener = (target, prop) => {
-  if (!getCurrentComponent()) return;
-
-  // We use a string instead of an array because it's much easier to match
-  const pathString = makePath(target, prop).join(PROP_PATH_SEP);
-
-  // TODO (davidg): consider Map instead of array? Easier to delete a component?
-  //  could be like this, but as a Map
-  // const listeners = {
-  //   'path~~~as~~~string': {
-  //     pathArray: ['path', 'as', 'string'],
-  //     components: [],
-  //   }
-  // }
-
-  if (listeners[pathString]) {
-    listeners[pathString].push(getCurrentComponent());
-  } else {
-    listeners[pathString] = [getCurrentComponent()];
-  }
-};
+import { debug } from 'src/shared/debug';
+import {
+  addManualListener,
+  getListeners,
+  getManualListeners,
+} from 'src/shared/state';
+import { PROP_PATH_SEP } from 'src/shared/constants';
 
 /**
  * Add a callback to be called every time the store changes
  * @param cb
  */
 export const afterChange = cb => {
-  manualListeners.push(cb);
+  addManualListener(cb);
 };
 
 // TODO (davidg): remember why I can't batch updates. It was something to do with a component
@@ -81,11 +41,11 @@ const updateComponents = ({ components, path, newStore }) => {
       if (updatedComponents.includes(component)) return;
       updatedComponents.push(component);
 
-      if (isDebugOn()) {
+      debug(() => {
         console.groupCollapsed(`QUEUE UPDATE:  <${component._name}>`);
         console.info(`Changed property:   ${userFriendlyPropPath}`);
         console.groupEnd();
-      }
+      });
 
       // TODO (davidg): could I push these to an array, then wait a tick and flush it?
       //  This would require major changes to the prev/next store logic.
@@ -99,7 +59,7 @@ const updateComponents = ({ components, path, newStore }) => {
 
   // In addition to calling .update() on components, we also trigger any manual listeners.
   // E.g. something registered with afterEach()
-  manualListeners.forEach(cb =>
+  getManualListeners().forEach(cb =>
     cb({
       store: newStore,
       propPath: userFriendlyPropPath,
@@ -115,36 +75,40 @@ const updateComponents = ({ components, path, newStore }) => {
  * - a path further up the object tree. E.g. store.tasks - this is because a component in an array
  *   will typically get its values from its parent component. Not directly from the store
  *   being made available by collect()
- * - a path further down the object tree. E.g. store.tasks.2.name (only when
+ * - a path further down the object tree. E.g. store.tasks.2.name
  * @param {Object} props
  * @param {Array<*>} props.path - The path of the prop that changed
  * @param {Object} props.newStore - The next version of the store
  */
 export const notifyByPath = ({ path, newStore }) => {
-  let components = [];
+  let componentsToUpdate = [];
   const pathString = path.join(PROP_PATH_SEP);
+  const listeners = getListeners();
 
-  Object.entries(listeners).forEach(([listenerPath, listenerComponents]) => {
+  Object.entries(listeners).forEach(([listenerPath, components]) => {
     if (
       pathString === listenerPath || // direct match
       pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
       listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
     ) {
-      components = components.concat(listenerComponents);
+      componentsToUpdate = componentsToUpdate.concat(components);
     }
   });
 
   updateComponents({
-    components,
+    components: componentsToUpdate,
     path,
     newStore,
   });
 };
 
-export const removeListenersForComponent = component => {
-  Object.entries(listeners).forEach(([listenerPath, listenerComponents]) => {
-    listeners[listenerPath] = listenerComponents.filter(
-      listeningComponent => listeningComponent !== component
+// TODO (davidg): this borderline belongs in `state.js`
+export const removeListenersForComponent = componentToRemove => {
+  const listeners = getListeners();
+
+  Object.entries(listeners).forEach(([listenerPath, components]) => {
+    listeners[listenerPath] = components.filter(
+      existingComponent => existingComponent !== componentToRemove
     );
   });
 };
