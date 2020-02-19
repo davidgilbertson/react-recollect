@@ -1,10 +1,10 @@
-import { debugOff, debugOn } from './debug';
-import { getListeners } from './updating';
-import { getStore } from './store';
+import { debugOff, debugOn } from 'src/debug';
+import { getListeners } from 'src/updating';
+import { getStore } from 'src/store';
 
-export { afterChange } from './updating';
-export { collect } from './collect';
-export { store, initStore } from './store';
+export { afterChange } from 'src/updating';
+export { collect } from 'src/collect';
+export { store, initStore } from 'src/store';
 
 if (typeof window !== 'undefined') {
   if ('Proxy' in window) {

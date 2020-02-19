@@ -1,8 +1,8 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { getNextStore } from './store';
-import { removeListenersForComponent } from './updating';
-import { isDebugOn } from './debug';
+import { getNextStore } from 'src/store';
+import { removeListenersForComponent } from 'src/updating';
+import { isDebugOn } from 'src/debug';
 
 let currentComponent;
 

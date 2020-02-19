@@ -1,8 +1,8 @@
 import {
   objectOrArrayProxyHandler,
   mapOrSetProxyHandler,
-} from './proxyHandlers';
-import * as utils from './utils';
+} from 'src/proxyHandlers';
+import * as utils from 'src/utils';
 
 const proxies = new WeakSet();
 let muted = false;

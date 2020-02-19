@@ -1,15 +1,15 @@
-import { isDebugOn } from './debug';
+import { isDebugOn } from 'src/debug';
 import {
   decorateWithPathAndProxy,
   makePath,
   makePathUserFriendly2,
   makeUserFriendlyPath,
-} from './general';
-import { isProxyMuted } from './proxy';
-import { getCurrentComponent } from './collect';
-import { addListener, notifyByPath } from './updating';
-import { getFromNextStore, updateStoreAtPath } from './store';
-import * as utils from './utils';
+} from 'src/general';
+import { isProxyMuted } from 'src/proxy';
+import { getCurrentComponent } from 'src/collect';
+import { addListener, notifyByPath } from 'src/updating';
+import { getFromNextStore, updateStoreAtPath } from 'src/store';
+import * as utils from 'src/utils';
 
 const shouldBypassProxy = prop =>
   isProxyMuted() ||

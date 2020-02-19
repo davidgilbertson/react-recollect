@@ -10,6 +10,9 @@
     "jest": true,
     "es2020": false
   },
+  "settings": {
+    "import/resolver": "webpack"
+  },
   "rules": {
     "no-plusplus": "off",
     "no-console": [

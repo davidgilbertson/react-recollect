@@ -1,6 +1,6 @@
-import { PATH_PROP } from './constants';
-import { createProxy } from './proxy';
-import * as utils from './utils';
+import { PATH_PROP } from 'src/constants';
+import { createProxy } from 'src/proxy';
+import * as utils from 'src/utils';
 
 /**
  * Convert a target and a prop into an internal path string like store~~~tasks~~~1~~~done

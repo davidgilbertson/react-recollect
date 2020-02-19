@@ -1,7 +1,7 @@
-import { createProxy, isProxy, muteProxy, unMuteProxy } from './proxy';
-import { addPathProp, makePath } from './general';
-import { PATH_PROP } from './constants';
-import * as utils from './utils';
+import { createProxy, isProxy, muteProxy, unMuteProxy } from 'src/proxy';
+import { addPathProp, makePath } from 'src/general';
+import { PATH_PROP } from 'src/constants';
+import * as utils from 'src/utils';
 
 const rawStore = {};
 

@@ -19,6 +19,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.jsx'],
+    modules: [__dirname, 'node_modules'],
   },
   externals: Object.keys(peerDependencies),
 };
