@@ -1,22 +1,46 @@
 import { getFromNextStore, updateStoreAtPath } from 'src/store';
 
 import { debug } from 'src/shared/debug';
-import {
-  getCurrentComponent,
-  isProxyMuted,
-  addListener,
-} from 'src/shared/state';
+import state from 'src/shared/state';
 import {
   makePath,
   makePathUserFriendly2,
   makeUserFriendlyPath,
 } from 'src/shared/general';
 import * as utils from 'src/shared/utils';
+import { PROP_PATH_SEP } from 'src/shared/constants';
+
+/**
+ * Add a new listener to be notified when a particular value in the store changes
+ * To be used when a component reads from a property
+ * @param {Array<*>} pathArray
+ */
+const addListener = pathArray => {
+  if (!state.currentComponent) return;
+
+  // We use a string instead of an array because it's much easier to match
+  const pathString = pathArray.join(PROP_PATH_SEP);
+
+  // TODO (davidg): consider Map instead of array? Easier to delete a component?
+  //  could be like this, but as a Map
+  // const listeners = {
+  //   'path~~~as~~~string': {
+  //     pathArray: ['path', 'as', 'string'],
+  //     components: [],
+  //   }
+  // }
+
+  if (state.listeners[pathString]) {
+    state.listeners[pathString].push(state.currentComponent);
+  } else {
+    state.listeners[pathString] = [state.currentComponent];
+  }
+};
 
 const shouldBypassProxy = prop =>
-  isProxyMuted() ||
+  state.proxyIsMuted ||
   !utils.isInBrowser() ||
-  !getCurrentComponent() ||
+  !state.currentComponent ||
   utils.isSymbol(prop) ||
   prop === 'constructor' ||
   prop === 'toJSON';
@@ -29,11 +53,11 @@ const shouldBypassProxy = prop =>
  * @param {*} prop
  */
 const isGettingPropOutsideOfRenderCycle = prop =>
-  !getCurrentComponent() &&
+  !state.currentComponent &&
   utils.isInBrowser() &&
   !utils.isSymbol(prop) &&
   prop !== 'constructor' && // TODO (davidg): maybe 'is exotic'? Check hasOwnProps? Slow?
-  !isProxyMuted();
+  !state.proxyIsMuted;
 
 /**
  * This function takes an instruction to update the store. For simple properties, it will update
@@ -87,9 +111,9 @@ export const mapOrSetProxyHandler = {
     if (utils.isFunction(result)) result = result.bind(target);
 
     // bail early for some things. Unlike objects/arrays, we will continue on even
-    // if !getCurrentComponent()
+    // if !state.currentComponent
     if (
-      isProxyMuted() ||
+      state.proxyIsMuted ||
       !utils.isInBrowser() ||
       utils.isSymbol(prop) ||
       prop === 'constructor' ||
@@ -164,7 +188,7 @@ export const mapOrSetProxyHandler = {
     }
 
     // Now that we've ruled out set/clear/delete, we can bail if we're not in the render cycle
-    if (!getCurrentComponent()) return result;
+    if (!state.currentComponent) return result;
 
     // For `size` or any getter method, subscribe to size changes and return
     if (
@@ -223,7 +247,7 @@ export const objectOrArrayProxyHandler = {
 
     debug(() => {
       console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
-      console.info(`Component: <${getCurrentComponent()._name}>`);
+      console.info(`Component: <${state.currentComponent._name}>`);
       console.info('Value:', result);
       console.groupEnd();
     });
@@ -235,7 +259,7 @@ export const objectOrArrayProxyHandler = {
 
   has(target, prop) {
     if (
-      isProxyMuted() ||
+      state.proxyIsMuted ||
       !utils.isInBrowser() ||
       utils.isArray(target) // Arrays call this trap, but we don't care
     ) {
@@ -244,7 +268,7 @@ export const objectOrArrayProxyHandler = {
 
     debug(() => {
       console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
-      console.info(`Component: <${getCurrentComponent()._name}>`);
+      console.info(`Component: <${state.currentComponent._name}>`);
       console.groupEnd();
     });
 
@@ -260,8 +284,9 @@ export const objectOrArrayProxyHandler = {
     // a set() on 'length' (helpful!) which tells us we need to update.
     if (prop !== 'length' && target[prop] === value) return true;
 
-    if (isProxyMuted() || !utils.isInBrowser())
+    if (state.proxyIsMuted || !utils.isInBrowser()) {
       return Reflect.set(target, prop, value);
+    }
 
     return handleSet({
       target,
@@ -275,16 +300,15 @@ export const objectOrArrayProxyHandler = {
 
   deleteProperty(target, prop) {
     // TODO (davidg): use shouldBypassProxy? Or not for delete?
-    if (isProxyMuted() || !utils.isInBrowser())
+    if (state.proxyIsMuted || !utils.isInBrowser()) {
       return Reflect.deleteProperty(target, prop);
+    }
 
     debug(() => {
       console.groupCollapsed(`DELETE: ${makeUserFriendlyPath(target, prop)}`);
       console.info('Property: ', makeUserFriendlyPath(target, prop));
       console.groupEnd();
     });
-
-    // TODO (davidg): this duplicates handleSet() a bit. Better to generalise that function
 
     updateStoreAtPath({
       target,

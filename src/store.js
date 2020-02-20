@@ -1,22 +1,21 @@
 import { createProxy, decorateWithPathAndProxy, isProxy } from 'src/proxy';
 import { getHandlerForObject } from 'src/proxyHandlers';
+import { notifyByPath } from 'src/updating';
 
-import { muteProxy, unMuteProxy } from 'src/shared/state';
+import state from 'src/shared/state';
 import { addPathProp, makePath } from 'src/shared/general';
 import { PATH_PROP } from 'src/shared/constants';
 import * as utils from 'src/shared/utils';
-import { notifyByPath } from 'src/updating';
-
-const rawStore = {};
-
-addPathProp(rawStore, ['store']); // TODO (davidg): why is store ever here?
 
 const createProxyWithHandler = obj =>
   createProxy(obj, getHandlerForObject(obj));
 
-export const store = createProxyWithHandler(rawStore);
+const rawStore = {};
 
-let nextStore;
+addPathProp(rawStore, ['store']); // TODO (davidg): why is store even here?
+
+state.store = createProxyWithHandler(rawStore);
+state.nextStore = state.store;
 
 const cloneAnything = anything => {
   let result;
@@ -57,17 +56,16 @@ const cloneAnything = anything => {
  * @return {*}
  */
 export const updateStoreAtPath = ({ target, prop, value, updater }) => {
-  // TODO (davidg): @callback for the updater
   // TODO (davidg): "updateTargetInStore"
 
-  muteProxy();
+  state.proxyIsMuted = true;
 
   // Note that this function doesn't know anything about the prop being set. It just finds the
   // target (the parent of the prop) and calls updater() with it.
   const propArray = target[PATH_PROP].slice(1);
 
   // Shallow clone the existing store. We will clone all the way down to the target object
-  const newStore = { ...store };
+  const newStore = { ...state.store };
 
   // This walks down into the object, returning the target.
   // On the way in clones each level so as not to mutate the original store.
@@ -116,36 +114,37 @@ export const updateStoreAtPath = ({ target, prop, value, updater }) => {
 
   addPathProp(newStore, ['store']);
 
-  unMuteProxy();
+  state.proxyIsMuted = false;
 
-  // TODO (davidg): store is already a proxy by this point
+  // TODO (davidg): at this point, I should lock/freeze 'store', since any
+  //  change to it mutates what the components used to render.
 
   notifyByPath({
     path,
+    // TODO (davidg): store is already a proxy by this point, no?
     newStore: createProxyWithHandler(newStore),
   });
 };
 
-const resetStore = () => {
-  Object.keys(store).forEach(prop => {
-    delete store[prop];
-  });
-};
-
+// TODO (davidg): why would I ever want to init the store without muting the
+//  proxies?
 // Calling this directly doesn't mute the proxy
 // So items added are wrapped in a proxy. Perhaps there's a better way to do this
 // (I want to mute the proxy emitting, but DO want new items wrapped in a proxy)
 export const initStore = data => {
-  resetStore();
+  // Delete everything first
+  // TODO (davidg): I can make this faster. No need to delete and add identical
+  //  things back in. Might require a semver major bump
+  Object.keys(state.store).forEach(prop => {
+    delete state.store[prop];
+  });
 
   if (data) {
     Object.entries(data).forEach(([prop, value]) => {
-      store[prop] = value;
+      state.store[prop] = value;
     });
   }
 };
-
-export const getStore = () => store;
 
 /**
  * Replace the contents of the old store with the new store.
@@ -153,23 +152,15 @@ export const getStore = () => store;
  * @param next
  */
 export const setStore = next => {
-  muteProxy();
+  state.proxyIsMuted = true;
 
   initStore(next);
 
-  unMuteProxy();
+  state.proxyIsMuted = false;
 };
-
-export const setNextStore = next => {
-  nextStore = next;
-};
-
-// TODO (davidg): should getStore() just do nextStore || store?
-// will getStore ever be called to get the last one?
-export const getNextStore = () => nextStore || store;
 
 export const getFromNextStore = (target, targetProp) => {
-  muteProxy();
+  state.proxyIsMuted = true;
 
   let result;
 
@@ -178,13 +169,13 @@ export const getFromNextStore = (target, targetProp) => {
   // TODO (davidg): reduce
   propPath.forEach(propName => {
     if (propName === 'store') {
-      result = getNextStore();
+      result = state.nextStore;
     } else {
       result = utils.getValue(result, propName);
     }
   });
 
-  unMuteProxy();
+  state.proxyIsMuted = false;
 
   return result;
 };

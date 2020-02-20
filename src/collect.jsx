@@ -1,10 +1,9 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { getNextStore } from 'src/store';
 import { removeListenersForComponent } from 'src/updating';
 
-import { setCurrentComponent } from 'src/shared/state';
+import state from 'src/shared/state';
 import { debug } from 'src/shared/debug';
 
 const startRecordingGetsForComponent = component => {
@@ -14,7 +13,7 @@ const startRecordingGetsForComponent = component => {
     console.groupCollapsed(`RENDER: <${component._name}>`);
   });
 
-  setCurrentComponent(component);
+  state.currentComponent = component;
 };
 
 const stopRecordingGetsForComponent = () => {
@@ -22,7 +21,7 @@ const stopRecordingGetsForComponent = () => {
     console.groupEnd();
   });
 
-  setCurrentComponent(null);
+  state.currentComponent = null;
 };
 
 const collect = (ComponentToWrap, { forwardRef } = {}) => {
@@ -35,7 +34,7 @@ const collect = (ComponentToWrap, { forwardRef } = {}) => {
       this.state = {
         // This might be called by React when a parent component has updated with a new store,
         // we want this component (if it's a child) to have that next store as well.
-        store: getNextStore(),
+        store: state.nextStore,
       };
       this._name = componentName;
       this._isMounted = false;

@@ -1,11 +1,7 @@
-import { getStore, setNextStore, setStore } from 'src/store';
+import { setStore } from 'src/store';
 
 import { debug } from 'src/shared/debug';
-import {
-  addManualListener,
-  getListeners,
-  getManualListeners,
-} from 'src/shared/state';
+import state from 'src/shared/state';
 import { PROP_PATH_SEP } from 'src/shared/constants';
 
 /**
@@ -13,7 +9,7 @@ import { PROP_PATH_SEP } from 'src/shared/constants';
  * @param cb
  */
 export const afterChange = cb => {
-  addManualListener(cb);
+  state.manualListeners.push(cb);
 };
 
 // TODO (davidg): remember why I can't batch updates. It was something to do with a component
@@ -30,7 +26,7 @@ export const afterChange = cb => {
  */
 const updateComponents = ({ components, path, newStore }) => {
   // This is for other components that might render as a result of these updates.
-  setNextStore(newStore);
+  state.nextStore = newStore;
 
   // components can have duplicates, so take care to only update once each.
   const updatedComponents = [];
@@ -53,13 +49,16 @@ const updateComponents = ({ components, path, newStore }) => {
     });
   }
 
-  const oldStore = { ...getStore() };
+  // TODO (davidg): I do a bunch of work updating the store even when there's
+  //  no components listening. When I look at batching, and investigate
+  //  having a 'prevStore' concept instead of a 'nextStore', fix this?
+  const oldStore = { ...state.store };
 
   setStore(newStore);
 
   // In addition to calling .update() on components, we also trigger any manual listeners.
   // E.g. something registered with afterEach()
-  getManualListeners().forEach(cb =>
+  state.manualListeners.forEach(cb =>
     cb({
       store: newStore,
       propPath: userFriendlyPropPath,
@@ -83,9 +82,8 @@ const updateComponents = ({ components, path, newStore }) => {
 export const notifyByPath = ({ path, newStore }) => {
   let componentsToUpdate = [];
   const pathString = path.join(PROP_PATH_SEP);
-  const listeners = getListeners();
 
-  Object.entries(listeners).forEach(([listenerPath, components]) => {
+  Object.entries(state.listeners).forEach(([listenerPath, components]) => {
     if (
       pathString === listenerPath || // direct match
       pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
@@ -102,12 +100,9 @@ export const notifyByPath = ({ path, newStore }) => {
   });
 };
 
-// TODO (davidg): this borderline belongs in `state.js`
 export const removeListenersForComponent = componentToRemove => {
-  const listeners = getListeners();
-
-  Object.entries(listeners).forEach(([listenerPath, components]) => {
-    listeners[listenerPath] = components.filter(
+  Object.entries(state.listeners).forEach(([listenerPath, components]) => {
+    state.listeners[listenerPath] = components.filter(
       existingComponent => existingComponent !== componentToRemove
     );
   });

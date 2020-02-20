@@ -1,19 +1,31 @@
-import { getStore } from 'src/store';
-
 import { debugOff, debugOn } from 'src/shared/debug';
-import { getListeners } from 'src/shared/state';
+import state from 'src/shared/state';
 
 export { default as collect } from 'src/collect';
 export { afterChange } from 'src/updating';
-export { store, initStore } from 'src/store';
+export { initStore } from 'src/store';
+export const { store } = state;
 
 if (typeof window !== 'undefined') {
   if ('Proxy' in window) {
+    // TODO (davidg): getStore() and getListeners() can go.
+    //  Requires a major bump, technically. Deprecate them for a version
     window.__RR__ = {
-      getStore,
-      getListeners,
       debugOn,
       debugOff,
+      getInternalState: () => state,
+      getStore: () => {
+        console.warn(
+          '__RR__.getStore() will be removed in v4. Use __RR__.getInternalState().store instead'
+        );
+        return state.store;
+      },
+      getListeners: () => {
+        console.warn(
+          '__RR__.getListeners() will be removed in v4. Use __RR__.getInternalState().listeners instead'
+        );
+        return state.listeners;
+      },
     };
   } else {
     console.warn(
