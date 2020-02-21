@@ -10,4 +10,8 @@ it('should replace the contents of the store', () => {
 
   expect(store.propertyOne).toBeUndefined();
   expect(store.propertyTwo).toBe('the second property');
+
+  expect(store).toEqual({
+    propertyTwo: 'the second property',
+  });
 });

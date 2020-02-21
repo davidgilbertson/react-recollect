@@ -29,7 +29,7 @@ export const makePathUserFriendly2 = internalPath => {
   //   .join('')
   //   .replace(/^\./, '');
   // === one.two[3].four
-  return internalPath.join('.');
+  return internalPath.slice(1).join('.');
 };
 
 /**

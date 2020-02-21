@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, afterChange, initStore, store as globalStore } from 'src';
+import { collect, afterChange, store as globalStore, initStore } from 'src';
 
 let renderCount;
 
@@ -240,9 +240,9 @@ it('should handle a Map', () => {
   });
 
   expect(propPathChanges(handleChange)).toEqual([
-    'store.testMap',
+    'testMap',
     // Note that 'david' isn't here since it was part of the initial map
-    'store.testMap.erica',
+    'testMap.erica',
   ]);
 
   expect(globalStore.testMap.get('erica')).toEqual({
@@ -291,19 +291,19 @@ it('should handle a Map', () => {
   expect(handleChange).not.toHaveBeenCalled();
 
   globalStore.testMap.delete('david');
-  expect(propPathChanges(handleChange)).toEqual(['store.testMap.delete']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap.delete']);
   expect(globalStore.testMap.get('david')).toBeUndefined();
   expect(globalStore.testMap.size).toBe(1);
 
   handleChange.mockClear();
   globalStore.testMap.set(0, 'a numeric key');
-  expect(propPathChanges(handleChange)).toEqual(['store.testMap.0']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap.0']);
   expect(globalStore.testMap.get(0)).toBe('a numeric key');
   expect(globalStore.testMap.size).toBe(2);
 
   handleChange.mockClear();
   globalStore.testMap.clear();
-  expect(propPathChanges(handleChange)).toEqual(['store.testMap.clear']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap.clear']);
   expect(globalStore.testMap.get(0)).toBeUndefined();
   expect(globalStore.testMap.size).toBe(0);
 
@@ -313,7 +313,7 @@ it('should handle a Map', () => {
   expect(propPathChanges(handleChange)).toEqual([
     // TODO (davidg): it's not great that the keys aren't unique if they're objects.
     //  It should work fine, but might over-notify
-    'store.testMap.[object Object]',
+    'testMap.[object Object]',
   ]);
   handleChange.mockClear();
 
@@ -321,9 +321,7 @@ it('should handle a Map', () => {
 
   // Overwrite that with a nested map
   globalStore.testMap.set(objectKey, new Map([['string key', 'the value']]));
-  expect(propPathChanges(handleChange)).toEqual([
-    'store.testMap.[object Object]',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['testMap.[object Object]']);
   expect(globalStore.testMap.get(objectKey).get('string key')).toBe(
     'the value'
   );

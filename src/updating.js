@@ -22,15 +22,11 @@ export const afterChange = cb => {
  * @param {Object} props
  * @param {Array<Object>} props.components - the components to update
  * @param {Array<*>} props.path - the property path that triggered this change
- * @param {Object} props.newStore - the next version of the store, with updates applied
  */
-const updateComponents = ({ components, path, newStore }) => {
-  // This is for other components that might render as a result of these updates.
-  state.nextStore = newStore;
-
+const updateComponents = ({ components, path }) => {
   // components can have duplicates, so take care to only update once each.
   const updatedComponents = [];
-  const userFriendlyPropPath = path.join('.');
+  const userFriendlyPropPath = path.slice(1).join('.');
 
   if (components) {
     components.forEach(component => {
@@ -45,24 +41,22 @@ const updateComponents = ({ components, path, newStore }) => {
 
       // TODO (davidg): could I push these to an array, then wait a tick and flush it?
       //  This would require major changes to the prev/next store logic.
-      component.update(newStore);
+      component.update();
     });
   }
 
   // TODO (davidg): I do a bunch of work updating the store even when there's
   //  no components listening. When I look at batching, and investigate
   //  having a 'prevStore' concept instead of a 'nextStore', fix this?
-  const oldStore = { ...state.store };
-
-  setStore(newStore);
+  setStore(state.nextStore);
 
   // In addition to calling .update() on components, we also trigger any manual listeners.
   // E.g. something registered with afterEach()
   state.manualListeners.forEach(cb =>
     cb({
-      store: newStore,
+      store: state.nextStore,
       propPath: userFriendlyPropPath,
-      prevStore: oldStore,
+      prevStore: state.store,
       components: updatedComponents,
     })
   );
@@ -75,13 +69,11 @@ const updateComponents = ({ components, path, newStore }) => {
  *   will typically get its values from its parent component. Not directly from the store
  *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name
- * @param {Object} props
- * @param {Array<*>} props.path - The path of the prop that changed
- * @param {Object} props.newStore - The next version of the store
+ * @param {Array<*>} path - The path of the prop that changed
  */
-export const notifyByPath = ({ path, newStore }) => {
+export const notifyByPath = path => {
   let componentsToUpdate = [];
-  const pathString = path.join(PROP_PATH_SEP);
+  const pathString = path.slice(1).join(PROP_PATH_SEP);
 
   Object.entries(state.listeners).forEach(([listenerPath, components]) => {
     if (
@@ -96,14 +88,21 @@ export const notifyByPath = ({ path, newStore }) => {
   updateComponents({
     components: componentsToUpdate,
     path,
-    newStore,
   });
 };
 
 export const removeListenersForComponent = componentToRemove => {
   Object.entries(state.listeners).forEach(([listenerPath, components]) => {
-    state.listeners[listenerPath] = components.filter(
+    const filteredComponents = components.filter(
       existingComponent => existingComponent !== componentToRemove
     );
+
+    if (filteredComponents.length) {
+      state.listeners[listenerPath] = filteredComponents;
+    } else {
+      // If there's no components left, remove the path
+      // For example, leaving a page will unmount a bunch of components
+      delete state.listeners[listenerPath];
+    }
   });
 };

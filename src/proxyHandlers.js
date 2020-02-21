@@ -19,7 +19,7 @@ const addListener = pathArray => {
   if (!state.currentComponent) return;
 
   // We use a string instead of an array because it's much easier to match
-  const pathString = pathArray.join(PROP_PATH_SEP);
+  const pathString = pathArray.slice(1).join(PROP_PATH_SEP);
 
   // TODO (davidg): consider Map instead of array? Easier to delete a component?
   //  could be like this, but as a Map
@@ -37,6 +37,14 @@ const addListener = pathArray => {
   }
 };
 
+/**
+ * We bypass the proxy if we don't want to:
+ * a) record a GET of a prop and add a listener for that prop path
+ * b) emit a SET and trigger listeners (which re-render components)
+ * @param prop
+ * @return {boolean}
+ */
+// TODO (davidg): there's only one use of this now, move it back down
 const shouldBypassProxy = prop =>
   state.proxyIsMuted ||
   !utils.isInBrowser() ||
@@ -239,10 +247,22 @@ export const objectOrArrayProxyHandler = {
 
     if (utils.isFunction(target[prop])) return result;
 
-    if (!isInBulkOperation && isGettingPropOutsideOfRenderCycle(prop)) {
+    // TODO (davidg): don't test for bulk operation here?
+    if (
+      !isInBulkOperation &&
+      !state.currentComponent &&
+      utils.isInBrowser() &&
+      !utils.isSymbol(prop) &&
+      !state.proxyIsMuted &&
+      prop !== 'constructor'
+    ) {
+      // Note, this will result in another get(), but on the equivalent
+      // target from the next store. muteProxy will be set so this line
+      // isn't triggers in an infinite loop
       return getFromNextStore(target, prop);
     }
 
+    // TODO (davidg): test for isInBulkOperation here?
     if (shouldBypassProxy(prop)) return result;
 
     debug(() => {

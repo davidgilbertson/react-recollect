@@ -59,13 +59,13 @@ const collect = (ComponentToWrap, { forwardRef } = {}) => {
       this._isMounted = false;
     }
 
-    update(newStore) {
+    update() {
       // 1. If the component has already unmounted, don't try and set the state
       // 2. The component might not have mounted YET, but is in the middle of its first
       //    render cycle.
       //    For example, if a user sets store.loading to true in App.componentDidMount
       if (this._isMounted || this._isMounting) {
-        this.setState({ store: newStore });
+        this.setState({ store: state.nextStore });
       }
     }
 

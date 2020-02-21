@@ -13,16 +13,16 @@ if (typeof window !== 'undefined') {
     window.__RR__ = {
       debugOn,
       debugOff,
-      getInternalState: () => state,
+      internals: state,
       getStore: () => {
         console.warn(
-          '__RR__.getStore() will be removed in v4. Use __RR__.getInternalState().store instead'
+          '__RR__.getStore() will be removed in v4. Use __RR__.internals.store instead'
         );
         return state.store;
       },
       getListeners: () => {
         console.warn(
-          '__RR__.getListeners() will be removed in v4. Use __RR__.getInternalState().listeners instead'
+          '__RR__.getListeners() will be removed in v4. Use __RR__.internals.listeners instead'
         );
         return state.listeners;
       },

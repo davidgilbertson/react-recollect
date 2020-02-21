@@ -163,7 +163,7 @@ afterChange(({ store }) => {
 Your callback will be called with an object, which has four properties:
 
 * `store` — the store
-* `propPath` — the 'path' of the property that changed. E.g. `'store.tasks.2.done'`
+* `propPath` — the 'path' of the property that changed. E.g. `'tasks.2.done'`
 * `components` — an array of the components that were updated
 * `prevStore` — the previous version of the store
 
@@ -727,13 +727,13 @@ test('loadTasksFromServer should update the store', async () => {
   const secondChange = afterChangeHandler.mock.calls[1][0];
   const thirdChange = afterChangeHandler.mock.calls[2][0];
   
-  expect(firstChange.propPath).toBe('store.loading');
+  expect(firstChange.propPath).toBe('loading');
   expect(firstChange.store.loading).toBe(true);
 
-  expect(secondChange.propPath).toBe('store.tasks');
+  expect(secondChange.propPath).toBe('tasks');
   expect(secondChange.store.tasks.length).toBe(1);
 
-  expect(thirdChange.propPath).toBe('store.loading');
+  expect(thirdChange.propPath).toBe('loading');
   expect(thirdChange.store.loading).toBe(false);
 
   // Check that the final state of the store is what we expected

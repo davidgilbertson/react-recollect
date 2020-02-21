@@ -68,7 +68,7 @@ it('should update a parent component when a prop is changed on a child component
   expect(taskListRenderCount).toBe(2);
   expect(taskRenderCount).toBe(2); // only one should update // TODO (davidg): failing
 
-  expect(handleChange.mock.calls[0][0].propPath).toBe('store.tasks.0.done');
+  expect(handleChange.mock.calls[0][0].propPath).toBe('tasks.0.done');
   expect(handleChange.mock.calls[0][0].components[0]._name).toBe('TaskList');
 
   // TODO (davidg): this fails to render because of React.memo (I'm mutating the store)

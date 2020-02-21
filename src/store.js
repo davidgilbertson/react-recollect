@@ -11,8 +11,9 @@ const createProxyWithHandler = obj =>
   createProxy(obj, getHandlerForObject(obj));
 
 const rawStore = {};
-
-addPathProp(rawStore, ['store']); // TODO (davidg): why is store even here?
+let storeCount = 0;
+addPathProp(rawStore, [`store-${storeCount++}`]); // TODO (davidg): why is
+// store even here?
 
 state.store = createProxyWithHandler(rawStore);
 state.nextStore = state.store;
@@ -65,6 +66,8 @@ export const updateStoreAtPath = ({ target, prop, value, updater }) => {
   const propArray = target[PATH_PROP].slice(1);
 
   // Shallow clone the existing store. We will clone all the way down to the target object
+  // TODO (davidg): is there a reason this doesn't operate on the next store
+  // directly?
   const newStore = { ...state.store };
 
   // This walks down into the object, returning the target.
@@ -112,68 +115,92 @@ export const updateStoreAtPath = ({ target, prop, value, updater }) => {
   // use utils.deepUpdate() instead
   updater(finalTarget, newValue);
 
-  addPathProp(newStore, ['store']);
+  addPathProp(newStore, [`store-${storeCount++}`]);
+  state.nextStore = createProxyWithHandler(newStore);
 
   state.proxyIsMuted = false;
 
   // TODO (davidg): at this point, I should lock/freeze 'store', since any
   //  change to it mutates what the components used to render.
 
-  notifyByPath({
-    path,
-    // TODO (davidg): store is already a proxy by this point, no?
-    newStore: createProxyWithHandler(newStore),
-  });
+  notifyByPath(path);
 };
 
-// TODO (davidg): why would I ever want to init the store without muting the
-//  proxies?
-// Calling this directly doesn't mute the proxy
-// So items added are wrapped in a proxy. Perhaps there's a better way to do this
-// (I want to mute the proxy emitting, but DO want new items wrapped in a proxy)
-export const initStore = data => {
-  // Delete everything first
-  // TODO (davidg): I can make this faster. No need to delete and add identical
-  //  things back in. Might require a semver major bump
-  Object.keys(state.store).forEach(prop => {
-    delete state.store[prop];
-  });
+/**
+ * Mutates prevObject. The top level object will remain the same,
+ * but all changed content will be replaced with the new content.
+ * In other words, only the top-level object is mutated.
+ * @param {object} prevObject
+ * @param {object} nextObject
+ */
+const replaceObject = (prevObject, nextObject) => {
+  /* eslint-disable no-param-reassign */
+  if (nextObject) {
+    if (nextObject[PATH_PROP]) {
+      // Copy the new path root across
+      prevObject[PATH_PROP] = nextObject[PATH_PROP];
+    }
 
-  if (data) {
-    Object.entries(data).forEach(([prop, value]) => {
-      state.store[prop] = value;
+    // From the new data, add to the old data anything that's new
+    // (from the top level props only)
+    Object.entries(nextObject).forEach(([prop, value]) => {
+      if (prevObject[prop] !== value) {
+        prevObject[prop] = value;
+      }
+    });
+
+    // Clear out any keys that aren't in the new data
+    Object.keys(prevObject).forEach(prop => {
+      if (!(prop in nextObject)) {
+        delete prevObject[prop];
+      }
+    });
+  } else {
+    // Just empty the old object
+    Object.keys(prevObject).forEach(prop => {
+      delete prevObject[prop];
     });
   }
+  /* eslint-enable no-param-reassign */
 };
 
 /**
  * Replace the contents of the old store with the new store.
- * DO NOT replace the old store object since the user's app will have a reference to it
+ * DO NOT replace the old store object since the user's app
+ * will have a reference to it
  * @param next
  */
 export const setStore = next => {
   state.proxyIsMuted = true;
-
-  initStore(next);
-
+  replaceObject(state.store, next);
   state.proxyIsMuted = false;
 };
 
+/**
+ * Unlike setStore() this doesn't mute the proxy, so objects are still
+ * wrapped and components are updated as a result
+ * @param data
+ */
+export const initStore = data => {
+  replaceObject(state.nextStore, data);
+};
+
+/**
+ * This takes a target (from one version of the store) and gets its value
+ * in `nextStore`.
+ * @param target
+ * @param targetProp
+ * @return {*}
+ */
 export const getFromNextStore = (target, targetProp) => {
   state.proxyIsMuted = true;
 
-  let result;
+  const propPath = makePath(target, targetProp).slice(1);
 
-  const propPath = makePath(target, targetProp);
-
-  // TODO (davidg): reduce
-  propPath.forEach(propName => {
-    if (propName === 'store') {
-      result = state.nextStore;
-    } else {
-      result = utils.getValue(result, propName);
-    }
-  });
+  const result = propPath.reduce(
+    (acc, propName) => utils.getValue(acc, propName),
+    state.nextStore
+  );
 
   state.proxyIsMuted = false;
 
