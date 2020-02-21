@@ -1,10 +1,9 @@
 import { afterChange, store } from 'src';
+import state from 'src/shared/state';
 
-delete global.window;
+state.isInBrowser = false;
 
 it('should handle not having window defined', () => {
-  expect(typeof window).toBe('undefined');
-
   store.tasks = [1, 2, 3];
 
   expect(store.tasks).toEqual([1, 2, 3]);

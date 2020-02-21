@@ -7,7 +7,7 @@ import { render } from '@testing-library/react';
 import { afterChange, collect, store as globalStore } from 'src';
 
 globalStore.tasks = [
-  { name: 'task 0', done: true },
+  { name: 'task 0', done: false },
   { name: 'task 1', done: false },
 ];
 
@@ -62,15 +62,16 @@ it('should update a parent component when a prop is changed on a child component
 
   getByText('task 0');
 
-  expect(getByLabelText('task 0').checked).toBe(true);
+  expect(getByLabelText('task 0').checked).toBe(false);
 
   getByLabelText('task 0').click(); // in the <Task>
+
+  const changeEvent = handleChange.mock.calls[0][0];
+  expect(changeEvent.propPath).toBe('tasks.0.done');
+  expect(changeEvent.components[0]._name).toBe('TaskList');
+
   expect(taskListRenderCount).toBe(2);
-  expect(taskRenderCount).toBe(2); // only one should update // TODO (davidg): failing
+  expect(taskRenderCount).toBe(3); // only one task should update
 
-  expect(handleChange.mock.calls[0][0].propPath).toBe('tasks.0.done');
-  expect(handleChange.mock.calls[0][0].components[0]._name).toBe('TaskList');
-
-  // TODO (davidg): this fails to render because of React.memo (I'm mutating the store)
-  // expect(getByLabelText('task 0').checked).toBe(false);
+  expect(getByLabelText('task 0').checked).toBe(true);
 });

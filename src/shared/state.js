@@ -3,11 +3,12 @@
  */
 export default {
   currentComponent: null,
-  proxyIsMuted: false,
+  isInBrowser: typeof window !== 'undefined',
   listeners: {
     store: [],
   },
   manualListeners: [],
   nextStore: null,
+  proxyIsMuted: false,
   store: null,
 };

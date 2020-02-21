@@ -1,4 +1,3 @@
-export const isInBrowser = () => typeof window !== 'undefined';
 export const isMap = item => item instanceof Map;
 export const isSet = item => item instanceof Set;
 export const isMapOrSet = item => isMap(item) || isSet(item);
@@ -25,30 +24,38 @@ export const setValue = (mutableTarget, prop, value) => {
   mutableTarget[prop] = value;
 };
 
-const clone = item => {
-  if (isArray(item)) return item.slice();
-  if (isMap(item)) return cloneMap(item);
-  if (isSet(item)) return cloneSet(item);
-  if (isPlainObject(item)) return { ...item };
-  return item;
-};
-
 // TODO (davidg): how does this fair with optional?.chaining?
-// TODO (davidg): this isn't implemented yet.
-export const deepUpdate = ({ object, path, updater }) => {
-  const result = clone(object);
+export const deepUpdate = ({ object, path, onClone, updater }) => {
+  const cloneItem = original => {
+    let clone = original;
 
-  path.reduce((item, prop, i) => {
-    const nextValue = clone(getValue(item, prop));
-    setValue(item, prop, nextValue);
+    if (isArray(original)) clone = original.slice();
+    if (isMap(original)) clone = cloneMap(original);
+    if (isSet(original)) clone = cloneSet(original);
+    if (isPlainObject(original)) clone = { ...original };
 
-    if (i === path.length - 1) {
-      updater(nextValue);
-      return null; // doesn't matter
-    }
+    // Let the caller do interesting things when cloning
+    return onClone ? onClone(original, clone) : clone;
+  };
 
-    return nextValue;
-  }, result);
+  const result = cloneItem(object);
+
+  // This will be the case if we're updating the top-level store
+  if (!path.length) {
+    updater(result);
+  } else {
+    path.reduce((item, prop, i) => {
+      const nextValue = cloneItem(getValue(item, prop));
+      setValue(item, prop, nextValue);
+
+      if (i === path.length - 1) {
+        updater(nextValue);
+        return null; // doesn't matter
+      }
+
+      return nextValue;
+    }, result);
+  }
 
   return result;
 };

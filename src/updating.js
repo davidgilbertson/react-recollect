@@ -1,4 +1,4 @@
-import { setStore } from 'src/store';
+import { collapseStore } from 'src/store';
 
 import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
@@ -16,51 +16,6 @@ export const afterChange = cb => {
 // only listening on one prop, so not seeing changes to other props. See scatter-bar checking for
 // if (!store.stories || !store.currentStoryIndex) return null. But I forget why exactly. Write
 // a test for this scenario
-
-/**
- * // TODO (davidg): bad name (or architecture?), this triggers afterChange
- * @param {Object} props
- * @param {Array<Object>} props.components - the components to update
- * @param {Array<*>} props.path - the property path that triggered this change
- */
-const updateComponents = ({ components, path }) => {
-  // components can have duplicates, so take care to only update once each.
-  const updatedComponents = [];
-  const userFriendlyPropPath = path.slice(1).join('.');
-
-  if (components) {
-    components.forEach(component => {
-      if (updatedComponents.includes(component)) return;
-      updatedComponents.push(component);
-
-      debug(() => {
-        console.groupCollapsed(`QUEUE UPDATE:  <${component._name}>`);
-        console.info(`Changed property:   ${userFriendlyPropPath}`);
-        console.groupEnd();
-      });
-
-      // TODO (davidg): could I push these to an array, then wait a tick and flush it?
-      //  This would require major changes to the prev/next store logic.
-      component.update();
-    });
-  }
-
-  // TODO (davidg): I do a bunch of work updating the store even when there's
-  //  no components listening. When I look at batching, and investigate
-  //  having a 'prevStore' concept instead of a 'nextStore', fix this?
-  setStore(state.nextStore);
-
-  // In addition to calling .update() on components, we also trigger any manual listeners.
-  // E.g. something registered with afterEach()
-  state.manualListeners.forEach(cb =>
-    cb({
-      store: state.nextStore,
-      propPath: userFriendlyPropPath,
-      prevStore: state.store,
-      components: updatedComponents,
-    })
-  );
-};
 
 /**
  * Updates any component listening to:
@@ -85,10 +40,39 @@ export const notifyByPath = path => {
     }
   });
 
-  updateComponents({
-    components: componentsToUpdate,
-    path,
-  });
+  // components can have duplicates, so take care to only update once each.
+  const updatedComponents = [];
+  const userFriendlyPropPath = path.slice(1).join('.');
+
+  if (componentsToUpdate) {
+    componentsToUpdate.forEach(component => {
+      if (updatedComponents.includes(component)) return;
+      updatedComponents.push(component);
+
+      debug(() => {
+        console.groupCollapsed(`QUEUE UPDATE:  <${component._name}>`);
+        console.info(`Changed property:   ${userFriendlyPropPath}`);
+        console.groupEnd();
+      });
+
+      // TODO (davidg): could I push these to an array, then wait a tick and flush it?
+      //  This would require major changes to the prev/next store logic.
+      component.update();
+    });
+  }
+
+  // In addition to calling .update() on components, we also trigger
+  // any manual listeners registered with afterEach()
+  state.manualListeners.forEach(cb =>
+    cb({
+      store: state.nextStore,
+      propPath: userFriendlyPropPath,
+      prevStore: state.store,
+      components: updatedComponents,
+    })
+  );
+
+  collapseStore();
 };
 
 export const removeListenersForComponent = componentToRemove => {

@@ -47,7 +47,7 @@ const addListener = pathArray => {
 // TODO (davidg): there's only one use of this now, move it back down
 const shouldBypassProxy = prop =>
   state.proxyIsMuted ||
-  !utils.isInBrowser() ||
+  !state.isInBrowser ||
   !state.currentComponent ||
   utils.isSymbol(prop) ||
   prop === 'constructor' ||
@@ -62,7 +62,7 @@ const shouldBypassProxy = prop =>
  */
 const isGettingPropOutsideOfRenderCycle = prop =>
   !state.currentComponent &&
-  utils.isInBrowser() &&
+  state.isInBrowser &&
   !utils.isSymbol(prop) &&
   prop !== 'constructor' && // TODO (davidg): maybe 'is exotic'? Check hasOwnProps? Slow?
   !state.proxyIsMuted;
@@ -97,6 +97,7 @@ const handleSet = ({ target, prop, value, updater }) => {
     target,
     value,
     prop,
+    // TODO (davidg): "mutator"
     updater: (mutableTarget, newValue) => {
       if (updater) {
         updater(mutableTarget, newValue);
@@ -122,7 +123,7 @@ export const mapOrSetProxyHandler = {
     // if !state.currentComponent
     if (
       state.proxyIsMuted ||
-      !utils.isInBrowser() ||
+      !state.isInBrowser ||
       utils.isSymbol(prop) ||
       prop === 'constructor' ||
       prop === 'toJSON'
@@ -251,7 +252,7 @@ export const objectOrArrayProxyHandler = {
     if (
       !isInBulkOperation &&
       !state.currentComponent &&
-      utils.isInBrowser() &&
+      state.isInBrowser &&
       !utils.isSymbol(prop) &&
       !state.proxyIsMuted &&
       prop !== 'constructor'
@@ -280,7 +281,7 @@ export const objectOrArrayProxyHandler = {
   has(target, prop) {
     if (
       state.proxyIsMuted ||
-      !utils.isInBrowser() ||
+      !state.isInBrowser ||
       utils.isArray(target) // Arrays call this trap, but we don't care
     ) {
       return Reflect.has(target, prop);
@@ -304,7 +305,7 @@ export const objectOrArrayProxyHandler = {
     // a set() on 'length' (helpful!) which tells us we need to update.
     if (prop !== 'length' && target[prop] === value) return true;
 
-    if (state.proxyIsMuted || !utils.isInBrowser()) {
+    if (state.proxyIsMuted || !state.isInBrowser) {
       return Reflect.set(target, prop, value);
     }
 
@@ -320,7 +321,7 @@ export const objectOrArrayProxyHandler = {
 
   deleteProperty(target, prop) {
     // TODO (davidg): use shouldBypassProxy? Or not for delete?
-    if (state.proxyIsMuted || !utils.isInBrowser()) {
+    if (state.proxyIsMuted || !state.isInBrowser) {
       return Reflect.deleteProperty(target, prop);
     }
 
