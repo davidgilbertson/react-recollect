@@ -40,14 +40,6 @@ class RawTaskList extends Component {
 
         <button
           onClick={() => {
-            store.tasks.sort((a, b) => a.id - b.id);
-          }}
-        >
-          Sort tasks
-        </button>
-
-        <button
-          onClick={() => {
             store.tasks.pop();
           }}
         >
@@ -115,43 +107,3 @@ it('should operate on arrays', () => {
 
   expect(queryByText('Task list')).toBeNull();
 });
-
-it('should sort an array', () => {
-  const { getByText } = render(<TaskList />);
-  expect(renderCount).toBe(1);
-
-  // should handle sorting an array
-  getByText('Add task').click();
-  getByText('Add task').click();
-  getByText('Add task').click();
-  expect(renderCount).toBe(4);
-
-  getByText('Sort tasks').click();
-  expect(renderCount).toBe(5);
-  // Check everything is there, we don't actually know the order.
-  expect(getByText('Task number 3'));
-  expect(getByText('Task number 2'));
-  expect(getByText('Task number 1'));
-  expect(globalStore.tasks).toEqual([
-    { id: -3, name: 'Task number 3' },
-    { id: -2, name: 'Task number 2' },
-    { id: -1, name: 'Task number 1' },
-  ]);
-
-  // Should not change the second time
-  getByText('Sort tasks').click();
-  expect(renderCount).toBe(5);
-});
-
-// It should handle the fact that paths need to update (e.g. when store.tasks.1.done becomes
-// store.tasks.0.done) in both they keys in the listeners AND the path prop/symbol on
-// the item in the store.
-
-// It should handle emptying an array with arr.length = 0;
-
-// It should handle adding a deep object (and/or nested array) to an array
-// (e.g. it needs to recursively wrap any object/array in new paths/proxies.
-
-// It should handle multiple updates to the store. E.g. I have a component that starts with
-// if (store.ready && store.tasks.length) ... then it is actually only listening to store.ready
-// after the first render. See notes in updating.js where I was going to do batching.

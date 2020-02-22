@@ -19,7 +19,7 @@ export const makePath = (target, prop) => {
  * @param {Array<*>} internalPath
  * @returns {string}
  */
-export const makePathUserFriendly2 = internalPath => {
+export const makePathUserFriendly = internalPath => {
   // TODO (davidg): this would require a major version bump, but outputs the lodash-style string.
   //  This could then be used by the user if required? And just be more readable
   //  However it has to make the assumption that any number-only prop is array access
@@ -40,7 +40,7 @@ export const makePathUserFriendly2 = internalPath => {
  */
 export const makeUserFriendlyPath = (target, prop) => {
   const path = makePath(target, prop);
-  return makePathUserFriendly2(path);
+  return makePathUserFriendly(path);
 };
 
 /**

@@ -1,10 +1,10 @@
-import { getFromNextStore, updateStoreAtPath } from 'src/store';
+import { getFromNextStore, updateInNextStore } from 'src/store';
 
 import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
 import {
   makePath,
-  makePathUserFriendly2,
+  makePathUserFriendly,
   makeUserFriendlyPath,
 } from 'src/shared/general';
 import * as utils from 'src/shared/utils';
@@ -82,18 +82,18 @@ const isGettingPropOutsideOfRenderCycle = prop =>
  */
 const handleSet = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
-  //  call updateStoreAtPath() from two places below
+  //  call updateInNextStore() from two places below
   const currentValue = utils.getValue(target, prop);
   const path = makePath(target, prop);
 
   debug(() => {
-    console.groupCollapsed(`SET: ${makePathUserFriendly2(path)}`);
+    console.groupCollapsed(`SET: ${makePathUserFriendly(path)}`);
     console.info('From:', currentValue);
-    console.info('To:  ', value); // The user doesn't care about the proxied version
+    console.info('To:  ', value);
     console.groupEnd();
   });
 
-  updateStoreAtPath({
+  updateInNextStore({
     target,
     value,
     prop,
@@ -219,38 +219,14 @@ export const mapOrSetProxyHandler = {
   },
 };
 
-let isInBulkOperation = false;
-
 export const objectOrArrayProxyHandler = {
   get(target, prop) {
     const result = Reflect.get(target, prop);
-    if (isInBulkOperation) return result;
-
     // TODO (davidg): array.pop() when empty can bail. But that's not easy
-    if (
-      Array.isArray(target) &&
-      typeof target[prop] === 'function' &&
-      ['sort', 'reverse', 'shift', 'splice', 'unshift', 'copyWithin'].includes(
-        prop
-      )
-    ) {
-      // These methods can rearrange an array over multiple steps. We don't want to trigger
-      // any renders during this operation, so we set isInBulkOperation
-      return new Proxy(result, {
-        apply(applyTarget, applyProp, args) {
-          isInBulkOperation = true;
-          const applyResult = Reflect.apply(applyTarget, applyProp, args);
-          isInBulkOperation = false;
-          return applyResult;
-        },
-      });
-    }
 
     if (utils.isFunction(target[prop])) return result;
 
-    // TODO (davidg): don't test for bulk operation here?
     if (
-      !isInBulkOperation &&
       !state.currentComponent &&
       state.isInBrowser &&
       !utils.isSymbol(prop) &&
@@ -299,6 +275,15 @@ export const objectOrArrayProxyHandler = {
   },
 
   set(target, prop, value) {
+    if (state.currentComponent) {
+      throw Error(
+        `You are modifying the store during a render cycle. Don't do this.
+        You're setting "${prop}" to "${value}" somewhere, we can't tell were.
+        If you must, wrap your code in a setTimeout() to allow the render
+        cycle to complete before changing the store.`
+      );
+    }
+
     // We need to let the 'length' change through, even if it doesn't change, so it can
     // trigger listeners and update components.
     // This could happen e.g. when sort() changes individual items in an array. It will fire
@@ -320,7 +305,6 @@ export const objectOrArrayProxyHandler = {
   },
 
   deleteProperty(target, prop) {
-    // TODO (davidg): use shouldBypassProxy? Or not for delete?
     if (state.proxyIsMuted || !state.isInBrowser) {
       return Reflect.deleteProperty(target, prop);
     }
@@ -331,7 +315,7 @@ export const objectOrArrayProxyHandler = {
       console.groupEnd();
     });
 
-    updateStoreAtPath({
+    updateInNextStore({
       target,
       prop,
       updater: finalTarget => {

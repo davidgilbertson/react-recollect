@@ -30,7 +30,7 @@ state.nextStore = state.store;
  * @param {function} props.updater - a function that will be passed the target
  * @return {*}
  */
-export const updateStoreAtPath = ({ target, prop, value, updater }) => {
+export const updateInNextStore = ({ target, prop, value, updater }) => {
   state.proxyIsMuted = true;
 
   // Note that this function doesn't know anything about the prop being set. It just finds the
@@ -71,6 +71,28 @@ export const updateStoreAtPath = ({ target, prop, value, updater }) => {
   state.proxyIsMuted = false;
 
   notifyByPath(path);
+};
+
+/**
+ * This takes a target (from one version of the store) and gets its value
+ * in `nextStore`.
+ * @param target
+ * @param targetProp
+ * @return {*}
+ */
+export const getFromNextStore = (target, targetProp) => {
+  state.proxyIsMuted = true;
+
+  const propPath = makePath(target, targetProp).slice(1);
+
+  const result = propPath.reduce(
+    (acc, propName) => utils.getValue(acc, propName),
+    state.nextStore
+  );
+
+  state.proxyIsMuted = false;
+
+  return result;
 };
 
 /**
@@ -130,26 +152,4 @@ export const collapseStore = () => {
  */
 export const initStore = data => {
   replaceObject(state.nextStore, data);
-};
-
-/**
- * This takes a target (from one version of the store) and gets its value
- * in `nextStore`.
- * @param target
- * @param targetProp
- * @return {*}
- */
-export const getFromNextStore = (target, targetProp) => {
-  state.proxyIsMuted = true;
-
-  const propPath = makePath(target, targetProp).slice(1);
-
-  const result = propPath.reduce(
-    (acc, propName) => utils.getValue(acc, propName),
-    state.nextStore
-  );
-
-  state.proxyIsMuted = false;
-
-  return result;
 };
