@@ -1,6 +1,6 @@
 import React from 'react';
-import { render } from '@testing-library/react';
-import { collect, store as globalStore } from 'src';
+import { render, wait } from '@testing-library/react';
+import { collect, batch, store as globalStore } from 'src';
 
 globalStore.count = 1;
 let parentCompRenderCount = 0;
@@ -29,7 +29,7 @@ const ParentComponent = () => {
   );
 };
 
-it('should batch synchronous updates to the store', () => {
+it('should batch synchronous updates to the store', async () => {
   const { getByText } = render(<ParentComponent />);
 
   expect(parentCompRenderCount).toBe(1);
@@ -50,9 +50,29 @@ it('should batch synchronous updates to the store', () => {
   globalStore.count++;
 
   expect(parentCompRenderCount).toBe(1);
-  // TODO (davidg): make the below 3!
   expect(comp1RenderCount).toBe(4);
   expect(comp2RenderCount).toBe(4);
   expect(getByText(/Comp1 count:/)).toHaveTextContent('Comp1 count: 4');
   expect(getByText(/Comp2 count:/)).toHaveTextContent('Comp2 count: 4');
+
+  batch(() => {
+    globalStore.count++;
+    globalStore.count++;
+    globalStore.count++;
+    globalStore.count++;
+    globalStore.count++;
+    globalStore.count++;
+  });
+
+  await wait();
+
+  expect(parentCompRenderCount).toBe(1);
+
+  // Of note: the render count is only 5 ...
+  expect(comp1RenderCount).toBe(5);
+  expect(comp2RenderCount).toBe(5);
+
+  // But the count correctly shows 10
+  expect(getByText(/Comp1 count:/)).toHaveTextContent('Comp1 count: 10');
+  expect(getByText(/Comp2 count:/)).toHaveTextContent('Comp2 count: 10');
 });

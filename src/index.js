@@ -3,7 +3,7 @@ import state from 'src/shared/state';
 
 export { default as collect } from 'src/collect';
 export { afterChange } from 'src/updating';
-export { initStore } from 'src/store';
+export { initStore, batch } from 'src/store';
 export const { store } = state;
 
 if (typeof window !== 'undefined') {

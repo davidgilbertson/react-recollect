@@ -93,6 +93,9 @@ const handleSet = ({ target, prop, value, updater }) => {
     console.groupEnd();
   });
 
+  // TODO (davidg): if I call getHandlerForObject() in here and pass it
+  //  through, I can remove a circular reference.
+
   updateInNextStore({
     target,
     value,

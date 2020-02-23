@@ -12,14 +12,44 @@ export const afterChange = cb => {
   state.manualListeners.push(cb);
 };
 
-// TODO (davidg): remember why I can't batch updates. It was something to do with a component
-// only listening on one prop, so not seeing changes to other props. See scatter-bar checking for
-// if (!store.stories || !store.currentStoryIndex) return null. But I forget why exactly. Write
-// a test for this scenario
+/** @type {{components: Map<CollectorComponent, Set<string>>, changedPaths: Set<string>, timeoutPending: boolean}} */
+const queue = {
+  components: new Map(),
+  changedPaths: new Set(),
+  timeoutPending: false,
+};
+
+const flushUpdates = () => {
+  queue.timeoutPending = false;
+
+  queue.components.forEach((propsUpdated, component) => {
+    debug(() => {
+      console.groupCollapsed(`UPDATE:  <${component._name}>`);
+      console.info('Changed properties:', Array.from(propsUpdated));
+      console.groupEnd();
+    });
+
+    component.update();
+  });
+
+  state.manualListeners.forEach(cb =>
+    cb({
+      changedProps: Array.from(queue.changedPaths),
+      renderedComponents: Array.from(queue.components.keys()),
+      prevStore: state.store,
+      store: state.nextStore,
+    })
+  );
+
+  queue.components.clear();
+  queue.changedPaths.clear();
+
+  collapseStore();
+};
 
 /**
  * Updates any component listening to:
- * - the exact propPath that has been changed. E.g. store.tasks.2
+ * - the exact propPath that has been changed. E.g. tasks.2
  * - a path further up the object tree. E.g. store.tasks - this is because a component in an array
  *   will typically get its values from its parent component. Not directly from the store
  *   being made available by collect()
@@ -30,6 +60,9 @@ export const notifyByPath = path => {
   let componentsToUpdate = [];
   const pathString = path.slice(1).join(PROP_PATH_SEP);
 
+  const userFriendlyPropPath = path.slice(1).join('.');
+  queue.changedPaths.add(userFriendlyPropPath);
+
   Object.entries(state.listeners).forEach(([listenerPath, components]) => {
     if (
       pathString === listenerPath || // direct match
@@ -37,42 +70,23 @@ export const notifyByPath = path => {
       listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
     ) {
       componentsToUpdate = componentsToUpdate.concat(components);
+
+      components.forEach(component => {
+        const propsUpdated = queue.components.get(component) || new Set();
+        propsUpdated.add(userFriendlyPropPath);
+        queue.components.set(component, propsUpdated);
+      });
     }
   });
 
-  // components can have duplicates, so take care to only update once each.
-  const updatedComponents = [];
-  const userFriendlyPropPath = path.slice(1).join('.');
-
-  if (componentsToUpdate) {
-    componentsToUpdate.forEach(component => {
-      if (updatedComponents.includes(component)) return;
-      updatedComponents.push(component);
-
-      debug(() => {
-        console.groupCollapsed(`QUEUE UPDATE:  <${component._name}>`);
-        console.info(`Changed property:   ${userFriendlyPropPath}`);
-        console.groupEnd();
-      });
-
-      // TODO (davidg): could I push these to an array, then wait a tick and flush it?
-      //  This would require major changes to the prev/next store logic.
-      component.update();
-    });
+  if (state.isBatchUpdating) {
+    if (!queue.timeoutPending) {
+      queue.timeoutPending = true;
+      setTimeout(flushUpdates);
+    }
+  } else {
+    flushUpdates();
   }
-
-  // In addition to calling .update() on components, we also trigger
-  // any manual listeners registered with afterEach()
-  state.manualListeners.forEach(cb =>
-    cb({
-      store: state.nextStore,
-      propPath: userFriendlyPropPath,
-      prevStore: state.store,
-      components: updatedComponents,
-    })
-  );
-
-  collapseStore();
 };
 
 export const removeListenersForComponent = componentToRemove => {

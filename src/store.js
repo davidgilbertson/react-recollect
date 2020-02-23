@@ -141,6 +141,9 @@ const replaceObject = (prevObject, nextObject) => {
  */
 export const collapseStore = () => {
   state.proxyIsMuted = true;
+  // TODO (davidg): rename to prevStore/store
+  // TODO (davidg): if I move this into update.js, and move
+  //  replaceObject into utils, I can remove a cyclic dependency
   replaceObject(state.store, state.nextStore);
   state.proxyIsMuted = false;
 };
@@ -152,4 +155,10 @@ export const collapseStore = () => {
  */
 export const initStore = data => {
   replaceObject(state.nextStore, data);
+};
+
+export const batch = cb => {
+  state.isBatchUpdating = true;
+  cb();
+  state.isBatchUpdating = false;
 };

@@ -67,8 +67,8 @@ it('should update a parent component when a prop is changed on a child component
   getByLabelText('task 0').click(); // in the <Task>
 
   const changeEvent = handleChange.mock.calls[0][0];
-  expect(changeEvent.propPath).toBe('tasks.0.done');
-  expect(changeEvent.components[0]._name).toBe('TaskList');
+  expect(changeEvent.changedProps).toEqual(['tasks.0.done']);
+  expect(changeEvent.renderedComponents[0]._name).toBe('TaskList');
 
   expect(taskListRenderCount).toBe(2);
   expect(taskRenderCount).toBe(3); // only one task should update

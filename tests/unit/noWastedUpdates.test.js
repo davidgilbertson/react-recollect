@@ -30,8 +30,8 @@ it('should only update the items that change', () => {
   const changeEvent1 = handleChange.mock.calls[0][0];
   const changeEvent2 = handleChange.mock.calls[1][0];
 
-  expect(changeEvent1.propPath).toBe('tasks.1.done');
-  expect(changeEvent2.propPath).toBe('tasks.3.done');
+  expect(changeEvent1.changedProps).toEqual(['tasks.1.done']);
+  expect(changeEvent2.changedProps).toEqual(['tasks.3.done']);
 });
 
 it('should ignore adding undefined', () => {

@@ -4,7 +4,7 @@ const handleChange = jest.fn();
 afterChange(handleChange);
 
 const propPathChanges = handleChangeMock =>
-  handleChangeMock.mock.calls.map(call => call[0].propPath);
+  handleChangeMock.mock.calls.map(call => call[0].changedProps[0]);
 
 afterEach(() => {
   initStore(); // empty the store
