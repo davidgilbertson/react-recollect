@@ -3,19 +3,13 @@ import { getHandlerForObject } from 'src/proxyHandlers';
 import { notifyByPath } from 'src/updating';
 
 import state from 'src/shared/state';
-import { addPathProp, makePath } from 'src/shared/general';
-import { PATH_PROP } from 'src/shared/constants';
 import * as utils from 'src/shared/utils';
+import * as paths from 'src/shared/paths';
 
 const createProxyWithHandler = obj =>
   createProxy(obj, getHandlerForObject(obj));
 
-const rawStore = {};
-let storeCount = 0;
-addPathProp(rawStore, [`store-${storeCount++}`]); // TODO (davidg): why is
-// store even here?
-
-state.store = createProxyWithHandler(rawStore);
+state.store = createProxyWithHandler({});
 state.nextStore = state.store;
 
 /**
@@ -35,27 +29,27 @@ export const updateInNextStore = ({ target, prop, value, updater }) => {
 
   // Note that this function doesn't know anything about the prop being set. It just finds the
   // target (the parent of the prop) and calls updater() with it.
-  const propArray = target[PATH_PROP].slice(1);
+  const targetPath = paths.get(target);
+  const propPath = paths.extend(target, prop);
 
-  const path = makePath(target, prop);
   let newValue = value;
 
   // If there's a value being set, wrap it in a proxy
   if (value !== 'undefined') {
     const handler = getHandlerForObject(value);
-    newValue = decorateWithPathAndProxy(value, path, handler);
+    newValue = decorateWithPathAndProxy(value, propPath, handler);
   }
 
-  if (!propArray.length) {
+  if (!targetPath.length) {
     state.nextStore = { ...state.nextStore };
     updater(state.nextStore, newValue);
   } else {
     state.nextStore = utils.deepUpdate({
       object: state.nextStore,
-      path: propArray,
+      path: targetPath,
       onClone: (original, clone) => {
-        if (original[PATH_PROP]) {
-          addPathProp(clone, original[PATH_PROP]);
+        if (paths.get(original)) {
+          paths.addProp(clone, paths.get(original));
         }
         return createProxyWithHandler(clone);
       },
@@ -65,12 +59,11 @@ export const updateInNextStore = ({ target, prop, value, updater }) => {
     });
   }
 
-  addPathProp(state.nextStore, [`store-${storeCount++}`]);
   state.nextStore = createProxyWithHandler(state.nextStore);
 
   state.proxyIsMuted = false;
 
-  notifyByPath(path);
+  notifyByPath(propPath);
 };
 
 /**
@@ -83,7 +76,7 @@ export const updateInNextStore = ({ target, prop, value, updater }) => {
 export const getFromNextStore = (target, targetProp) => {
   state.proxyIsMuted = true;
 
-  const propPath = makePath(target, targetProp).slice(1);
+  const propPath = paths.extend(target, targetProp);
 
   const result = propPath.reduce(
     (acc, propName) => utils.getValue(acc, propName),
@@ -105,9 +98,9 @@ export const getFromNextStore = (target, targetProp) => {
 const replaceObject = (prevObject, nextObject) => {
   /* eslint-disable no-param-reassign */
   if (nextObject) {
-    if (nextObject[PATH_PROP]) {
+    if (paths.has(nextObject)) {
       // Copy the new path root across
-      prevObject[PATH_PROP] = nextObject[PATH_PROP];
+      paths.set(prevObject, paths.get(nextObject));
     }
 
     // From the new data, add to the old data anything that's new

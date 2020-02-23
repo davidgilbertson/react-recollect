@@ -2,14 +2,12 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { collect, afterChange, store as globalStore, initStore } from 'src';
+import { propPathChanges } from 'tests/testUtils';
 
 let renderCount;
 
 const handleChange = jest.fn();
 afterChange(handleChange);
-
-const propPathChanges = handleChangeMock =>
-  handleChangeMock.mock.calls.map(call => call[0].changedProps[0]);
 
 beforeEach(() => {
   initStore({

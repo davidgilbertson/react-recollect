@@ -1,5 +1,5 @@
 import * as utils from 'src/shared/utils';
-import { addPathProp } from 'src/shared/general';
+import * as paths from 'src/shared/paths';
 
 const proxies = new WeakSet();
 
@@ -48,17 +48,17 @@ export const decorateWithPathAndProxy = (parentObject, parentPath, handler) => {
           return createProxy(decorateObject(itemEntry, [...path, i]), handler);
         });
 
-        addPathProp(nextArray, path);
+        paths.addProp(nextArray, path);
         return createProxy(nextArray, handler);
       }
 
       if (utils.isMap(item)) {
-        addPathProp(item, path);
+        paths.addProp(item, path);
         return createProxy(item, handler);
       }
 
       if (utils.isSet(item)) {
-        addPathProp(item, path);
+        paths.addProp(item, path);
         return createProxy(item, handler);
       }
 
@@ -73,7 +73,7 @@ export const decorateWithPathAndProxy = (parentObject, parentPath, handler) => {
         );
       });
 
-      addPathProp(newObject, path);
+      paths.addProp(newObject, path);
 
       return createProxy(newObject, handler);
     }

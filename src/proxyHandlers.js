@@ -2,13 +2,8 @@ import { getFromNextStore, updateInNextStore } from 'src/store';
 
 import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
-import {
-  makePath,
-  makePathUserFriendly,
-  makeUserFriendlyPath,
-} from 'src/shared/general';
 import * as utils from 'src/shared/utils';
-import { PROP_PATH_SEP } from 'src/shared/constants';
+import * as paths from 'src/shared/paths';
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
@@ -19,7 +14,7 @@ const addListener = pathArray => {
   if (!state.currentComponent) return;
 
   // We use a string instead of an array because it's much easier to match
-  const pathString = pathArray.slice(1).join(PROP_PATH_SEP);
+  const pathString = paths.makeInternalString(pathArray);
 
   // TODO (davidg): consider Map instead of array? Easier to delete a component?
   //  could be like this, but as a Map
@@ -83,12 +78,9 @@ const isGettingPropOutsideOfRenderCycle = prop =>
 const handleSet = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
   //  call updateInNextStore() from two places below
-  const currentValue = utils.getValue(target, prop);
-  const path = makePath(target, prop);
-
   debug(() => {
-    console.groupCollapsed(`SET: ${makePathUserFriendly(path)}`);
-    console.info('From:', currentValue);
+    console.groupCollapsed(`SET: ${paths.extendToUserString(target, prop)}`);
+    console.info('From:', utils.getValue(target, prop));
     console.info('To:  ', value);
     console.groupEnd();
   });
@@ -102,11 +94,7 @@ const handleSet = ({ target, prop, value, updater }) => {
     prop,
     // TODO (davidg): "mutator"
     updater: (mutableTarget, newValue) => {
-      if (updater) {
-        updater(mutableTarget, newValue);
-      } else {
-        mutableTarget[prop] = newValue;
-      }
+      updater(mutableTarget, newValue);
     },
   });
 
@@ -208,7 +196,7 @@ export const mapOrSetProxyHandler = {
         prop
       )
     ) {
-      addListener(makePath(target, 'size'));
+      addListener(paths.extend(target, 'size'));
       // TODO (davidg): do I not log the get on some Map or Set reads?
       return result;
     }
@@ -246,13 +234,13 @@ export const objectOrArrayProxyHandler = {
     if (shouldBypassProxy(prop)) return result;
 
     debug(() => {
-      console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
+      console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
       console.info(`Component: <${state.currentComponent._name}>`);
       console.info('Value:', result);
       console.groupEnd();
     });
 
-    addListener(makePath(target, prop));
+    addListener(paths.extend(target, prop));
 
     return result;
   },
@@ -267,14 +255,30 @@ export const objectOrArrayProxyHandler = {
     }
 
     debug(() => {
-      console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
+      console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
       console.info(`Component: <${state.currentComponent._name}>`);
       console.groupEnd();
     });
 
-    addListener(makePath(target, prop));
+    addListener(paths.extend(target, prop));
 
     return Reflect.has(target, prop);
+  },
+
+  ownKeys(target) {
+    const result = Reflect.ownKeys(target);
+
+    if (state.proxyIsMuted || !state.isInBrowser) return result;
+
+    debug(() => {
+      console.groupCollapsed(`GET: ${paths.extendToUserString(target)}`);
+      console.info(`Component: <${state.currentComponent._name}>`);
+      console.groupEnd();
+    });
+
+    addListener(paths.get(target));
+
+    return result;
   },
 
   set(target, prop, value) {
@@ -313,8 +317,10 @@ export const objectOrArrayProxyHandler = {
     }
 
     debug(() => {
-      console.groupCollapsed(`DELETE: ${makeUserFriendlyPath(target, prop)}`);
-      console.info('Property: ', makeUserFriendlyPath(target, prop));
+      console.groupCollapsed(
+        `DELETE: ${paths.extendToUserString(target, prop)}`
+      );
+      console.info('Property: ', paths.extendToUserString(target, prop));
       console.groupEnd();
     });
 

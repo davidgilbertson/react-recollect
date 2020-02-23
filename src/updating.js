@@ -2,6 +2,7 @@ import { collapseStore } from 'src/store';
 
 import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
+import * as paths from 'src/shared/paths';
 import { PROP_PATH_SEP } from 'src/shared/constants';
 
 /**
@@ -54,17 +55,18 @@ const flushUpdates = () => {
  *   will typically get its values from its parent component. Not directly from the store
  *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name
- * @param {Array<*>} path - The path of the prop that changed
+ * @param {Array<*>} pathArray - The path of the prop that changed
  */
-export const notifyByPath = path => {
+export const notifyByPath = pathArray => {
   let componentsToUpdate = [];
-  const pathString = path.slice(1).join(PROP_PATH_SEP);
+  const pathString = paths.makeInternalString(pathArray);
+  const userFriendlyPropPath = paths.makeUserString(pathArray);
 
-  const userFriendlyPropPath = path.slice(1).join('.');
   queue.changedPaths.add(userFriendlyPropPath);
 
   Object.entries(state.listeners).forEach(([listenerPath, components]) => {
     if (
+      listenerPath === '' || // listening directly to the store object
       pathString === listenerPath || // direct match
       pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
       listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
