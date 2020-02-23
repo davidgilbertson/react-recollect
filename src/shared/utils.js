@@ -1,3 +1,5 @@
+import * as paths from 'src/shared/paths';
+
 export const isMap = item => item instanceof Map;
 export const isSet = item => item instanceof Set;
 export const isMapOrSet = item => isMap(item) || isSet(item);
@@ -58,4 +60,42 @@ export const deepUpdate = ({ object, path, onClone, updater }) => {
   }
 
   return result;
+};
+
+/**
+ * Mutates prevObject. The top level object will remain the same,
+ * but all changed content will be replaced with the new content.
+ * In other words, only the top-level object is mutated.
+ * @param {object} prevObject
+ * @param {object} nextObject
+ */
+export const replaceObject = (prevObject, nextObject) => {
+  /* eslint-disable no-param-reassign */
+  if (nextObject) {
+    if (paths.has(nextObject)) {
+      // Copy the new path root across
+      paths.set(prevObject, paths.get(nextObject));
+    }
+
+    // From the new data, add to the old data anything that's new
+    // (from the top level props only)
+    Object.entries(nextObject).forEach(([prop, value]) => {
+      if (prevObject[prop] !== value) {
+        prevObject[prop] = value;
+      }
+    });
+
+    // Clear out any keys that aren't in the new data
+    Object.keys(prevObject).forEach(prop => {
+      if (!(prop in nextObject)) {
+        delete prevObject[prop];
+      }
+    });
+  } else {
+    // Just empty the old object
+    Object.keys(prevObject).forEach(prop => {
+      delete prevObject[prop];
+    });
+  }
+  /* eslint-enable no-param-reassign */
 };

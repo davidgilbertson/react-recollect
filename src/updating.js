@@ -1,8 +1,7 @@
-import { collapseStore } from 'src/store';
-
 import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
 import * as paths from 'src/shared/paths';
+import * as utils from 'src/shared/utils';
 import { PROP_PATH_SEP } from 'src/shared/constants';
 
 /**
@@ -45,7 +44,10 @@ const flushUpdates = () => {
   queue.components.clear();
   queue.changedPaths.clear();
 
-  collapseStore();
+  state.proxyIsMuted = true;
+  // TODO (davidg): rename to prevStore/store
+  utils.replaceObject(state.store, state.nextStore);
+  state.proxyIsMuted = false;
 };
 
 /**
