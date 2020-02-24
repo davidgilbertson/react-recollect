@@ -1,4 +1,4 @@
-import { deepUpdate } from 'src/utils';
+import { deepUpdate } from 'src/shared/utils';
 
 it('should mutate the object', () => {
   const original = {
@@ -72,4 +72,34 @@ it('should mutate a Map', () => {
   expect(clone.mapTwo).toBe(original.mapTwo);
   expect(clone.mapOne.get('123')).toBe(original.mapOne.get('123'));
   expect(clone.mapOne.get('two')).toBe(original.mapOne.get('two'));
+});
+
+it('should clone with a clone function', () => {
+  const originalObj = {
+    mapOne: new Map([
+      ['123', { name: 'Task one', done: true }],
+      [123, { name: 'Task one (number key)', done: false }],
+      ['two', { name: 'Task two', done: true }],
+    ]),
+    mapTwo: new Map(),
+  };
+
+  const cloneObj = deepUpdate({
+    object: originalObj,
+    path: ['mapOne', 123],
+    updater: mutableTarget => {
+      mutableTarget.name = 'A new name';
+    },
+    onClone: (original, mutableTarget) => {
+      if (!mutableTarget.done) {
+        mutableTarget.done = true;
+      }
+      return mutableTarget;
+    },
+  });
+
+  expect(originalObj.mapOne.get(123).name).toBe('Task one (number key)');
+  expect(originalObj.mapOne.get(123).done).toBe(false);
+  expect(cloneObj.mapOne.get(123).name).toBe('A new name');
+  expect(cloneObj.mapOne.get(123).done).toBe(true);
 });

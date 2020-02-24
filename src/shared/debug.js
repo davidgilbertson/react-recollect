@@ -8,6 +8,12 @@ let DEBUG = hasLocalStorage
   ? window.localStorage.RECOLLECT__DEBUG || DEBUG_OFF
   : DEBUG_OFF;
 
+if (DEBUG === DEBUG_ON) {
+  console.info(
+    'Recollect debugging is enabled. Type __RR__.debugOff() to turn it off.'
+  );
+}
+
 export const debugOn = () => {
   DEBUG = DEBUG_ON;
   if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
@@ -18,4 +24,6 @@ export const debugOff = () => {
   if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
 };
 
-export const isDebugOn = () => DEBUG === DEBUG_ON;
+export const debug = cb => {
+  if (DEBUG === DEBUG_ON) cb();
+};

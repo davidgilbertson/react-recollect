@@ -1,10 +1,8 @@
 import { store, afterChange, initStore } from 'src';
+import { propPathChanges } from 'tests/testUtils';
 
 const handleChange = jest.fn();
 afterChange(handleChange);
-
-const propPathChanges = handleChangeMock =>
-  handleChangeMock.mock.calls.map(call => call[0].propPath);
 
 afterEach(() => {
   initStore(); // empty the store
@@ -90,8 +88,8 @@ it('should update an item in an array', () => {
 
   expect(store.arrToUpdate).toEqual([1, 'cats', 3]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrToUpdate',
-    'store.arrToUpdate.1',
+    'arrToUpdate',
+    'arrToUpdate.1',
   ]);
 });
 
@@ -105,8 +103,8 @@ it('should update an object in an array', () => {
 
   expect(store.arrToDeepUpdate[1].name).toEqual('Kerry');
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrToDeepUpdate',
-    'store.arrToDeepUpdate.1.name',
+    'arrToDeepUpdate',
+    'arrToDeepUpdate.1.name',
   ]);
 });
 
@@ -124,8 +122,8 @@ it('should delete a string', () => {
   expect(store.deletionTest).not.toHaveProperty('name');
 
   expect(propPathChanges(handleChange)).toEqual([
-    'store.deletionTest',
-    'store.deletionTest.name',
+    'deletionTest',
+    'deletionTest.name',
   ]);
 });
 
@@ -155,10 +153,10 @@ it('should push()', () => {
 
   expect(store.emptyArray[0]).toBe(77);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.emptyArray',
+    'emptyArray',
     // push() calls set with the new item, then sets the length
-    'store.emptyArray.0',
-    'store.emptyArray.length',
+    'emptyArray.0',
+    'emptyArray.length',
   ]);
 });
 
@@ -170,13 +168,72 @@ it('should sort()', () => {
   // We don't know the order or these (in practice, Node 10 is different to Node 12)
   expect(propPathChanges(handleChange)).toEqual(
     expect.arrayContaining([
-      'store.arrayToSort',
-      'store.arrayToSort.0',
-      'store.arrayToSort.1',
-      'store.arrayToSort.2',
-      'store.arrayToSort.3',
+      'arrayToSort',
+      'arrayToSort.0',
+      'arrayToSort.1',
+      'arrayToSort.2',
+      'arrayToSort.3',
     ])
   );
+
+  // Sorting with a compare function fails in < V8 7.0. (Node 10)
+  // So we disable the test for older versions, for now.
+  // Fix in https://github.com/davidgilbertson/react-recollect/issues/71
+  if (parseInt(process.versions.v8, 10) >= 7) {
+    // V8 uses a different algorithm for < and > 10 items
+    // So we test both
+    store.longArrayToCompareSort = [
+      { id: 3, name: 'Task 3' },
+      { id: 4, name: 'Task 4' },
+      { id: 11, name: 'Task 11' },
+      { id: 2, name: 'Task 2' },
+      { id: 1, name: 'Task 1' },
+      { id: 5, name: 'Task 5' },
+      { id: 10, name: 'Task 10' },
+      { id: 6, name: 'Task 6' },
+      { id: 7, name: 'Task 7' },
+      { id: 8, name: 'Task 8' },
+      { id: 9, name: 'Task 9' },
+      { id: 12, name: 'Task 12' },
+    ];
+
+    store.longArrayToCompareSort.sort((a, b) => a.id - b.id);
+
+    expect(store.longArrayToCompareSort).toEqual([
+      { id: 1, name: 'Task 1' },
+      { id: 2, name: 'Task 2' },
+      { id: 3, name: 'Task 3' },
+      { id: 4, name: 'Task 4' },
+      { id: 5, name: 'Task 5' },
+      { id: 6, name: 'Task 6' },
+      { id: 7, name: 'Task 7' },
+      { id: 8, name: 'Task 8' },
+      { id: 9, name: 'Task 9' },
+      { id: 10, name: 'Task 10' },
+      { id: 11, name: 'Task 11' },
+      { id: 12, name: 'Task 12' },
+    ]);
+
+    store.shortArrayToCompareSort = [
+      { id: 3, name: 'Task 3' },
+      { id: 4, name: 'Task 4' },
+      { id: 2, name: 'Task 2' },
+      { id: 1, name: 'Task 1' },
+    ];
+
+    store.shortArrayToCompareSort.sort((a, b) => a.id - b.id);
+
+    expect(store.shortArrayToCompareSort).toEqual([
+      { id: 1, name: 'Task 1' },
+      { id: 2, name: 'Task 2' },
+      { id: 3, name: 'Task 3' },
+      { id: 4, name: 'Task 4' },
+    ]);
+  } else {
+    console.warn(
+      `Skipping the array.sort() test for V8 ${process.versions.v8}`
+    );
+  }
 });
 
 it('should pop()', () => {
@@ -186,9 +243,9 @@ it('should pop()', () => {
   expect(popped).toBe(1);
   expect(store.arrayToPop).toEqual([3, 4, 2]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToPop',
-    'store.arrayToPop.3', // fired as deleteProperty()
-    'store.arrayToPop.length',
+    'arrayToPop',
+    'arrayToPop.3', // fired as deleteProperty()
+    'arrayToPop.length',
   ]);
 });
 
@@ -199,11 +256,11 @@ it('should reverse()', () => {
   expect(newArray).toEqual([1, 2, 4, 3]);
   expect(store.arrayToReverse).toEqual([1, 2, 4, 3]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToReverse',
-    'store.arrayToReverse.0',
-    'store.arrayToReverse.3', // fires in weird order, but whatever
-    'store.arrayToReverse.1',
-    'store.arrayToReverse.2',
+    'arrayToReverse',
+    'arrayToReverse.0',
+    'arrayToReverse.3', // fires in weird order, but whatever
+    'arrayToReverse.1',
+    'arrayToReverse.2',
   ]);
 });
 
@@ -214,9 +271,9 @@ it('should fill()', () => {
   expect(newArray).toEqual(['x', 'x', 3, 4]);
   expect(store.arrayToFill).toEqual(['x', 'x', 3, 4]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToFill',
-    'store.arrayToFill.0',
-    'store.arrayToFill.1',
+    'arrayToFill',
+    'arrayToFill.0',
+    'arrayToFill.1',
   ]);
 });
 
@@ -228,9 +285,9 @@ it('should copyWithin()', () => {
   expect(newArray).toEqual([3, 4, 3, 4]);
   expect(store.arrayToCopyWithin).toEqual([3, 4, 3, 4]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToCopyWithin',
-    'store.arrayToCopyWithin.0',
-    'store.arrayToCopyWithin.1',
+    'arrayToCopyWithin',
+    'arrayToCopyWithin.0',
+    'arrayToCopyWithin.1',
   ]);
 });
 
@@ -241,12 +298,12 @@ it('should shift()', () => {
   expect(removedItem).toBe(1);
   expect(store.arrayToShift).toEqual([2, 3, 4]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToShift',
-    'store.arrayToShift.0',
-    'store.arrayToShift.1',
-    'store.arrayToShift.2',
-    'store.arrayToShift.3',
-    'store.arrayToShift.length',
+    'arrayToShift',
+    'arrayToShift.0',
+    'arrayToShift.1',
+    'arrayToShift.2',
+    'arrayToShift.3',
+    'arrayToShift.length',
   ]);
 });
 
@@ -257,11 +314,11 @@ it('should splice()', () => {
   expect(spliced).toEqual([2, 3]);
   expect(store.arrayToSplice).toEqual([1, 4]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToSplice',
-    'store.arrayToSplice.1',
-    'store.arrayToSplice.3',
-    'store.arrayToSplice.2',
-    'store.arrayToSplice.length',
+    'arrayToSplice',
+    'arrayToSplice.1',
+    'arrayToSplice.3',
+    'arrayToSplice.2',
+    'arrayToSplice.length',
   ]);
 });
 
@@ -272,14 +329,14 @@ it('should unshift()', () => {
   expect(newLength).toBe(6);
   expect(store.arrayToUnshift).toEqual(['a', 'b', 1, 2, 3, 4]);
   expect(propPathChanges(handleChange)).toEqual([
-    'store.arrayToUnshift',
-    'store.arrayToUnshift.5',
-    'store.arrayToUnshift.4',
-    'store.arrayToUnshift.3',
-    'store.arrayToUnshift.2',
-    'store.arrayToUnshift.0',
-    'store.arrayToUnshift.1',
-    'store.arrayToUnshift.length',
+    'arrayToUnshift',
+    'arrayToUnshift.5',
+    'arrayToUnshift.4',
+    'arrayToUnshift.3',
+    'arrayToUnshift.2',
+    'arrayToUnshift.0',
+    'arrayToUnshift.1',
+    'arrayToUnshift.length',
   ]);
 });
 
@@ -319,7 +376,7 @@ it('calls listeners with the changed path', () => {
   secondItem.name = 'Sam';
 
   expect(propPathChanges(handleChange)).toEqual([
-    'store.deepObject',
-    'store.deepObject.objectProp.arr.2.name',
+    'deepObject',
+    'deepObject.objectProp.arr.2.name',
   ]);
 });

@@ -1,20 +1,37 @@
-import { isDebugOn } from 'src/debug';
-import {
-  decorateWithPathAndProxy,
-  makePath,
-  makePathUserFriendly2,
-  makeUserFriendlyPath,
-} from 'src/general';
-import { isProxyMuted } from 'src/proxy';
-import { getCurrentComponent } from 'src/collect';
-import { addListener, notifyByPath } from 'src/updating';
-import { getFromNextStore, updateStoreAtPath } from 'src/store';
-import * as utils from 'src/utils';
+import { getFromNextStore, updateInNextStore } from 'src/store';
 
+import { debug } from 'src/shared/debug';
+import state from 'src/shared/state';
+import * as utils from 'src/shared/utils';
+import * as paths from 'src/shared/paths';
+import { IS_OLD_STORE } from 'src/shared/constants';
+
+/**
+ * Add a new listener to be notified when a particular value in the store changes
+ * To be used when a component reads from a property
+ * @param {Array<*>} pathArray
+ */
+const addListener = pathArray => {
+  // We use a string instead of an array because it's much easier to match
+  const pathString = paths.makeInternalString(pathArray);
+
+  const components = state.listeners.get(pathString) || new Set();
+  components.add(state.currentComponent);
+  state.listeners.set(pathString, components);
+};
+
+/**
+ * We bypass the proxy if we don't want to:
+ * a) record a GET of a prop and add a listener for that prop path
+ * b) emit a SET and trigger listeners (which re-render components)
+ * @param prop
+ * @return {boolean}
+ */
+// TODO (davidg): there's only one use of this now, move it back down
 const shouldBypassProxy = prop =>
-  isProxyMuted() ||
-  !utils.isInBrowser() ||
-  !getCurrentComponent() ||
+  state.proxyIsMuted ||
+  !state.isInBrowser ||
+  !state.currentComponent ||
   utils.isSymbol(prop) ||
   prop === 'constructor' ||
   prop === 'toJSON';
@@ -27,11 +44,11 @@ const shouldBypassProxy = prop =>
  * @param {*} prop
  */
 const isGettingPropOutsideOfRenderCycle = prop =>
-  !getCurrentComponent() &&
-  utils.isInBrowser() &&
+  !state.currentComponent &&
+  state.isInBrowser &&
   !utils.isSymbol(prop) &&
   prop !== 'constructor' && // TODO (davidg): maybe 'is exotic'? Check hasOwnProps? Slow?
-  !isProxyMuted();
+  !state.proxyIsMuted;
 
 /**
  * This function takes an instruction to update the store. For simple properties, it will update
@@ -46,36 +63,23 @@ const isGettingPropOutsideOfRenderCycle = prop =>
  * @param {function} props.updater
  * @return {boolean}
  */
-const handleSet = ({ target, prop, value, updater }) => {
+const forwardSetToNextStore = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
-  //  call updateStoreAtPath() from two places below
-  const currentValue = utils.getValue(target, prop);
-  const newValuePath = makePath(target, prop);
-
-  // Add paths to this new value
-  const newValueProxy = decorateWithPathAndProxy(value, newValuePath);
-
-  if (isDebugOn()) {
-    console.groupCollapsed(`SET: ${makePathUserFriendly2(newValuePath)}`);
-    console.info('From:', currentValue);
-    console.info('To:  ', value); // The user doesn't care about the proxied version
+  //  call updateInNextStore() from two places below
+  debug(() => {
+    console.groupCollapsed(`SET: ${paths.extendToUserString(target, prop)}`);
+    console.info('From:', utils.getValue(target, prop));
+    console.info('To:  ', value);
     console.groupEnd();
-  }
-
-  const newStore = updateStoreAtPath({
-    target,
-    updater: mutableTarget => {
-      if (updater) {
-        updater(mutableTarget, newValueProxy);
-      } else {
-        mutableTarget[prop] = newValueProxy;
-      }
-    },
   });
 
-  notifyByPath({
-    path: newValuePath,
-    newStore,
+  updateInNextStore({
+    target,
+    value,
+    prop,
+    updater: (mutableTarget, newValue) => {
+      updater(mutableTarget, newValue);
+    },
   });
 
   return true;
@@ -91,10 +95,10 @@ export const mapOrSetProxyHandler = {
     if (utils.isFunction(result)) result = result.bind(target);
 
     // bail early for some things. Unlike objects/arrays, we will continue on even
-    // if !getCurrentComponent()
+    // if !state.currentComponent
     if (
-      isProxyMuted() ||
-      !utils.isInBrowser() ||
+      state.proxyIsMuted ||
+      !state.isInBrowser ||
       utils.isSymbol(prop) ||
       prop === 'constructor' ||
       prop === 'toJSON'
@@ -116,7 +120,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [key, value]) {
           if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop: key,
             value,
@@ -138,7 +142,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [value]) {
           if (applyTarget.has(value)) return true; // Would be a no op
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop: value,
             value,
@@ -156,7 +160,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [key]) {
           if (prop === 'delete' && !applyTarget.has(key)) return result; // Would not be a change
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop,
             updater: finalTarget => {
@@ -168,7 +172,7 @@ export const mapOrSetProxyHandler = {
     }
 
     // Now that we've ruled out set/clear/delete, we can bail if we're not in the render cycle
-    if (!getCurrentComponent()) return result;
+    if (!state.currentComponent) return result;
 
     // For `size` or any getter method, subscribe to size changes and return
     if (
@@ -176,7 +180,7 @@ export const mapOrSetProxyHandler = {
         prop
       )
     ) {
-      addListener(target, 'size');
+      addListener(paths.extend(target, 'size'));
       // TODO (davidg): do I not log the get on some Map or Set reads?
       return result;
     }
@@ -190,84 +194,103 @@ export const mapOrSetProxyHandler = {
   },
 };
 
-let isInBulkOperation = false;
-
 export const objectOrArrayProxyHandler = {
   get(target, prop) {
-    const result = Reflect.get(target, prop);
-    if (isInBulkOperation) return result;
-
-    // TODO (davidg): array.pop() when empty can bail. But that's not easy
-    if (
-      Array.isArray(target) &&
-      typeof target[prop] === 'function' &&
-      ['sort', 'reverse', 'shift', 'splice', 'unshift', 'copyWithin'].includes(
-        prop
-      )
-    ) {
-      // These methods can rearrange an array over multiple steps. We don't want to trigger
-      // any renders during this operation, so we set isInBulkOperation
-      return new Proxy(result, {
-        apply(applyTarget, applyProp, args) {
-          isInBulkOperation = true;
-          const applyResult = Reflect.apply(applyTarget, applyProp, args);
-          isInBulkOperation = false;
-          return applyResult;
-        },
-      });
+    if (IS_OLD_STORE in target && state.currentComponent) {
+      throw Error(
+        `You are trying to read "${prop}" from the global store while rendering 
+        a component. This could result in subtle bugs. Instead, read from the 
+        store object passed as a prop to your component.`
+      );
     }
+
+    const result = Reflect.get(target, prop);
+    // TODO (davidg): array.pop() when empty can bail. But that's not easy
 
     if (utils.isFunction(target[prop])) return result;
 
-    if (!isInBulkOperation && isGettingPropOutsideOfRenderCycle(prop)) {
+    if (
+      !state.currentComponent &&
+      state.isInBrowser &&
+      !utils.isSymbol(prop) &&
+      !state.proxyIsMuted &&
+      prop !== 'constructor'
+    ) {
+      // Note, this will result in another get(), but on the equivalent
+      // target from the next store. muteProxy will be set so this line
+      // isn't triggers in an infinite loop
       return getFromNextStore(target, prop);
     }
 
     if (shouldBypassProxy(prop)) return result;
 
-    if (isDebugOn()) {
-      console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
-      console.info(`Component: <${getCurrentComponent()._name}>`);
+    debug(() => {
+      console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
+      console.info(`Component: <${state.currentComponent._name}>`);
       console.info('Value:', result);
       console.groupEnd();
-    }
+    });
 
-    addListener(target, prop);
+    addListener(paths.extend(target, prop));
 
     return result;
   },
 
   has(target, prop) {
-    if (
-      isProxyMuted() ||
-      !utils.isInBrowser() ||
-      utils.isArray(target) // Arrays call this trap, but we don't care
-    ) {
-      return Reflect.has(target, prop);
+    // Arrays use `has` too, but we capture a listener elsewhere for that.
+    // Here we only want to capture access to objects
+    if (state.currentComponent && !utils.isArray(target)) {
+      debug(() => {
+        console.groupCollapsed(
+          `GET: ${paths.extendToUserString(target, prop)}`
+        );
+        console.info(`Component: <${state.currentComponent._name}>`);
+        console.groupEnd();
+      });
+
+      addListener(paths.extend(target, prop));
     }
 
-    if (isDebugOn()) {
-      console.groupCollapsed(`GET: ${makeUserFriendlyPath(target, prop)}`);
-      console.info(`Component: <${getCurrentComponent()._name}>`);
-      console.groupEnd();
-    }
-
-    addListener(target, prop);
-
+    // TODO (davidg): should this be from the next store? Test, etc.
     return Reflect.has(target, prop);
   },
 
+  ownKeys(target) {
+    if (state.currentComponent) {
+      debug(() => {
+        console.groupCollapsed(`GET: ${paths.extendToUserString(target)}`);
+        console.info(`Component: <${state.currentComponent._name}>`);
+        console.groupEnd();
+      });
+
+      addListener(paths.get(target));
+    }
+
+    return Reflect.ownKeys(target);
+  },
+
   set(target, prop, value) {
+    if (state.currentComponent) {
+      throw Error(
+        `You are modifying the store during a render cycle. Don't do this.
+        You're setting "${prop}" to "${value}" somewhere; check the stack 
+        trace below.
+        If you're changing the store in componentDidMount, wrap your code in a
+        setTimeout() to allow the render cycle to complete before changing the store.`
+      );
+    }
+
     // We need to let the 'length' change through, even if it doesn't change, so it can
     // trigger listeners and update components.
     // This could happen e.g. when sort() changes individual items in an array. It will fire
     // a set() on 'length' (helpful!) which tells us we need to update.
     if (prop !== 'length' && target[prop] === value) return true;
 
-    if (isProxyMuted() || !utils.isInBrowser())
+    if (state.proxyIsMuted || !state.isInBrowser) {
       return Reflect.set(target, prop, value);
+    }
 
-    return handleSet({
+    return forwardSetToNextStore({
       target,
       prop,
       value,
@@ -278,32 +301,29 @@ export const objectOrArrayProxyHandler = {
   },
 
   deleteProperty(target, prop) {
-    // TODO (davidg): use shouldBypassProxy? Or not for delete?
-    if (isProxyMuted() || !utils.isInBrowser())
+    if (state.proxyIsMuted || !state.isInBrowser) {
       return Reflect.deleteProperty(target, prop);
-
-    if (isDebugOn()) {
-      console.groupCollapsed(`DELETE: ${makeUserFriendlyPath(target, prop)}`);
-      console.info('Property: ', makeUserFriendlyPath(target, prop));
-      console.groupEnd();
     }
 
-    // TODO (davidg): this duplicates handleSet() a bit. Better to generalise that function
-    const path = makePath(target, prop);
-
-    const newStore = updateStoreAtPath({
-      target,
-      updater: finalTarget => {
-        // Could I not just pass `args` and `reflection`?
-        Reflect.deleteProperty(finalTarget, prop);
-      },
+    debug(() => {
+      console.groupCollapsed(
+        `DELETE: ${paths.extendToUserString(target, prop)}`
+      );
+      console.info('Property: ', paths.extendToUserString(target, prop));
+      console.groupEnd();
     });
 
-    notifyByPath({
-      path,
-      newStore,
+    updateInNextStore({
+      target,
+      prop,
+      updater: finalTarget => {
+        Reflect.deleteProperty(finalTarget, prop);
+      },
     });
 
     return true;
   },
 };
+
+export const getHandlerForObject = obj =>
+  utils.isMapOrSet(obj) ? mapOrSetProxyHandler : objectOrArrayProxyHandler;

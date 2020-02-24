@@ -1,41 +1,16 @@
-import { createProxy, isProxy, muteProxy, unMuteProxy } from 'src/proxy';
-import { addPathProp, makePath } from 'src/general';
-import { PATH_PROP } from 'src/constants';
-import * as utils from 'src/utils';
+import { createProxy, decorateWithPathAndProxy } from 'src/proxy';
+import { getHandlerForObject } from 'src/proxyHandlers';
+import { notifyByPath } from 'src/updating';
 
-const rawStore = {};
+import state from 'src/shared/state';
+import * as utils from 'src/shared/utils';
+import * as paths from 'src/shared/paths';
 
-addPathProp(rawStore, ['store']); // TODO (davidg): why is store ever here?
+const createProxyWithHandler = obj =>
+  createProxy(obj, getHandlerForObject(obj));
 
-export const store = createProxy(rawStore);
-
-let nextStore;
-
-const cloneAnything = anything => {
-  let result;
-
-  if (utils.isArray(anything)) {
-    // TODO (davidg): there's a need for a cloneWithPath shortcut
-    result = createProxy(anything.slice());
-    addPathProp(result, anything[PATH_PROP]);
-  } else if (utils.isMap(anything)) {
-    result = createProxy(utils.cloneMap(anything));
-    addPathProp(result, anything[PATH_PROP]);
-  } else if (utils.isSet(anything)) {
-    result = createProxy(utils.cloneSet(anything));
-    addPathProp(result, anything[PATH_PROP]);
-  } else if (utils.isPlainObject(anything)) {
-    result = { ...anything };
-    if (isProxy(anything) && !isProxy(result)) {
-      result = createProxy(result);
-    }
-    addPathProp(result, anything[PATH_PROP]);
-  } else {
-    console.warn('> did not expect this:', anything);
-  }
-
-  return result;
-};
+state.nextStore = createProxyWithHandler({});
+state.store = state.nextStore;
 
 /**
  * This function immutably updates a target in the store, returning the new store.
@@ -44,117 +19,86 @@ const cloneAnything = anything => {
  *
  * @param props
  * @param {*} props.target - the target in the current store
+ * @param {*} props.prop - the target in the current store
+ * @param {*} [props.value] - the target in the current store
  * @param {function} props.updater - a function that will be passed the target
  * @return {*}
  */
-export const updateStoreAtPath = ({ target, updater }) => {
-  // TODO (davidg): @callback for the updater
-  // TODO (davidg): "updateTargetInStore"
-  muteProxy();
+export const updateInNextStore = ({ target, prop, value, updater }) => {
+  state.proxyIsMuted = true;
 
   // Note that this function doesn't know anything about the prop being set. It just finds the
   // target (the parent of the prop) and calls updater() with it.
-  const propArray = target[PATH_PROP].slice(1);
+  const targetPath = paths.get(target);
+  const propPath = paths.extend(target, prop);
 
-  // Shallow clone the existing store. We will clone all the way down to the target object
-  const newStore = { ...store };
+  let newValue = value;
 
-  // This walks down into the object, returning the target.
-  // On the way in clones each level so as not to mutate the original store.
-  const finalTarget = propArray.reduce((mutableTarget, prop) => {
-    // If we're updating a prop at data.tasks[2].done, we need to shallow clone every step on
-    // the way down so that we're not mutating them.
-    const targetClone = cloneAnything(mutableTarget);
+  // If there's a value being set, wrap it in a proxy
+  if (value !== 'undefined') {
+    const handler = getHandlerForObject(value);
+    newValue = decorateWithPathAndProxy(value, propPath, handler);
+  }
 
-    let nextLevelDown;
-
-    if (utils.isMap(mutableTarget)) {
-      // TODO (davidg): isn't it an error if this doesn't exist?
-      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
-      targetClone.set(prop, nextLevelDown);
-    } else if (utils.isSet(mutableTarget)) {
-      nextLevelDown = mutableTarget.has(prop) ? mutableTarget.get(prop) : {};
-      targetClone.add(nextLevelDown);
-    } else {
-      // When a prop doesn't exist, create a new object, so we can deep set a value.
-      nextLevelDown = prop in mutableTarget ? mutableTarget[prop] : {};
-      targetClone[prop] = nextLevelDown;
-    }
-
-    return nextLevelDown;
-  }, newStore);
-
-  // TODO (davidg): of course this doesn't work! It mutates the object!
-  // use utils.deepUpdate
-  updater(finalTarget);
-
-  addPathProp(newStore, ['store']);
-
-  unMuteProxy();
-
-  // TODO (davidg): store is already a proxy by this point
-  return createProxy(newStore);
-};
-
-const resetStore = () => {
-  Object.keys(store).forEach(prop => {
-    delete store[prop];
-  });
-};
-
-// Calling this directly doesn't mute the proxy
-// So items added are wrapped in a proxy. Perhaps there's a better way to do this
-// (I want to mute the proxy emitting, but DO want new items wrapped in a proxy)
-export const initStore = data => {
-  resetStore();
-
-  if (data) {
-    Object.entries(data).forEach(([prop, value]) => {
-      store[prop] = value;
+  if (!targetPath.length) {
+    state.nextStore = { ...state.nextStore };
+    updater(state.nextStore, newValue);
+  } else {
+    state.nextStore = utils.deepUpdate({
+      object: state.nextStore,
+      path: targetPath,
+      onClone: (original, clone) => {
+        if (paths.get(original)) {
+          paths.addProp(clone, paths.get(original));
+        }
+        return createProxyWithHandler(clone);
+      },
+      updater: updateTarget => {
+        updater(updateTarget, newValue);
+      },
     });
   }
-};
 
-export const getStore = () => store;
+  state.nextStore = createProxyWithHandler(state.nextStore);
+
+  state.proxyIsMuted = false;
+
+  notifyByPath(propPath);
+};
 
 /**
- * Replace the contents of the old store with the new store.
- * DO NOT replace the old store object since the user's app will have a reference to it
- * @param next
+ * This takes a target (from one version of the store) and gets its value
+ * in `nextStore`.
+ * @param target
+ * @param targetProp
+ * @return {*}
  */
-export const setStore = next => {
-  muteProxy();
-
-  initStore(next);
-
-  unMuteProxy();
-};
-
-export const setNextStore = next => {
-  nextStore = next;
-};
-
-// TODO (davidg): should getStore() just do nextStore || store?
-// will getStore ever be called to get the last one?
-export const getNextStore = () => nextStore || store;
-
 export const getFromNextStore = (target, targetProp) => {
-  muteProxy();
+  state.proxyIsMuted = true;
 
-  let result;
+  const propPath = paths.extend(target, targetProp);
 
-  const propPath = makePath(target, targetProp);
+  const result = propPath.reduce(
+    (acc, propName) => utils.getValue(acc, propName),
+    state.nextStore
+  );
 
-  // TODO (davidg): reduce
-  propPath.forEach(propName => {
-    if (propName === 'store') {
-      result = getNextStore();
-    } else {
-      result = utils.getValue(result, propName);
-    }
-  });
-
-  unMuteProxy();
+  state.proxyIsMuted = false;
 
   return result;
+};
+
+/**
+ * Unlike collapseStore() this doesn't mute the proxy, so objects are still
+ * wrapped and components are updated as a result
+ * @param data
+ */
+export const initStore = data => {
+  utils.replaceObject(state.store, data);
+};
+
+export const batch = cb => {
+  state.isBatchUpdating = true;
+  cb();
+  state.isBatchUpdating = false;
 };

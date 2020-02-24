@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store } from 'src';
+import { collect, store as globalStore } from 'src';
 
 const ChildComponent = props => (
   <div>This component should be {props.visibility}</div>
@@ -10,6 +10,8 @@ const ChildComponent = props => (
 // eslint-disable-next-line react/prefer-stateless-function
 class RawClassComponent extends Component {
   render() {
+    const { store } = this.props;
+
     return (
       <div>
         <button
@@ -31,7 +33,7 @@ class RawClassComponent extends Component {
 const ClassComponent = collect(RawClassComponent);
 
 it('should update a child component not wrapped in collect()', () => {
-  store.clickCount = 0;
+  globalStore.clickCount = 0;
 
   const { getByText } = render(<ClassComponent />);
 

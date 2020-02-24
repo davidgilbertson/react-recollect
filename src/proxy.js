@@ -1,11 +1,7 @@
-import {
-  objectOrArrayProxyHandler,
-  mapOrSetProxyHandler,
-} from 'src/proxyHandlers';
-import * as utils from 'src/utils';
+import * as utils from 'src/shared/utils';
+import * as paths from 'src/shared/paths';
 
 const proxies = new WeakSet();
-let muted = false;
 
 export const isProxy = obj => proxies.has(obj);
 
@@ -20,17 +16,11 @@ const canBeProxied = item =>
 /**
  * This will _maybe_ create a proxy. If an item can't be proxied, it will be returned as is.
  * @param obj - the item to be proxied
+ * @param {object} handler - the item to be proxied
  * @returns {*}
  */
-export const createProxy = obj => {
+export const createProxy = (obj, handler) => {
   if (!canBeProxied(obj)) return obj;
-
-  let handler;
-  if (utils.isMapOrSet(obj)) {
-    handler = mapOrSetProxyHandler;
-  } else {
-    handler = objectOrArrayProxyHandler;
-  }
 
   const proxy = new Proxy(obj, handler);
   proxies.add(proxy);
@@ -38,23 +28,57 @@ export const createProxy = obj => {
 };
 
 /**
- * Mutes reads/writes to the proxied store
- * Do this to silence reads/writes that happen inside Recollect. The proxy only needs to listen
- * to changes happening in a user's code
+ *
+ * @param {*} parentObject
+ * @param parentPath
+ * @param handler
+ * @return {*}
  */
-export const muteProxy = () => {
-  muted = true;
-};
+export const decorateWithPathAndProxy = (parentObject, parentPath, handler) => {
+  const decorateObject = (item, path) => {
+    // TODO (davidg): canBeProxied() exists
+    if (
+      utils.isArray(item) ||
+      utils.isPlainObject(item) ||
+      utils.isMap(item) ||
+      utils.isSet(item)
+    ) {
+      if (utils.isArray(item)) {
+        const nextArray = item.map((itemEntry, i) => {
+          return createProxy(decorateObject(itemEntry, [...path, i]), handler);
+        });
 
-/**
- * Un-mute the proxy
- */
-export const unMuteProxy = () => {
-  muted = false;
-};
+        paths.addProp(nextArray, path);
+        return createProxy(nextArray, handler);
+      }
 
-/**
- * Is proxy muting currently turned on?
- * @returns {boolean}
- */
-export const isProxyMuted = () => muted;
+      if (utils.isMap(item)) {
+        paths.addProp(item, path);
+        return createProxy(item, handler);
+      }
+
+      if (utils.isSet(item)) {
+        paths.addProp(item, path);
+        return createProxy(item, handler);
+      }
+
+      const newObject = {}; // TODO (davidg): reduce
+
+      // TODO (davidg): is this necessary? Does the proxy not look after itself when calling set
+      //  on children
+      Object.entries(item).forEach(([prop, value]) => {
+        newObject[prop] = createProxy(
+          decorateObject(value, [...path, prop]),
+          handler
+        );
+      });
+
+      paths.addProp(newObject, path);
+
+      return createProxy(newObject, handler);
+    }
+    return item;
+  };
+
+  return decorateObject(parentObject, parentPath);
+};

@@ -1,18 +1,17 @@
-import { debugOff, debugOn } from 'src/debug';
-import { getListeners } from 'src/updating';
-import { getStore } from 'src/store';
+import { debugOff, debugOn } from 'src/shared/debug';
+import state from 'src/shared/state';
 
+export { default as collect } from 'src/collect';
 export { afterChange } from 'src/updating';
-export { collect } from 'src/collect';
-export { store, initStore } from 'src/store';
+export { initStore, batch } from 'src/store';
+export const { store } = state;
 
 if (typeof window !== 'undefined') {
   if ('Proxy' in window) {
     window.__RR__ = {
-      getStore,
-      getListeners,
       debugOn,
       debugOff,
+      internals: state,
     };
   } else {
     console.warn(

@@ -41,11 +41,20 @@ export const store: Store;
 export function initStore(data: Store);
 
 /**
+ * Executes the provided function, then updates appropriate components and calls
+ * listeners registered with `afterChange()`. Guaranteed to only trigger one
+ * update. The provided function must only contain synchronous code.
+ */
+export function batch(cb: () => void);
+
+export type AfterChangeEvent = {
+  store: Store,
+  changedProps: string[],
+  renderedComponents: CollectorComponent[],
+  prevStore: Store
+}
+
+/**
  * afterChange will be called each time the Recollect store changes
  */
-export function afterChange(callback: (changeEvent: {
-  store: Store,
-  propPath: string,
-  components: CollectorComponent[],
-  prevStore: Store
-}) => void): void;
+export function afterChange(callback: (e: AfterChangeEvent) => void): void;
