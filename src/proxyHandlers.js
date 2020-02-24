@@ -12,25 +12,12 @@ import { IS_OLD_STORE } from 'src/shared/constants';
  * @param {Array<*>} pathArray
  */
 const addListener = pathArray => {
-  if (!state.currentComponent) return;
-
   // We use a string instead of an array because it's much easier to match
   const pathString = paths.makeInternalString(pathArray);
 
-  // TODO (davidg): consider Map instead of array? Easier to delete a component?
-  //  could be like this, but as a Map
-  // const listeners = {
-  //   'path~~~as~~~string': {
-  //     pathArray: ['path', 'as', 'string'],
-  //     components: [],
-  //   }
-  // }
-
-  if (state.listeners[pathString]) {
-    state.listeners[pathString].push(state.currentComponent);
-  } else {
-    state.listeners[pathString] = [state.currentComponent];
-  }
+  const components = state.listeners.get(pathString) || new Set();
+  components.add(state.currentComponent);
+  state.listeners.set(pathString, components);
 };
 
 /**
@@ -76,7 +63,7 @@ const isGettingPropOutsideOfRenderCycle = prop =>
  * @param {function} props.updater
  * @return {boolean}
  */
-const handleSet = ({ target, prop, value, updater }) => {
+const forwardSetToNextStore = ({ target, prop, value, updater }) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
   //  call updateInNextStore() from two places below
   debug(() => {
@@ -86,14 +73,10 @@ const handleSet = ({ target, prop, value, updater }) => {
     console.groupEnd();
   });
 
-  // TODO (davidg): if I call getHandlerForObject() in here and pass it
-  //  through, I can remove a circular reference.
-
   updateInNextStore({
     target,
     value,
     prop,
-    // TODO (davidg): "mutator"
     updater: (mutableTarget, newValue) => {
       updater(mutableTarget, newValue);
     },
@@ -137,7 +120,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [key, value]) {
           if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop: key,
             value,
@@ -159,7 +142,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [value]) {
           if (applyTarget.has(value)) return true; // Would be a no op
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop: value,
             value,
@@ -177,7 +160,7 @@ export const mapOrSetProxyHandler = {
         apply(func, applyTarget, [key]) {
           if (prop === 'delete' && !applyTarget.has(key)) return result; // Would not be a change
 
-          return handleSet({
+          return forwardSetToNextStore({
             target: applyTarget,
             prop,
             updater: finalTarget => {
@@ -239,7 +222,6 @@ export const objectOrArrayProxyHandler = {
       return getFromNextStore(target, prop);
     }
 
-    // TODO (davidg): test for isInBulkOperation here?
     if (shouldBypassProxy(prop)) return result;
 
     debug(() => {
@@ -255,48 +237,46 @@ export const objectOrArrayProxyHandler = {
   },
 
   has(target, prop) {
-    if (
-      state.proxyIsMuted ||
-      !state.isInBrowser ||
-      utils.isArray(target) // Arrays call this trap, but we don't care
-    ) {
-      return Reflect.has(target, prop);
+    // Arrays use `has` too, but we capture a listener elsewhere for that.
+    // Here we only want to capture access to objects
+    if (state.currentComponent && !utils.isArray(target)) {
+      debug(() => {
+        console.groupCollapsed(
+          `GET: ${paths.extendToUserString(target, prop)}`
+        );
+        console.info(`Component: <${state.currentComponent._name}>`);
+        console.groupEnd();
+      });
+
+      addListener(paths.extend(target, prop));
     }
 
-    debug(() => {
-      console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
-      console.info(`Component: <${state.currentComponent._name}>`);
-      console.groupEnd();
-    });
-
-    addListener(paths.extend(target, prop));
-
+    // TODO (davidg): should this be from the next store? Test, etc.
     return Reflect.has(target, prop);
   },
 
   ownKeys(target) {
-    const result = Reflect.ownKeys(target);
+    if (state.currentComponent) {
+      debug(() => {
+        console.groupCollapsed(`GET: ${paths.extendToUserString(target)}`);
+        console.info(`Component: <${state.currentComponent._name}>`);
+        console.groupEnd();
+      });
 
-    if (state.proxyIsMuted || !state.isInBrowser) return result;
+      addListener(paths.get(target));
+    }
 
-    debug(() => {
-      console.groupCollapsed(`GET: ${paths.extendToUserString(target)}`);
-      console.info(`Component: <${state.currentComponent._name}>`);
-      console.groupEnd();
-    });
-
-    addListener(paths.get(target));
-
-    return result;
+    return Reflect.ownKeys(target);
   },
 
   set(target, prop, value) {
     if (state.currentComponent) {
       throw Error(
         `You are modifying the store during a render cycle. Don't do this.
-        You're setting "${prop}" to "${value}" somewhere, we can't tell were.
-        If you must, wrap your code in a setTimeout() to allow the render
-        cycle to complete before changing the store.`
+        You're setting "${prop}" to "${value}" somewhere; check the stack 
+        trace below.
+        If you're changing the store in componentDidMount, wrap your code in a
+        setTimeout() to allow the render cycle to complete before changing the store.`
       );
     }
 
@@ -310,7 +290,7 @@ export const objectOrArrayProxyHandler = {
       return Reflect.set(target, prop, value);
     }
 
-    return handleSet({
+    return forwardSetToNextStore({
       target,
       prop,
       value,

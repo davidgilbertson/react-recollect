@@ -8,24 +8,10 @@ export const { store } = state;
 
 if (typeof window !== 'undefined') {
   if ('Proxy' in window) {
-    // TODO (davidg): getStore() and getListeners() can go.
-    //  Requires a major bump, technically. Deprecate them for a version
     window.__RR__ = {
       debugOn,
       debugOff,
       internals: state,
-      getStore: () => {
-        console.warn(
-          '__RR__.getStore() will be removed in v4. Use __RR__.internals.store instead'
-        );
-        return state.nextStore;
-      },
-      getListeners: () => {
-        console.warn(
-          '__RR__.getListeners() will be removed in v4. Use __RR__.internals.listeners instead'
-        );
-        return state.listeners;
-      },
     };
   } else {
     console.warn(

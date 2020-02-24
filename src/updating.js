@@ -60,21 +60,18 @@ const flushUpdates = () => {
  * @param {Array<*>} pathArray - The path of the prop that changed
  */
 export const notifyByPath = pathArray => {
-  let componentsToUpdate = [];
   const pathString = paths.makeInternalString(pathArray);
   const userFriendlyPropPath = paths.makeUserString(pathArray);
 
   queue.changedPaths.add(userFriendlyPropPath);
 
-  Object.entries(state.listeners).forEach(([listenerPath, components]) => {
+  state.listeners.forEach((components, listenerPath) => {
     if (
       listenerPath === '' || // listening directly to the store object
       pathString === listenerPath || // direct match
       pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
       listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
     ) {
-      componentsToUpdate = componentsToUpdate.concat(components);
-
       components.forEach(component => {
         const propsUpdated = queue.components.get(component) || new Set();
         propsUpdated.add(userFriendlyPropPath);
@@ -94,17 +91,17 @@ export const notifyByPath = pathArray => {
 };
 
 export const removeListenersForComponent = componentToRemove => {
-  Object.entries(state.listeners).forEach(([listenerPath, components]) => {
-    const filteredComponents = components.filter(
+  state.listeners.forEach((components, listenerPath) => {
+    const filteredComponents = Array.from(components).filter(
       existingComponent => existingComponent !== componentToRemove
     );
 
     if (filteredComponents.length) {
-      state.listeners[listenerPath] = filteredComponents;
+      state.listeners.set(listenerPath, new Set(filteredComponents));
     } else {
-      // If there's no components left, remove the path
+      // If there are no components left listening, remove the path
       // For example, leaving a page will unmount a bunch of components
-      delete state.listeners[listenerPath];
+      state.listeners.delete(listenerPath);
     }
   });
 };

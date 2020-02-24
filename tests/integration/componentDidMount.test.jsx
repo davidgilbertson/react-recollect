@@ -44,15 +44,9 @@ const TestComponentGood = collect(
 );
 
 it('should fail if setting the state during mounting', () => {
-  expectToThrow(
-    () => {
-      render(<TestComponentBad />);
-    },
-    `You are modifying the store during a render cycle. Don't do this.
-        You're setting "loading" to "true" somewhere, we can't tell were.
-        If you must, wrap your code in a setTimeout() to allow the render
-        cycle to complete before changing the store.`
-  );
+  expectToThrow(() => {
+    render(<TestComponentBad />);
+  });
 });
 
 it('should set loading state after mounting', async () => {
