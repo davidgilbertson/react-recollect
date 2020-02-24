@@ -34,7 +34,7 @@ const collect = (ComponentToWrap, { forwardRef } = {}) => {
       this.state = {
         // This might be called by React when a parent component has updated with a new store,
         // we want this component (if it's a child) to have that next store as well.
-        store: state.nextStore,
+        nextStore: state.nextStore,
       };
       this._name = componentName;
       this._isMounted = false;
@@ -65,14 +65,14 @@ const collect = (ComponentToWrap, { forwardRef } = {}) => {
       //    render cycle.
       //    For example, if a user sets store.loading to true in App.componentDidMount
       if (this._isMounted || this._isMounting) {
-        this.setState({ store: state.nextStore });
+        this.setState({ nextStore: state.nextStore });
       }
     }
 
     render() {
       startRecordingGetsForComponent(this);
 
-      return <ComponentToWrap {...this.props} store={this.state.store} />;
+      return <ComponentToWrap {...this.props} store={this.state.nextStore} />;
     }
   }
 

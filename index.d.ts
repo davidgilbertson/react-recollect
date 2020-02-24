@@ -47,12 +47,14 @@ export function initStore(data: Store);
  */
 export function batch(cb: () => void);
 
-/**
- * afterChange will be called each time the Recollect store changes
- */
-export function afterChange(callback: (changeEvent: {
+export type AfterChangeEvent = {
   store: Store,
   changedProps: string[],
   renderedComponents: CollectorComponent[],
   prevStore: Store
-}) => void): void;
+}
+
+/**
+ * afterChange will be called each time the Recollect store changes
+ */
+export function afterChange(callback: (e: AfterChangeEvent) => void): void;

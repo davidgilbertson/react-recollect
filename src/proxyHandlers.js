@@ -4,6 +4,7 @@ import { debug } from 'src/shared/debug';
 import state from 'src/shared/state';
 import * as utils from 'src/shared/utils';
 import * as paths from 'src/shared/paths';
+import { IS_OLD_STORE } from 'src/shared/constants';
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
@@ -212,6 +213,14 @@ export const mapOrSetProxyHandler = {
 
 export const objectOrArrayProxyHandler = {
   get(target, prop) {
+    if (IS_OLD_STORE in target && state.currentComponent) {
+      throw Error(
+        `You are trying to read "${prop}" from the global store while rendering 
+        a component. This could result in subtle bugs. Instead, read from the 
+        store object passed as a prop to your component.`
+      );
+    }
+
     const result = Reflect.get(target, prop);
     // TODO (davidg): array.pop() when empty can bail. But that's not easy
 

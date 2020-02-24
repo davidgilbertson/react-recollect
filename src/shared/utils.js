@@ -1,4 +1,4 @@
-import * as paths from 'src/shared/paths';
+import { IS_OLD_STORE } from 'src/shared/constants';
 
 export const isMap = item => item instanceof Map;
 export const isSet = item => item instanceof Set;
@@ -63,39 +63,37 @@ export const deepUpdate = ({ object, path, onClone, updater }) => {
 };
 
 /**
- * Mutates prevObject. The top level object will remain the same,
- * but all changed content will be replaced with the new content.
- * In other words, only the top-level object is mutated.
- * @param {object} prevObject
- * @param {object} nextObject
+ * Replaces the contents of one object with the contents of another. The top
+ * level object will remain the same, but all changed content will be replaced
+ * with the new content.
+ *
+ * @param {object} mutableTarget - the object to update/replace
+ * @param {object} nextObject - the object to replace it with
  */
-export const replaceObject = (prevObject, nextObject) => {
-  /* eslint-disable no-param-reassign */
+export const replaceObject = (mutableTarget, nextObject) => {
   if (nextObject) {
-    if (paths.has(nextObject)) {
-      // Copy the new path root across
-      paths.set(prevObject, paths.get(nextObject));
-    }
-
     // From the new data, add to the old data anything that's new
     // (from the top level props only)
     Object.entries(nextObject).forEach(([prop, value]) => {
-      if (prevObject[prop] !== value) {
-        prevObject[prop] = value;
+      if (mutableTarget[prop] !== value) {
+        mutableTarget[prop] = value;
       }
     });
 
     // Clear out any keys that aren't in the new data
-    Object.keys(prevObject).forEach(prop => {
+    Object.keys(mutableTarget).forEach(prop => {
       if (!(prop in nextObject)) {
-        delete prevObject[prop];
+        delete mutableTarget[prop];
       }
     });
   } else {
     // Just empty the old object
-    Object.keys(prevObject).forEach(prop => {
-      delete prevObject[prop];
+    Object.keys(mutableTarget).forEach(prop => {
+      delete mutableTarget[prop];
     });
   }
-  /* eslint-enable no-param-reassign */
+
+  // If the user is reading this object while a component is rendering,
+  // they're doing it wrong.
+  mutableTarget[IS_OLD_STORE] = true;
 };

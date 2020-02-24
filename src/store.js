@@ -9,8 +9,8 @@ import * as paths from 'src/shared/paths';
 const createProxyWithHandler = obj =>
   createProxy(obj, getHandlerForObject(obj));
 
-state.store = createProxyWithHandler({});
-state.nextStore = state.store;
+state.nextStore = createProxyWithHandler({});
+state.store = state.nextStore;
 
 /**
  * This function immutably updates a target in the store, returning the new store.
@@ -94,7 +94,7 @@ export const getFromNextStore = (target, targetProp) => {
  * @param data
  */
 export const initStore = data => {
-  utils.replaceObject(state.nextStore, data);
+  utils.replaceObject(state.store, data);
 };
 
 export const batch = cb => {

@@ -6,3 +6,5 @@
  */
 // eslint-disable-next-line import/prefer-default-export
 export const PROP_PATH_SEP = '~~~';
+
+export const IS_OLD_STORE = Symbol('FROZEN');

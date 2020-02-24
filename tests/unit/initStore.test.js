@@ -12,9 +12,11 @@ it('should replace the contents of the store', () => {
   expect(store.propertyOne).toBeUndefined();
   expect(store.propertyTwo).toBe('the second property');
 
-  expect(store).toEqual({
-    propertyTwo: 'the second property',
-  });
+  expect(store).toEqual(
+    expect.objectContaining({
+      propertyTwo: 'the second property',
+    })
+  );
 });
 
 it('should be impossible to get out of sync', () => {

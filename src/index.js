@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
         console.warn(
           '__RR__.getStore() will be removed in v4. Use __RR__.internals.store instead'
         );
-        return state.store;
+        return state.nextStore;
       },
       getListeners: () => {
         console.warn(

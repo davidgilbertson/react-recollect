@@ -13,79 +13,28 @@ Recollect solves these problems like so:
 
 1. The Recollect store is immutable, but the implementation is hidden. So, you
    can interact with the store as though it was a plain JavaScript object. No
-   need to worry about accidentally mutating the store. With Recollect that's
+   need to worry about accidentally mutating the store; with Recollect that's
    impossible.
-2. Recollect keeps a record of which components use which properties from the
-   store. When a property in your store changes, only the appropriate components
-   are targeted for an update.
+2. Recollect records all access to the store during the render cycle of each
+   component. When a property in your store changes, any component that read
+   that specific property when last rendered is re-rendered.
 
-Take it for a spin in this [Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
+The result is simpler code and a faster app. Take it for a spin in this
+[Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
 
-## Warnings
+---
 
 There is no support for any version of IE, Opera mini, or Android browser 4.4
 (because Recollect uses the `Proxy` object). Check out the latest usage stats
 for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 
-# Contents
-
-Don't be put off by the long list, you only need to know `collect` and `store`
-to get started.
-
-- [Basic usage](#basic-usage)
-  - [Installation](#installation)
-  - [API](#api)
-    - [The `collect` function](#the-collect-function)
-    - [The `store` object](#the-store-object)
-- [Advanced usage](#advanced-usage)
-  - [The `afterChange` function](#the-afterchange-function)
-  - [Passing a ref to a `collect`ed component](#passing-a-ref-to-a-collected-component)
-  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
-  - [Server-side rendering](#server-side-rendering)
-    - [On the server](#on-the-server)
-    - [In the browser](#in-the-browser)
-  - [Usage with TypeScript](#usage-with-typescript)
-    - [Your store](#your-store)
-    - [Using collect](#using-collect)
-- [How Recollect works](#how-recollect-works)
-- [Project structure guidelines](#project-structure-guidelines)
-  - [Concepts](#concepts)
-  - [Selectors](#selectors)
-    - [Keeping references to objects in the store](#keeping-references-to-objects-in-the-store)
-    - [Always pass the store to selectors](#always-pass-the-store-to-selectors)
-  - [Updaters](#updaters)
-    - [Loading data with an updater](#loading-data-with-an-updater)
-    - [Asynchronous updaters](#asynchronous-updaters)
-    - [Testing an updater](#testing-an-updater)
-- [Questions](#questions)
-  - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
-  - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
-  - [Will component state still work?](#will-component-state-still-work)
-  - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
-  - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
-  - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
-  - [Can I use this with `Context`?](#can-i-use-this-with-context)
-  - [Can I have multiple stores?](#can-i-have-multiple-stores)
-  - [Tell me about your tests](#tell-me-about-your-tests)
-  - [How big is it?](#how-big-it-it)
-- [Dependencies](#dependencies)
-- [Alternatives](#alternatives)
-- [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
-
-# Basic usage
-
-## Installation
+# Quick start
 
 ```
 npm i react-recollect
 ```
 
-## API
-
-To get started with Recollect, you need to know about two things: the `store`
-object and the `collect` function.
-
-### The `collect` function
+## The `collect` function
 
 You can wrap a React component in `collect` to have Recollect take care of it.
 Here's a component that reads from and writes to the store.
@@ -123,11 +72,13 @@ Recollect will:
 - Provide a store object as a prop
 - Collect information about what data the component needs to render
 - When any of that data changes, Recollect will instruct React to re-render the
-  component
+  component.
 
-Let's talk some more about...
+Internally, Recollect maintains a list of 'listeners'. The above component would
+be listed as listening to the `'store.tasks'` prop, and be re-rendered with any
+change to that array.
 
-### The `store` object
+## The `store` object
 
 You can import, read from, and write to the store in any file. Or, as you saw
 above, access it as a prop in a component wrapped in `collect`.
@@ -157,22 +108,62 @@ store = 'tasks'; // NOPE! (Can't reassign a constant)
 Recollect is always watching and it knows which components need what data from
 the store, so it will trigger updates accordingly.
 
-**An important note:** when referring to the store **within a component**, it's
-important that you use the `store` object passed in as a prop, not the `store`
-imported from `react-recollect`. The reason for this is super-interesting and
-described in great detail below.
+**Note:** when referring to the store **within a component**, it's important
+that you use the `store` object passed in as a prop, not the `store` imported
+from `react-recollect`. The reason for this is super-interesting and described
+in great detail below.
 
 ---
 
 Congratulations my friend, you just finished learning Recollect. I am very proud
 of you.
 
-Go have a play, and when you're ready for more readme, come back to read about
-...
+Go have a play, and when you're ready for more readme, come back to read on ...
 
 # Advanced usage
 
-## The `afterChange` function
+- [Advanced usage](#advanced-usage)
+  - [The `afterChange` function](#the-afterchange-function)
+  - [The `batch` function](#the-batch-function)
+  - [The `initStore` function](#the-initstore-function)
+    - [On the server](#on-the-server)
+    - [In the browser](#in-the-browser)
+  - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
+  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+  - [Usage with TypeScript](#usage-with-typescript)
+    - [Your store](#your-store)
+    - [Using collect](#using-collect)
+- [How Recollect works](#how-recollect-works)
+- [Project structure guidelines](#project-structure-guidelines)
+  - [Concepts](#concepts)
+  - [Selectors](#selectors)
+    - [Keeping references to objects in the store](#keeping-references-to-objects-in-the-store)
+    - [Always pass the store to selectors](#always-pass-the-store-to-selectors)
+  - [Updaters](#updaters)
+    - [Loading data with an updater](#loading-data-with-an-updater)
+    - [Asynchronous updaters](#asynchronous-updaters)
+    - [Testing an updater](#testing-an-updater)
+- [Questions](#questions)
+  - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
+  - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
+  - [Will component state still work?](#will-component-state-still-work)
+  - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
+  - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
+  - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
+  - [Can I use this with `Context`?](#can-i-use-this-with-context)
+  - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [Tell me about your tests](#tell-me-about-your-tests)
+  - [How big is it?](#how-big-it-it)
+- [Dependencies](#dependencies)
+- [Alternatives](#alternatives)
+- [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
+
+## API
+
+In addition to [`connect`](#the-collect-function) and
+[`store`](#the-store-object) above ...
+
+### The `afterChange` function
 
 Pass a function to `afterChange` to have it called whenever the store updates.
 For example, if you wanted to sync your store to local storage, you could do the
@@ -181,12 +172,12 @@ following (anywhere in your app).
 ```js
 import { afterChange } from 'react-recollect';
 
-afterChange(({ store }) => {
-  localStorage.siteData = JSON.stringify(store);
+afterChange(e => {
+  localStorage.siteData = JSON.stringify(e.store);
 });
 ```
 
-Your callback will be called with an object, which has four properties:
+The `afterChange` event is an object with these properties:
 
 - `store` — the store
 - `changedProps` — the 'paths' of the properties that changed. E.g .
@@ -198,6 +189,8 @@ Those last two might be interesting if you want to implement time travel, for
 example:
 
 ```js
+import { afterChange } from 'react-recollect';
+
 const thePast = [];
 const theFuture = [];
 
@@ -211,8 +204,6 @@ window.TIME_TRAVEL = {
     e.renderedComponents.forEach(component => {
       component.update(e.prevStore);
     });
-
-    console.log('Replayed the change made to', e.changedProps[0]);
   },
   forward() {
     if (!theFuture.length) return;
@@ -223,8 +214,6 @@ window.TIME_TRAVEL = {
     e.renderedComponents.forEach(component => {
       component.update(e.store);
     });
-
-    console.log('Replayed the change made to', e.changedProps[0]);
   },
 };
 
@@ -233,7 +222,7 @@ afterChange(e => {
 });
 ```
 
-## The `batch` function
+### The `batch` function
 
 The `batch` function allows you to update the store multiple times, and be
 guaranteed that components will only be updated after all updates are made.
@@ -256,87 +245,23 @@ const fetchData = async () => {
 };
 ```
 
-Note that a lot of the time, you don't need to batch because React does a good
-job of batching changes into a single render. You can set `__RR__ .debugOn()` to
-see in the console how often your components are being rendered, and why.
+Note that React already does a good job of batching multiple updates into a
+single render cycle. So only clutter up your code with `batch` if it results in
+an appreciable performance improvement. You can set `__RR__ .debugOn()` to see
+in the console how often your components are being rendered, and why.
 
-## Passing a ref to a `collect`ed component
-
-The `collect` function takes a second parameter — an options object with one
-property, `forwardRef`. When you supply this property, you will be able to
-provide a `ref` to the wrapped component, which will be made available on that
-component as `props.forwardedRef`.
-
-The component that you're wrapping in `collect` would then look like this:
-
-```jsx
-const MyInput = props => (
-  <label>
-    Some input
-    <input ref={props.forwardedRef} />
-  </label>
-);
-
-export default collect(MyComponent, { forwardRef: true });
-```
-
-And passing it a ref would look the same as passing a ref to any other component
-
-```jsx
-class MyParentComponent extends Component {
-  constructor(props) {
-    super(props);
-
-    this.inputRef = React.createRef();
-  }
-
-  render() {
-    return (
-      <div>
-        <MyInput ref={this.inputRef} />
-
-        <button
-          onClick={() => {
-            this.inputRef.current.focus();
-          }}
-        >
-          Focus the input for some reason
-        </button>
-      </div>
-    );
-  }
-}
-```
-
-You can forward a ref to class-based components or stateless functional
-components.
-
-## Peeking into Recollect's innards
-
-Some neat things are exposed on `window.__RR__` for tinkering in the console.
-
-- Use `__RR__.debugOn()` to turn on debugging. The setting is stored in local
-  storage, so will persist while you sleep. You can combine this with Chrome's
-  console filtering, for example to only see 'UPDATE' or 'SET' events. Who needs
-  professional, well made dev tools extensions!
-- Type `__RR__.debugOff()` and see what happens
-- `__RR__.internals` returns all sorts of interesting things. Including a live
-  reference to the store. For example, typing
-  `__RR__.internals.store.tasks[1].done = true` in the console would update the
-  store, and Recollect would instruct React to re-render the appropriate
-  components.
-
-## Server-side rendering
+### The `initStore` function
 
 When you're only using Recollect in the browser, you don't need to 'create' or
 'initialize' the store.
 
-When you server-render though, you _do_ need to initialize the store, because
-unlike a browser, a server is shared between many users.
+When you render on the server though, you _do_ need to initialize the store,
+because unlike a browser, a server is shared between many users and state needs
+to be fresh for each request.
 
 Enter the `initStore` function, which you use on the server and in the browser.
 
-### On the server
+#### On the server
 
 Here's a minimal implementation of server-side rendering with Express and
 Recollect.
@@ -384,18 +309,14 @@ This is because your Node server might receive several requests from several
 users at the same time. All of these requests share the same global state,
 including the `store` object.
 
-So, you must make sure that for each request, you populate the store and render
-the markup at the same time. And by 'at the same time', I mean _synchronously_.
+So, you must make sure that for each request, you empty the store, populate it
+with the appropriate data for the request, and render the markup at the same
+time. And by 'at the same time', I mean _synchronously_.
 
-### In the browser
+#### In the browser
 
 In the entry point to your app, right before you call `ReactDOM.hydrate()`, call
 `initStore()` with the data that you sent from the server:
-
-To recap: on the server, you initialize the store with some data, render the
-markup, and embed the store data in the page. Then in the browser, you get that
-data from the page, initialize the store with it, and render your React
-components.
 
 ```jsx
 import { initStore } from 'react-recollect';
@@ -410,6 +331,73 @@ ReactDOM.hydrate(<App />, document.getElementById('root'));
 This will take the data that you saved in the DOM on the server and fill up the
 Recollect store with it. You should only init the store once, before the initial
 render.
+
+Note that `initStore` will trigger a render of collected components where
+applicable, and will fire `afterChange`.
+
+### Passing a ref to a collected component
+
+The `collect` function takes a second parameter — an options object with one
+property: `forwardRef`. When you supply this property, you will be able to
+provide a `ref` to the wrapped component, which will be made available on that
+component as `props.forwardedRef`.
+
+The component that you're wrapping in `collect` would then look like this:
+
+```jsx
+const MyInput = props => (
+  <label>
+    My input
+    <input ref={props.forwardedRef} />
+  </label>
+);
+
+export default collect(MyComponent, { forwardRef: true });
+```
+
+And passing it a ref would look the same as passing a ref to any other component
+
+```jsx
+class MyParentComponent extends Component {
+  constructor(props) {
+    super(props);
+
+    this.inputRef = React.createRef();
+  }
+
+  render() {
+    return (
+      <div>
+        <MyInput ref={this.inputRef} />
+
+        <button
+          onClick={() => {
+            this.inputRef.current.focus();
+          }}
+        >
+          Focus the input for some reason
+        </button>
+      </div>
+    );
+  }
+}
+```
+
+You can forward a ref to class-based components or functional components.
+
+### Peeking into Recollect's innards
+
+Some neat things are exposed on `window.__RR__` for tinkering in the console.
+
+- Use `__RR__.debugOn()` to turn on debugging. You can combine this with
+  Chrome's console filtering, for example to only see 'UPDATE' or 'SET' events.
+  Who needs professional, well made dev tools extensions!
+- Type `__RR__.debugOff()` and see what happens
+- `__RR__.internals` returns all sorts of interesting things. Including a live
+  reference to the store. For example, typing
+  `__RR__.internals.store.tasks[1].done = true` in the console would update the
+  store, and Recollect would instruct React to re-render the appropriate
+  components.
 
 ## Usage with TypeScript
 
@@ -450,8 +438,8 @@ export default collect(TaskList);
 > This section is for the curious, you don't need to know any of this to use
 > Recollect.
 
-The `store` object that Recollect exposes is designed to _feel_ like a mutable
-object, but it isn't.
+The `store` object that Recollect exposes is designed to _feel_ like a plain old
+mutable JavaScript object, but it isn't.
 
 If you do something like `store.site.title = 'Page two'`, Recollect will **not**
 mutate the store object (the `Proxy` object that wraps the store will block the
@@ -488,10 +476,9 @@ Sweet.
 Hiding away immutability like this allows for simpler code, but there may be
 times when you're left scratching your head.
 
-But you can see in this fancy footwork that if you used the _global_ store
-object inside the render method of a component, you'd actually be getting the
-previous version of the data, because the 'update components' step comes before
-the 'update the global store' step.
+If you read from the _global_ store object inside the render method of a
+component, you'd actually be getting the previous version of the data, because
+the 'update components' step comes before the 'update the global store' step.
 
 Another example:
 
@@ -739,10 +726,8 @@ clone function, you'll be fine.
 
 For the same reason as above, you _must_ pass the store to selectors, and it
 _must_ be the store that was passed to the component as a prop (not the one you
-can import directly from `react-recollect`).
-
-The reason is complex but the rule is simple: if you're reading the store when
-rendering a component, it must be the store passed in as a prop.
+can import directly from `react-recollect`). If you try to get data from the
+store imported from `react-recollect`, you will get an error.
 
 ## Updaters
 

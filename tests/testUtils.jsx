@@ -10,3 +10,14 @@ export const collectAndRender = Comp => {
 
 export const propPathChanges = handleChangeMock =>
   handleChangeMock.mock.calls.map(call => call[0].changedProps[0]);
+
+export const expectToThrow = (func, message) => {
+  // Even though the error is caught, it still gets printed to the console
+  // so we mock that out to avoid the wall of red text.
+  jest.spyOn(console, 'error');
+  console.error.mockImplementation(() => {});
+
+  expect(func).toThrow(message);
+
+  console.error.mockRestore();
+};
