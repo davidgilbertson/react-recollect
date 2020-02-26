@@ -51,10 +51,15 @@
       }
     ],
     "import/no-cycle": "off",
-    "import/no-extraneous-dependencies": ["error", {
-      "devDependencies": ["**/*.test.tsx"],
-      "packageDir": "./"
-    }],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "**/*.test.ts",
+          "**/*.test.tsx"
+        ]
+      }
+    ],
     "no-param-reassign": [
       "error",
       {
@@ -70,6 +75,9 @@
     "react/jsx-props-no-spreading": "off",
     "react/button-has-type": "off",
     "react/prop-types": "off",
-    "react/state-in-constructor": [2, "never"]
+    "react/state-in-constructor": [
+      2,
+      "never"
+    ]
   }
 }
