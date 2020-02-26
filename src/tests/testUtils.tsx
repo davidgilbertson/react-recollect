@@ -1,6 +1,6 @@
 import React from 'react';
-import { render } from '@testing-library/react';
 import { mocked } from 'ts-jest/utils';
+import { render } from '@testing-library/react';
 import { collect } from 'src';
 
 // TODO (davidg): why can't I type this right?
