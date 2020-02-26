@@ -52,7 +52,8 @@
     ],
     "import/no-cycle": "off",
     "import/no-extraneous-dependencies": ["error", {
-      "devDependencies": ["**/*.test.tsx"]
+      "devDependencies": ["**/*.test.tsx"],
+      "packageDir": "./"
     }],
     "no-param-reassign": [
       "error",
