@@ -427,7 +427,7 @@ import { collect, WithStoreProp } from 'react-recollect';
 interface Props extends WithStoreProp {
   someComponentProp: string;
 }
-const TaskList: React.SFC<Props> = ({ store, someComponentProp }) => (
+const TaskList: React.FC<Props> = ({ store, someComponentProp }) => (
   // < your awesome JSX here>
 );
 export default collect(TaskList);

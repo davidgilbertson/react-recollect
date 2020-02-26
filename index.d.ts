@@ -4,6 +4,7 @@ import * as React from 'react';
  * Define the shape of your store in your project - see README.
  */
 export interface Store {
+  [x: string]: any; // TODO (davidg): just for tests somehow
 }
 
 /**
@@ -12,12 +13,17 @@ export interface Store {
  */
 export interface WithStoreProp {
   store: Store;
+  forwardedRef?: any;
 }
 
 export interface CollectorComponent extends React.Component {
-  update(store: Store): void,
-  _name: string,
+  update(): void;
+  _name: string;
 }
+
+export type CollectOptions = {
+  forwardRef: boolean;
+};
 
 // `collect` uses Exclude so that TS doesn't complain
 // about undefined store prop when you use your component
@@ -25,9 +31,10 @@ export interface CollectorComponent extends React.Component {
 /**
  * Provide the `store: Store` object as a prop to wrapped component
  */
-export function collect<P extends WithStoreProp>(
-  Component: React.ComponentType<P>
-): React.ComponentType<Pick<P, Exclude<keyof P, keyof WithStoreProp>>>;
+// export function collect<P extends WithStoreProp>(
+//   Component: React.ComponentType<P>,
+//   options?: CollectOptions
+// ): React.ComponentType<Pick<P, Exclude<keyof P, keyof WithStoreProp>>>;
 
 export const store: Store;
 
@@ -48,11 +55,11 @@ export function initStore(data: Store);
 export function batch(cb: () => void);
 
 export type AfterChangeEvent = {
-  store: Store,
-  changedProps: string[],
-  renderedComponents: CollectorComponent[],
-  prevStore: Store
-}
+  store: Store;
+  changedProps: string[];
+  renderedComponents: CollectorComponent[];
+  prevStore: Store;
+};
 
 /**
  * afterChange will be called each time the Recollect store changes
