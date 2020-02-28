@@ -1,4 +1,4 @@
-import { IS_OLD_STORE } from 'src/shared/constants';
+import { IS_OLD_STORE } from './constants';
 
 export const isMap = (item) => item instanceof Map;
 export const isSet = (item) => item instanceof Set;

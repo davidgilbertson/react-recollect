@@ -1,6 +1,5 @@
 const path = require('path');
 const { peerDependencies } = require('./package.json');
-const { compilerOptions } = require('./tsconfig.json');
 
 module.exports = {
   mode: 'production',
@@ -35,10 +34,6 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.json', '.ts', '.tsx'],
-    modules: [
-      path.resolve(__dirname, 'node_modules'),
-      path.resolve(__dirname, compilerOptions.baseUrl),
-    ],
   },
   externals: Object.keys(peerDependencies),
 };

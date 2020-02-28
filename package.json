@@ -17,16 +17,15 @@
   "license": "MIT",
   "author": "David Gilbertson",
   "main": "dist/index.js",
-  "types": "./index.d.ts",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "src",
-    "index.d.ts"
+    "src"
   ],
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch --mode=\"development\"",
-    "lint": "eslint src --fix --cache --ext js,ts,tsx",
+    "lint": "eslint src tests --fix --cache --ext js,ts,tsx",
     "test": "jest --watchAll",
     "test:ci": "jest --ci",
     "preversion": "npm run build && jest"

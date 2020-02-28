@@ -4,7 +4,6 @@
  * then it could cause false matches in the updated logic.
  * @type {string}
  */
-// eslint-disable-next-line import/prefer-default-export
 export const PROP_PATH_SEP = '~~~';
 
 export const IS_OLD_STORE = Symbol('IS_OLD_STORE');

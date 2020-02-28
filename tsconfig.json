@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "baseUrl": ".",
-    "outDir": "dist",
-    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
-    "incremental": true,
+    "incremental": false,
+    "isolatedModules": false,
     "jsx": "react",
     "module": "CommonJS",
-    "target": "ES2017",
+    "outDir": "dist",
+    "skipLibCheck": true,
     "sourceMap": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "target": "ES2017"
   }
 }

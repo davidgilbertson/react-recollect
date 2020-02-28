@@ -1,15 +1,15 @@
-import { debug } from 'src/shared/debug';
-import state from 'src/shared/state';
-import * as paths from 'src/shared/paths';
-import * as utils from 'src/shared/utils';
-import { PROP_PATH_SEP } from 'src/shared/constants';
-import { CollectorComponent } from 'index.d';
+import { debug } from './shared/debug';
+import state from './shared/state';
+import * as paths from './shared/paths';
+import * as utils from './shared/utils';
+import { PROP_PATH_SEP } from './shared/constants';
+import { CollectorComponent } from './types/collect';
+import { AfterChangeEvent } from './types/updating';
 
 /**
  * Add a callback to be called every time the store changes
- * @param cb
  */
-export const afterChange = (cb) => {
+export const afterChange = (cb: (e: AfterChangeEvent) => void) => {
   state.manualListeners.push(cb);
 };
 

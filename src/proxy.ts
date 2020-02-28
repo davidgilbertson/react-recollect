@@ -1,5 +1,5 @@
-import * as utils from 'src/shared/utils';
-import * as paths from 'src/shared/paths';
+import * as utils from './shared/utils';
+import * as paths from './shared/paths';
 
 const proxies = new WeakSet();
 

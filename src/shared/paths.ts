@@ -1,4 +1,4 @@
-import { PROP_PATH_SEP } from 'src/shared/constants';
+import { PROP_PATH_SEP } from './constants';
 
 const PATH_PROP = Symbol('path');
 

@@ -1,10 +1,10 @@
-import { getFromNextStore, updateInNextStore } from 'src/store';
-
-import { debug } from 'src/shared/debug';
-import state from 'src/shared/state';
-import * as utils from 'src/shared/utils';
-import * as paths from 'src/shared/paths';
-import { IS_OLD_STORE } from 'src/shared/constants';
+import { getFromNextStore, updateInNextStore } from './store';
+import { debug } from './shared/debug';
+import state from './shared/state';
+import * as utils from './shared/utils';
+import * as paths from './shared/paths';
+import { IS_OLD_STORE } from './shared/constants';
+import { StoreUpdater } from './types/store';
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
@@ -53,20 +53,12 @@ const isGettingPropOutsideOfRenderCycle = (prop: string) =>
  * to update the store in a specific manner. E.g. target.clear(), where target is a Map.
  */
 
-// TODO (davidg): this is duplicated with store.ts
-type ForwardSetToNextStoreProps = {
-  target: object;
-  prop?: string;
-  value?: any;
-  updater: (target: any, value: any) => void;
-};
-
 const forwardSetToNextStore = ({
   target,
   prop,
   value,
   updater,
-}: ForwardSetToNextStoreProps) => {
+}: StoreUpdater) => {
   // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
   //  call updateInNextStore() from two places below
   debug(() => {

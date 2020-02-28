@@ -1,9 +1,13 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { removeListenersForComponent } from 'src/updating';
-import state from 'src/shared/state';
-import { debug } from 'src/shared/debug';
-import { CollectOptions, CollectorComponent, WithStoreProp } from '../index.d';
+import { removeListenersForComponent } from './updating';
+import state from './shared/state';
+import { debug } from './shared/debug';
+import {
+  CollectOptions,
+  CollectorComponent,
+  WithStoreProp,
+} from './types/collect';
 
 const startRecordingGetsForComponent = (component) => {
   removeListenersForComponent(component);

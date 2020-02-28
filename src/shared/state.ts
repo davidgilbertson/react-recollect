@@ -1,18 +1,8 @@
-import { AfterChangeEvent, CollectorComponent, Store } from '../../index.d';
-
-type State = {
-  currentComponent: CollectorComponent | null;
-  isInBrowser: boolean;
-  isBatchUpdating: boolean;
-  listeners: Map<string, Set<CollectorComponent>>;
-  manualListeners: ((e: AfterChangeEvent) => void)[];
-  nextStore: Store;
-  proxyIsMuted: boolean;
-  store: Store;
-};
+import { State } from '../types/state';
 
 /**
  * Any state shared between modules goes here
+ * For internal use, not for consumers
  */
 const state: State = {
   currentComponent: null,
