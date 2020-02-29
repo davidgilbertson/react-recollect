@@ -46,7 +46,7 @@ import Task from './Task';
 
 const TaskList = ({ store }) => (
   <div>
-    {store.tasks.map(task => (
+    {store.tasks.map((task) => (
       <Task key={task.id} task={task} />
     ))}
 
@@ -172,7 +172,7 @@ following (anywhere in your app).
 ```js
 import { afterChange } from 'react-recollect';
 
-afterChange(e => {
+afterChange((e) => {
   localStorage.siteData = JSON.stringify(e.store);
 });
 ```
@@ -201,7 +201,7 @@ window.TIME_TRAVEL = {
     const e = thePast.pop();
     theFuture.push(e);
 
-    e.renderedComponents.forEach(component => {
+    e.renderedComponents.forEach((component) => {
       component.update(e.prevStore);
     });
   },
@@ -211,13 +211,13 @@ window.TIME_TRAVEL = {
     const e = theFuture.pop();
     thePast.push(e);
 
-    e.renderedComponents.forEach(component => {
+    e.renderedComponents.forEach((component) => {
       component.update(e.store);
     });
   },
 };
 
-afterChange(e => {
+afterChange((e) => {
   if (e.renderedComponents.length) thePast.push(e);
 });
 ```
@@ -231,7 +231,7 @@ guaranteed that components will only be updated after all updates are made.
 import { batch } from 'react-recollect';
 
 const fetchData = async () => {
-  const { posts, users, meta } = await fetch('/api').then(response =>
+  const { posts, users, meta } = await fetch('/api').then((response) =>
     response.json()
   );
 
@@ -345,7 +345,7 @@ component as `props.forwardedRef`.
 The component that you're wrapping in `collect` would then look like this:
 
 ```jsx
-const MyInput = props => (
+const MyInput = (props) => (
   <label>
     My input
     <input ref={props.forwardedRef} />
@@ -590,10 +590,12 @@ A simple case for a selector would be to return all incomplete tasks, sorted by
 due date.
 
 ```js
-export const getIncompleteTasksSortedByDueDate = store => {
+export const getIncompleteTasksSortedByDueDate = (store) => {
   const tasks = store.tasks.slice();
 
-  return tasks.sort((a, b) => a.dueDate - b.dueDate).filter(task => !task.done);
+  return tasks
+    .sort((a, b) => a.dueDate - b.dueDate)
+    .filter((task) => !task.done);
 };
 ```
 
@@ -611,7 +613,7 @@ const TaskList = ({ store }) => {
 
   return (
     <div>
-      {tasks.map(task => (
+      {tasks.map((task) => (
         <Task key={task.id} task={task} />
       ))}
     </div>
@@ -626,17 +628,17 @@ Let's create a second selector. And while we're at it, move repeated sorting
 code out into its own function:
 
 ```js
-const getTasksSortedByDate = tasks => {
+const getTasksSortedByDate = (tasks) => {
   const sortedTasks = tasks.slice();
 
   return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
 };
 
-export const getAllTasksSortedByDueDate = store =>
+export const getAllTasksSortedByDueDate = (store) =>
   getTasksSortedByDate(store.tasks);
 
-export const getIncompleteTasksSortedByDueDate = store =>
-  getTasksSortedByDate(store.tasks).filter(task => !task.done);
+export const getIncompleteTasksSortedByDueDate = (store) =>
+  getTasksSortedByDate(store.tasks).filter((task) => !task.done);
 ```
 
 And here's a more complex component with local state and a dropdown to show
@@ -658,13 +660,13 @@ class TaskList extends PureComponent {
 
     return (
       <div>
-        {tasks.map(task => (
+        {tasks.map((task) => (
           <Task key={task.id} task={task} />
         ))}
 
         <select
           value={this.state.filter}
-          onChange={e => {
+          onChange={(e) => {
             this.setState({ filter: e.target.value });
           }}
         >
@@ -688,7 +690,7 @@ interesting stuff happening here that's worth discussing.
 Do you remember when we did this?
 
 ```js
-const getTasksSortedByDate = tasks => {
+const getTasksSortedByDate = (tasks) => {
   const sortedTasks = tasks.slice();
 
   return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
@@ -737,7 +739,7 @@ A simple case for an updater would be to mark all tasks as done in a todo app:
 
 ```js
 export const markAllTasksAsDone = () => {
-  store.tasks.forEach(task => {
+  store.tasks.forEach((task) => {
     task.done = true;
   });
 };
@@ -992,8 +994,8 @@ reducers.
 
 # Dependencies
 
-Recollect has a peer dependency of React, and needs at least version 15.3 (when
-`PureComponent` was released).
+Recollect has a peer dependency of React `>=15.3`. If you use the `forwardRef`
+option with `collect`, you will need React `>=16.3`.
 
 # Alternatives
 

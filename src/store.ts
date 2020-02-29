@@ -1,12 +1,12 @@
-import { createProxy, decorateWithPathAndProxy } from './proxy';
+import { createProxy, decorateWithSymbolsAndProxy } from './proxy';
 import { getHandlerForObject } from './proxyHandlers';
 import { notifyByPath } from './updating';
 import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
-import { Store, StoreUpdater } from './types/store';
+import { Store, StoreUpdater, Target } from './shared/types';
 
-const createProxyWithHandler = (obj) =>
+const createProxyWithHandler = <T extends Target>(obj: T): T =>
   createProxy(obj, getHandlerForObject(obj));
 
 state.nextStore = createProxyWithHandler({});
@@ -35,7 +35,7 @@ export const updateInNextStore = ({
   // If there's a value being set, wrap it in a proxy
   if (value !== 'undefined') {
     const handler = getHandlerForObject(value);
-    newValue = decorateWithPathAndProxy(value, propPath, handler);
+    newValue = decorateWithSymbolsAndProxy(value, propPath, handler);
   }
 
   if (!targetPath.length) {
@@ -68,7 +68,7 @@ export const updateInNextStore = ({
  * This takes a target (from one version of the store) and gets its value
  * in `nextStore`.
  */
-export const getFromNextStore = (target: object, targetProp: string): any => {
+export const getFromNextStore = (target: Target, targetProp: any): any => {
   state.proxyIsMuted = true;
 
   const propPath = paths.extend(target, targetProp);
@@ -93,8 +93,6 @@ export const getFromNextStore = (target: object, targetProp: string): any => {
  * Unlike collapseStore() this doesn't mute the proxy, so objects are still
  * wrapped and components are updated as a result
  */
-// TODO (davidg): this doesn't seem to warn in disco-mundus when the data
-//  isn't store
 export const initStore = (data?: Partial<Store>) => {
   utils.replaceObject(state.store, data);
 };

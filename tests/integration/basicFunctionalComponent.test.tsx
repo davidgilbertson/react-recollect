@@ -1,11 +1,11 @@
 import React from 'react';
-import { store } from '../../src';
+import { store, WithStoreProp } from '../../src';
 import { collectAndRender } from '../testUtils';
 
 it('should render the title', () => {
   store.title = 'The initial title';
 
-  const { getByText } = collectAndRender((props) => (
+  const { getByText } = collectAndRender((props: WithStoreProp) => (
     // @ts-ignore
     <h1>{props.store.title}</h1>
   ));

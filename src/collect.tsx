@@ -6,10 +6,11 @@ import { debug } from './shared/debug';
 import {
   CollectOptions,
   CollectorComponent,
+  Store,
   WithStoreProp,
-} from './types/collect';
+} from './shared/types';
 
-const startRecordingGetsForComponent = (component) => {
+const startRecordingGetsForComponent = (component: CollectorComponent) => {
   removeListenersForComponent(component);
 
   debug(() => {
@@ -27,6 +28,10 @@ const stopRecordingGetsForComponent = () => {
   state.currentComponent = null;
 };
 
+type ComponentState = {
+  store: Store;
+};
+
 const collect = <P extends {}>(
   ComponentToWrap: React.ComponentType<P>,
   options?: CollectOptions
@@ -34,23 +39,24 @@ const collect = <P extends {}>(
   const componentName =
     ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
-  class WrappedComponent extends React.PureComponent<P & WithStoreProp>
+  class WrappedComponent
+    extends React.PureComponent<P & WithStoreProp, ComponentState>
     implements CollectorComponent {
     state = {
       // This might be called by React when a parent component has updated with a new store,
       // we want this component (if it's a child) to have that next store as well.
-      nextStore: state.nextStore,
+      store: state.nextStore,
     };
 
-    _name = componentName;
-
+    // TODO (davidg) 2020-02-28: use private #isMounted, waiting on
+    //  https://github.com/prettier/prettier/issues/7263
     _isMounted = false;
 
     _isMounting = true;
 
-    // TODO (davidg): how to type this?
-    // eslint-disable-next-line react/static-property-placement
-    static displayName: string;
+    _name = componentName;
+
+    static displayName = `Collected(${componentName})`;
 
     componentDidMount() {
       this._isMounted = true;
@@ -76,22 +82,23 @@ const collect = <P extends {}>(
       //    render cycle.
       //    For example, if a user sets store.loading to true in App.componentDidMount
       if (this._isMounted || this._isMounting) {
-        this.setState({ nextStore: state.nextStore });
+        this.setState({ store: state.nextStore });
       }
     }
 
     render() {
       startRecordingGetsForComponent(this);
 
-      return <ComponentToWrap {...this.props} store={this.state.nextStore} />;
+      return <ComponentToWrap {...this.props} store={this.state.store} />;
     }
   }
-
-  WrappedComponent.displayName = `Collected(${componentName})`;
 
   if (options && options.forwardRef) {
     type WrappedProps = React.ComponentProps<typeof WrappedComponent>;
 
+    // TODO (davidg): why is forwardedRef not ref? ATM I would need `ref` in
+    //  props, so the parent component knows to pass this. But forwardedRef
+    //  is defined in WithStoreProp - confusing
     const WrappedWithRef = React.forwardRef((props: WrappedProps, ref) => (
       <WrappedComponent {...props} forwardedRef={ref} />
     ));
@@ -103,10 +110,13 @@ const collect = <P extends {}>(
     //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/a05cc538a42243c632f054e42eab483ebf1560ab/types/react/index.d.ts#L770
     //  ??
 
+    // We recommend to the user that they define the type of Ref in their
+    // own props.
     // @ts-ignore
     return hoistNonReactStatics(WrappedWithRef, ComponentToWrap);
   }
 
+  // @ts-ignore
   return hoistNonReactStatics(WrappedComponent, ComponentToWrap);
 };
 

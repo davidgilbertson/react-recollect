@@ -6,11 +6,11 @@ export { afterChange } from './updating';
 export { initStore, batch } from './store';
 export const { store } = state;
 
-// TODO (davidg): test using all these
-export { CollectorComponent, WithStoreProp } from './types/collect';
-export { State } from './types/state';
-export { Store } from './types/store';
-export { AfterChangeEvent } from './types/updating';
+export { AfterChangeEvent } from './shared/types';
+export { CollectorComponent } from './shared/types';
+export { WithStoreProp } from './shared/types';
+export { State } from './shared/types';
+export { Store } from './shared/types';
 
 if (typeof window !== 'undefined') {
   if ('Proxy' in window) {

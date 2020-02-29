@@ -11,7 +11,7 @@
     "outDir": "dist",
     "skipLibCheck": true,
     "sourceMap": true,
-    "strictNullChecks": true,
+    "strict": true,
     "target": "ES2017"
   }
 }

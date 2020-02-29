@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
+import { TaskType } from '../testUtils';
 
-let renderCount;
-let taskNumber;
-let taskId;
+let renderCount: number;
+let taskNumber: number;
+let taskId: number;
 const log = jest.fn();
 
 beforeEach(() => {
@@ -15,7 +16,11 @@ beforeEach(() => {
   log.mockReset();
 });
 
-const Task = (props) => <div>{props.task.name}</div>;
+type Props = {
+  task: TaskType;
+};
+
+const Task = (props: Props) => <div>{props.task.name}</div>;
 
 // eslint-disable-next-line react/prefer-stateless-function
 class RawTaskList extends Component<WithStoreProp> {
@@ -27,11 +32,14 @@ class RawTaskList extends Component<WithStoreProp> {
       <div>
         <button
           onClick={() => {
-            store.tasks.push({
-              id: taskId--, // we go backwards with IDs so that .sort() triggers a change
-              name: `Task number ${taskNumber++}`,
-            });
-            log(store.tasks.length);
+            if (store.tasks) {
+              store.tasks.push({
+                id: taskId--, // we go backwards with IDs so that .sort() triggers a change
+                name: `Task number ${taskNumber++}`,
+              });
+
+              log(store.tasks.length);
+            }
           }}
         >
           Add task
@@ -39,7 +47,7 @@ class RawTaskList extends Component<WithStoreProp> {
 
         <button
           onClick={() => {
-            store.tasks.pop();
+            if (store.tasks) store.tasks.pop();
           }}
         >
           Remove last task
@@ -83,7 +91,7 @@ it('should operate on arrays', () => {
   expect(getByText('Task number 1'));
   // Reading immediately should already have the new length property
   expect(log).toHaveBeenCalledWith(1);
-  expect(globalStore.tasks.length).toBe(1);
+  expect(globalStore.tasks && globalStore.tasks.length).toBe(1);
 
   // should handle removing an item from an array
   getByText('Add task').click();

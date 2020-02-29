@@ -9,10 +9,10 @@ afterEach(() => {
 
 it('should only update the items that change', () => {
   store.tasks = [
-    { name: 'task 0', done: true },
-    { name: 'task 1', done: false },
-    { name: 'task 2', done: true },
-    { name: 'task 3', done: false },
+    { id: 0, name: 'task 0', done: true },
+    { id: 1, name: 'task 1', done: false },
+    { id: 2, name: 'task 2', done: true },
+    { id: 3, name: 'task 3', done: false },
   ];
 
   handleChange.mockClear();

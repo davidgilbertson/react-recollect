@@ -1,5 +1,13 @@
 import { store, afterChange, initStore } from '../../src';
-import { propPathChanges } from '../testUtils';
+import { propPathChanges, TaskType } from '../testUtils';
+
+declare module '../../src' {
+  interface Store {
+    // Add a few things used in this file
+    longArrayToCompareSort?: TaskType[];
+    shortArrayToCompareSort?: TaskType[];
+  }
+}
 
 const handleChange = jest.fn();
 afterChange(handleChange);
@@ -131,8 +139,8 @@ it('should perform read operations without triggering changes', () => {
   store.arrayToRead = [1, 2, 3, 4];
   handleChange.mockReset();
 
-  expect(store.arrayToRead.find((item) => item > 2)).toBe(3);
-  expect(store.arrayToRead.findIndex((item) => item > 2)).toBe(2);
+  expect(store.arrayToRead.find((item: number) => item > 2)).toBe(3);
+  expect(store.arrayToRead.findIndex((item: number) => item > 2)).toBe(2);
   expect(store.arrayToRead.concat([5, 6])).toEqual([1, 2, 3, 4, 5, 6]);
   expect(store.arrayToRead.join('~')).toBe('1~2~3~4');
   expect(store.arrayToRead.toString()).toBe('1,2,3,4');

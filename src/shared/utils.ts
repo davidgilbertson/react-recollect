@@ -1,51 +1,92 @@
 import { IS_OLD_STORE } from './constants';
+import {
+  ArrWithSymbols,
+  MapWithSymbols,
+  ObjWithSymbols,
+  PropPath,
+  SetWithSymbols,
+  Target,
+} from './types';
 
-export const isMap = (item) => item instanceof Map;
-export const isSet = (item) => item instanceof Set;
-export const isMapOrSet = (item) => isMap(item) || isSet(item);
-export const isSymbol = (item) => typeof item === 'symbol';
-export const isFunction = (item) => typeof item === 'function';
-export const isPlainObject = (item) =>
-  item && typeof item === 'object' && item.constructor === Object;
-export const isArray = (item) => Array.isArray(item);
+export const isMap = (item: any): item is MapWithSymbols => item instanceof Map;
 
-export const cloneMap = (originalMap) => new Map(originalMap);
-export const cloneSet = (originalSet) => new Set(originalSet);
+export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
 
-export const getValue = (target, prop) => {
+export const isMapOrSet = (item: any) => isMap(item) || isSet(item);
+
+export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
+
+export const isPlainObject = (item: any): item is ObjWithSymbols =>
+  !!item && typeof item === 'object' && item.constructor === Object;
+
+export const isFunction = (item: any) => typeof item === 'function';
+
+export const isArray = (item: any): item is ArrWithSymbols =>
+  Array.isArray(item);
+
+export const cloneMap = (originalMap: Map<any, any>) => new Map(originalMap);
+
+export const cloneSet = (originalSet: Set<any>) => new Set(originalSet);
+
+type GetValue = {
+  (item: ObjWithSymbols, prop: number | string | symbol): any;
+  (item: ArrWithSymbols, prop: number): any;
+  (item: MapWithSymbols, prop: any): any;
+  (item: SetWithSymbols, prop: any): any;
+};
+
+export const getValue: GetValue = (target: Target, prop: any) => {
   if (isMap(target)) return target.get(prop);
   if (isSet(target)) return prop;
+  if (isArray(target)) return target[prop];
 
   return target[prop];
 };
 
-export const setValue = (mutableTarget, prop, value) => {
-  if (isMap(mutableTarget)) mutableTarget.set(prop, value);
-  if (isSet(mutableTarget)) mutableTarget.add(prop);
+type SetValue = {
+  (item: ObjWithSymbols, prop: string | symbol, value: any | null): any;
+  (item: ArrWithSymbols, prop: number, value?: any): any;
+  (item: MapWithSymbols, prop: any, value?: any): any;
+  (item: SetWithSymbols, prop: any, value?: any): any;
+};
 
-  mutableTarget[prop] = value;
+export const setValue: SetValue = (
+  mutableTarget: Target,
+  prop: any,
+  value: any
+) => {
+  if (isMap(mutableTarget)) {
+    mutableTarget.set(prop, value);
+  } else if (isSet(mutableTarget)) {
+    mutableTarget.add(prop);
+  } else if (isArray(mutableTarget)) {
+    mutableTarget[prop] = value;
+  } else if (isPlainObject(mutableTarget)) {
+    // @ts-ignore - is fine, prop can be a symbol
+    mutableTarget[prop] = value;
+  } else {
+    throw Error('Unexpected type');
+  }
 };
 
 // TODO (davidg): how does this fair with optional?.chaining?
-type DeepUpdateProps = {
-  object: object;
-  path: any[];
-  onClone?: (original: object, clone: object) => void;
-  updater: (object: object) => void;
-};
-
-export const deepUpdate = ({
+export const deepUpdate = <T extends Target>({
   object,
   path,
   onClone,
   updater,
-}: DeepUpdateProps) => {
-  const cloneItem = (original) => {
+}: {
+  object: T;
+  path: PropPath;
+  onClone?: <U extends object>(original: U, clone: U) => U;
+  updater: (object: any) => void;
+}) => {
+  const cloneItem = (original: T): T => {
     let clone = original;
 
-    if (isArray(original)) clone = original.slice();
-    if (isMap(original)) clone = cloneMap(original);
-    if (isSet(original)) clone = cloneSet(original);
+    if (isArray(original)) clone = original.slice() as T;
+    if (isMap(original)) clone = cloneMap(original) as T;
+    if (isSet(original)) clone = cloneSet(original) as T;
     if (isPlainObject(original)) clone = { ...original };
 
     // Let the caller do interesting things when cloning
@@ -78,11 +119,11 @@ export const deepUpdate = ({
  * Replaces the contents of one object with the contents of another. The top
  * level object will remain the same, but all changed content will be replaced
  * with the new content.
- *
- * @param {object} mutableTarget - the object to update/replace
- * @param {object} nextObject - the object to replace it with
  */
-export const replaceObject = (mutableTarget, nextObject) => {
+export const replaceObject = (
+  mutableTarget: ObjWithSymbols,
+  nextObject?: ObjWithSymbols
+) => {
   if (nextObject) {
     // From the new data, add to the old data anything that's new
     // (from the top level props only)

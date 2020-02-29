@@ -40,7 +40,8 @@ const ComponentWithRef = collect(RawComponentWithRef);
 
 const { getByText, getByLabelText } = render(<ComponentWithRef />);
 
-const getInputByLabelText = (text) => getByLabelText(text) as HTMLInputElement;
+const getInputByLabelText = (text: string) =>
+  getByLabelText(text) as HTMLInputElement;
 
 it('should empty the input when the button is clicked', () => {
   expect(getInputByLabelText('The input').value).toBe('some text');

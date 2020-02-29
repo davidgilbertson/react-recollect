@@ -15,7 +15,7 @@ class Notifications extends Component<Props> {
 
     return (
       <div>
-        {store.notifications.map((notification) => (
+        {store.notifications.map((notification: string) => (
           <p key={notification}>{notification}</p>
         ))}
       </div>

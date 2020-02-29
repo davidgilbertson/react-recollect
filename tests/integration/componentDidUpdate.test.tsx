@@ -7,7 +7,7 @@ interface Props extends WithStoreProp {
 }
 
 class RawClassComponent extends Component<Props> {
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     if (this.props.store.userId !== prevProps.store.userId) {
       this.props.fetchData();
     }

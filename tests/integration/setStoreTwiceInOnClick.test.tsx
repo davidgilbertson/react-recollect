@@ -25,7 +25,10 @@ const TestComponent = collect(({ store }: WithStoreProp) => (
         }
 
         // expect tasks to be defined
-        store.tasks.push({ name: 'A new task' });
+        store.tasks.push({
+          name: 'A new task',
+          id: Math.random(),
+        });
       }}
     >
       Add a task

@@ -41,11 +41,13 @@ it('TaskList', async () => {
   getByText('You have nothing to do');
 
   // it should accept a task added from an external source
-  store.tasks.push({
-    id: Math.random(),
-    name: 'A task added outside the component',
-    done: true,
-  });
+  if (store.tasks) {
+    store.tasks.push({
+      id: Math.random(),
+      name: 'A task added outside the component',
+      done: true,
+    });
+  }
 
   const newTaskCheckbox = getByLabelText(
     'A task added outside the component'

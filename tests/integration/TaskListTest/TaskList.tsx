@@ -32,6 +32,8 @@ class TaskList extends Component<Props> {
         )}
         <button
           onClick={() => {
+            if (!store.tasks) store.tasks = [];
+
             store.tasks.push({
               id: Math.random(),
               name: 'A new task',
@@ -44,7 +46,7 @@ class TaskList extends Component<Props> {
 
         <button
           onClick={() => {
-            store.tasks.length = 0;
+            if (store.tasks) store.tasks.length = 0;
           }}
         >
           Delete all tasks

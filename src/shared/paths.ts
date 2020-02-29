@@ -1,29 +1,20 @@
-import { PROP_PATH_SEP } from './constants';
-
-const PATH_PROP = Symbol('path');
+import { PATH_PATH_SYMBOL, PROP_PATH_SEP } from './constants';
+import { PropPath, Target } from './types';
 
 /**
  * Convert a target and a prop into a user-friendly string like store.tasks.1.done
- * @param {Array<*>} pathArray
- * @returns {string}
  */
-export const makeUserString = (pathArray) => pathArray.join('.');
+export const makeUserString = (propPath: PropPath) => propPath.join('.');
 
-/**
- * @param {Array<*>} pathArray
- * @returns {string}
- */
-export const makeInternalString = (pathArray) => pathArray.join(PROP_PATH_SEP);
+export const makeInternalString = (propPath: PropPath) =>
+  propPath.join(PROP_PATH_SEP);
 
 /**
  * Takes the path stored in an object, and a new prop, and returns the two
  * combined
- * @param {object} obj
- * @param {string} [prop]
- * @returns {Array<*>}
  */
-export const extend = (obj, prop) => {
-  const basePath = obj[PATH_PROP] || [];
+export const extend = (obj: Target, prop?: any): PropPath => {
+  const basePath = obj[PATH_PATH_SYMBOL] || [];
 
   if (typeof prop === 'undefined') return basePath;
 
@@ -33,23 +24,20 @@ export const extend = (obj, prop) => {
 /**
  * Convert a obj and a prop into a user-friendly string like store.tasks.1.done
  */
-export const extendToUserString = (obj: object, prop?: string) =>
+export const extendToUserString = (obj: Target, prop?: any): string =>
   makeUserString(extend(obj, prop));
 
-/**
- *
- * @param item
- * @param {Array<*>} propPath
- */
-export const addProp = (item, propPath) => {
-  Object.defineProperty(item, PATH_PROP, {
+export const addProp = (item: object, propPath: PropPath) => {
+  Object.defineProperty(item, PATH_PATH_SYMBOL, {
     value: propPath,
     writable: true, // paths can be updated. E.g. store.tasks.2 could become store.tasks.1
   });
 };
 
-export const get = (obj) => obj[PATH_PROP] || [];
-export const has = (obj) => PATH_PROP in obj;
-export const set = (mutableTarget, propArray) => {
-  mutableTarget[PATH_PROP] = propArray;
+export const get = (obj: Target) => obj[PATH_PATH_SYMBOL] || [];
+
+export const has = (obj: Target) => PATH_PATH_SYMBOL in obj;
+
+export const set = (mutableTarget: Target, propPath: PropPath) => {
+  mutableTarget[PATH_PATH_SYMBOL] = propPath;
 };

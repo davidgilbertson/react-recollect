@@ -5,10 +5,11 @@ import {
   collect,
   initStore,
   store as globalStore,
+  WithStoreProp,
 } from '../../src';
 import { propPathChanges } from '../testUtils';
 
-let renderCount;
+let renderCount: number;
 
 const handleChange = jest.fn();
 afterChange(handleChange);
@@ -25,7 +26,7 @@ beforeEach(() => {
 
 const log = jest.fn();
 
-const RawComponent = ({ store }) => {
+const RawComponent = ({ store }: WithStoreProp) => {
   renderCount++;
 
   return (
@@ -288,7 +289,7 @@ it('should handle a Map', () => {
   ]);
 
   const forEachResult: Person[] = [];
-  globalStore.testMap.forEach((value) => {
+  globalStore.testMap.forEach((value: Person) => {
     forEachResult.push(value);
   });
 

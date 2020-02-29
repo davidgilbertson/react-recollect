@@ -4,9 +4,9 @@ import state from '../../src/shared/state';
 state.isInBrowser = false;
 
 it('should handle not having window defined', () => {
-  store.tasks = [1, 2, 3];
+  store.test = 'the value';
 
-  expect(store.tasks).toEqual([1, 2, 3]);
+  expect(store.test).toEqual('the value');
 });
 
 it('should not react to setting data in the store when on the server', () => {

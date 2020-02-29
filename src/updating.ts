@@ -3,8 +3,7 @@ import state from './shared/state';
 import * as paths from './shared/paths';
 import * as utils from './shared/utils';
 import { PROP_PATH_SEP } from './shared/constants';
-import { CollectorComponent } from './types/collect';
-import { AfterChangeEvent } from './types/updating';
+import { AfterChangeEvent, CollectorComponent } from './shared/types';
 
 /**
  * Add a callback to be called every time the store changes
@@ -63,9 +62,8 @@ const flushUpdates = () => {
  *   will typically get its values from its parent component. Not directly from the store
  *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name
- * @param {Array<*>} pathArray - The path of the prop that changed
  */
-export const notifyByPath = (pathArray) => {
+export const notifyByPath = (pathArray: any[]) => {
   const pathString = paths.makeInternalString(pathArray);
   const userFriendlyPropPath = paths.makeUserString(pathArray);
 
@@ -89,6 +87,7 @@ export const notifyByPath = (pathArray) => {
   if (state.isBatchUpdating) {
     if (!queue.timeoutPending) {
       queue.timeoutPending = true;
+      // TODO (davidg): ignoring because of this bug: https://github.com/typescript-eslint/typescript-eslint/pull/1652
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
       setTimeout(flushUpdates);
     }
@@ -97,7 +96,9 @@ export const notifyByPath = (pathArray) => {
   }
 };
 
-export const removeListenersForComponent = (componentToRemove) => {
+export const removeListenersForComponent = (
+  componentToRemove: CollectorComponent
+) => {
   state.listeners.forEach((components, listenerPath) => {
     const filteredComponents = Array.from(components).filter(
       (existingComponent) => existingComponent !== componentToRemove

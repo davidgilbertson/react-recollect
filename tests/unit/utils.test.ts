@@ -1,9 +1,5 @@
 import { deepUpdate } from '../../src/shared/utils';
-
-type Task = {
-  name: string;
-  done: boolean;
-};
+import { ObjWithSymbols } from '../../src/shared/types';
 
 it('should mutate the object', () => {
   const original = {
@@ -22,12 +18,12 @@ it('should mutate the object', () => {
         data: 'the result',
       },
     },
-  };
+  } as ObjWithSymbols;
 
   const clone = deepUpdate({
     object: original,
     path: ['level1', 0, 'data'],
-    updater: (mutableTarget: Task) => {
+    updater: (mutableTarget: any) => {
       mutableTarget.done = false;
     },
   });
@@ -48,24 +44,19 @@ it('should mutate the object', () => {
 });
 
 it('should mutate a Map', () => {
-  type Original = {
-    mapOne: Map<string | number, Task>;
-    mapTwo: Map<any, Task>;
-  };
-
-  const original: Original = {
+  const original = {
     mapOne: new Map(),
     mapTwo: new Map(),
   };
 
-  original.mapOne.set('123', { name: 'Task one', done: true });
-  original.mapOne.set(123, { name: 'Task one (number key)', done: true });
-  original.mapOne.set('two', { name: 'Task two', done: true });
+  original.mapOne.set('123', { id: 1, name: 'Task one' });
+  original.mapOne.set(123, { id: 2, name: 'Task one (number key)' });
+  original.mapOne.set('two', { id: 3, name: 'Task two' });
 
   const clone = deepUpdate({
     object: original,
     path: ['mapOne', 123],
-    updater: (mutableTarget: Task) => {
+    updater: (mutableTarget: any) => {
       mutableTarget.name = 'A new name';
     },
   });
@@ -97,10 +88,10 @@ it('should clone with a clone function', () => {
   const cloneObj = deepUpdate({
     object: originalObj,
     path: ['mapOne', 123],
-    updater: (mutableTarget: Task) => {
+    updater: (mutableTarget: any) => {
       mutableTarget.name = 'A new name';
     },
-    onClone: (original, mutableTarget: Task) => {
+    onClone: (original, mutableTarget: any) => {
       if (!mutableTarget.done) {
         mutableTarget.done = true;
       }

@@ -1,7 +1,12 @@
 import React from 'react';
 import { store } from '../../../src';
+import { TaskType } from '../../testUtils';
 
-const Task = ({ task }) => (
+type Props = {
+  task: TaskType;
+};
+
+const Task = ({ task }: Props) => (
   <div>
     <label>
       <input
@@ -17,9 +22,11 @@ const Task = ({ task }) => (
 
     <button
       onClick={() => {
-        store.tasks = store.tasks.filter(
-          (storeTask) => storeTask.id !== task.id
-        );
+        if (store.tasks) {
+          store.tasks = store.tasks.filter(
+            (storeTask: TaskType) => storeTask.id !== task.id
+          );
+        }
       }}
     >
       Delete {task.name}

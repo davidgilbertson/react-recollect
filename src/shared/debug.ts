@@ -23,6 +23,6 @@ export const debugOff = () => {
   if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
 };
 
-export const debug = (cb) => {
+export const debug = (cb: () => void) => {
   if (DEBUG === DEBUG_ON) cb();
 };

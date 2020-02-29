@@ -4,16 +4,16 @@ import { render } from '@testing-library/react';
 import { collect } from '../src';
 
 // TODO (davidg): why can't I type this right?
-export const collectAndRender = (Comp) => {
+export const collectAndRender = (Comp: any) => {
   const CollectedComp = collect(Comp);
 
   return render(<CollectedComp />);
 };
 
-export const propPathChanges = (handleChangeMock) =>
+export const propPathChanges = (handleChangeMock: jest.Mock) =>
   handleChangeMock.mock.calls.map((call) => call[0].changedProps[0]);
 
-export const expectToThrow = (func) => {
+export const expectToThrow = (func: () => void) => {
   // Even though the error is caught, it still gets printed to the console
   // so we mock that out to avoid the wall of red text.
   jest.spyOn(console, 'error');
@@ -25,9 +25,17 @@ export const expectToThrow = (func) => {
   mockedConsole.mockRestore();
 };
 
-// Allow anything in the store for tests
+export type TaskType = {
+  id: number;
+  name: string;
+  done?: boolean;
+};
+
 declare module '../src' {
+  // Add a few things used in the tests
   interface Store {
+    tasks?: TaskType[];
+    // And anything else...
     [key: string]: any;
   }
 }

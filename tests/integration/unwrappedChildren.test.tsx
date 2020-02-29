@@ -3,11 +3,17 @@
  */
 import React from 'react';
 import { render } from '@testing-library/react';
-import { afterChange, collect, store as globalStore } from '../../src';
+import {
+  afterChange,
+  collect,
+  store as globalStore,
+  WithStoreProp,
+} from '../../src';
+import { TaskType } from '../testUtils';
 
 globalStore.tasks = [
-  { name: 'task 0', done: false },
-  { name: 'task 1', done: false },
+  { id: 0, name: 'task 0', done: false },
+  { id: 1, name: 'task 1', done: false },
 ];
 
 const handleChange = jest.fn();
@@ -21,10 +27,7 @@ afterEach(() => {
 });
 
 type Props = {
-  task: {
-    done: boolean;
-    name: string;
-  };
+  task: TaskType;
 };
 
 const Task = React.memo(({ task }: Props) => {
@@ -46,14 +49,13 @@ const Task = React.memo(({ task }: Props) => {
   );
 });
 
-const TaskList = ({ store }) => {
+const TaskList = ({ store }: WithStoreProp) => {
   taskListRenderCount++;
 
   return (
     <div>
-      {store.tasks.map((task) => (
-        <Task key={task.name} task={task} />
-      ))}
+      {store.tasks &&
+        store.tasks.map((task) => <Task key={task.name} task={task} />)}
     </div>
   );
 };

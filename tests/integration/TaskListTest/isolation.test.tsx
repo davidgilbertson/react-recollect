@@ -50,7 +50,7 @@ it('should handle isolation', () => {
   jest.resetAllMocks();
 
   // should re-render the TaskList component only
-  store.tasks[0].done = true;
+  if (store.tasks) store.tasks[0].done = true;
 
   expect(props.onAppUpdate).toHaveBeenCalledTimes(0);
   expect(props.onTaskListUpdate).toHaveBeenCalledTimes(1);

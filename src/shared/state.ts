@@ -1,4 +1,4 @@
-import { State } from '../types/state';
+import { State } from './types';
 
 /**
  * Any state shared between modules goes here
