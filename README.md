@@ -352,14 +352,6 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
 ## Usage with TypeScript
 
-Recollect uses TypeScript, and all tests are strictly typed. So if you're not
-sure how to implement something, check out some
-[integration tests](./tests/integration).
-
-(If you've got Mad TypeScript Skillz and would like to contribute, see if you
-can work out how to resolve the `@ts-ignore` in
-[the collect module](./src/collect.tsx))
-
 ### Your store
 
 Define the shape of your recollect `store` like this:
@@ -400,6 +392,14 @@ directly.
 ```tsx
 const MyComponent = ({ store }: WithStoreProp) => <div>Hello {store.name}</div>;
 ```
+
+Recollect is written in TypeScript, so you can check out the
+[integration tests](./tests/integration) if you're not sure how to implement
+something.
+
+(If you've got Mad TypeScript Skillz and would like to contribute, see if you
+can work out how to resolve the `@ts-ignore` in
+[the collect module](./src/collect.tsx)).
 
 # How Recollect works
 
@@ -938,15 +938,21 @@ anywhere and at any time.
 
 ## Can I have multiple stores?
 
-You don't want multiple stores :)
+No, but you don't want multiple stores anyway :)
 
 There is no performance improvement to be had, so the desire for multiple stores
 is just an organizational preference. And objects already have a mechanism to
 organize their contents: 'properties'.
 
+## I'm getting a `no-param-reassign` ESLint error
+
+You can add 'store' as a special case so that ESLint allows you to mutate it.
+Check out the `no-param-reassign` rule in this repo's
+[eslint config](./.eslintrc.json) for the syntax.
+
 ## Tell me about your tests
 
-In the `/tests` directory you'll find:
+In the [tests](./tests) directory you'll find:
 
 - Unit tests that test the behaviour of the store directly
 - Integration tests that simulate a user interacting with React components that
@@ -957,13 +963,12 @@ In the `/tests` directory you'll find:
 
 It's about 4 KB. If you were to replace `redux`, `redux-thunk`, and
 `react-redux` with this library, you'd shed a bit over 2 KB. But if you've got a
-decent sized app you'll save much more than that just by getting rid of all your
+decent sized app the real size reduction comes from getting rid of all your
 reducers.
 
 # Dependencies
 
-Recollect has a peer dependency of React `>=15.3`. If you use the `forwardRef`
-option with `collect`, you will need React `>=16.3`.
+Recollect has a peer dependency of React `>=15.3`.
 
 # Alternatives
 
@@ -975,9 +980,7 @@ If you want a walk down memory lane, use Flux.
 
 Also there is a library that is very similar to this one (I didn't copy,
 promise) called
-[`react-easy-state`](https://github.com/solkimicreb/react-easy-state). It's more
-mature than this library, but _slightly_ more complex and has external
-dependencies.
+[`react-easy-state`](https://github.com/solkimicreb/react-easy-state).
 
 # Is it really OK to drop support for IE?
 
