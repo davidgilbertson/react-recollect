@@ -3,12 +3,7 @@ import hoistNonReactStatics from 'hoist-non-react-statics';
 import { removeListenersForComponent } from './updating';
 import state from './shared/state';
 import { debug } from './shared/debug';
-import {
-  CollectOptions,
-  CollectorComponent,
-  Store,
-  WithStoreProp,
-} from './shared/types';
+import { CollectorComponent, Store, WithStoreProp } from './shared/types';
 
 const startRecordingGetsForComponent = (component: CollectorComponent) => {
   removeListenersForComponent(component);
@@ -28,19 +23,28 @@ const stopRecordingGetsForComponent = () => {
   state.currentComponent = null;
 };
 
-type ComponentState = {
-  store: Store;
-};
+type RemoveStore<T> = Pick<T, Exclude<keyof T, keyof WithStoreProp>>;
+type ComponentPropsWithoutStore<C extends React.ComponentType> = RemoveStore<
+  React.ComponentProps<C>
+>;
 
-const collect = <P extends {}>(
-  ComponentToWrap: React.ComponentType<P>,
-  options?: CollectOptions
-): React.ComponentType<Pick<P, Exclude<keyof P, keyof WithStoreProp>>> => {
+const collect = <C extends React.ComponentType<any>>(
+  ComponentToWrap: C
+): React.ComponentType<ComponentPropsWithoutStore<C>> &
+  CollectorComponent &
+  hoistNonReactStatics.NonReactStatics<C> => {
   const componentName =
     ComponentToWrap.displayName || ComponentToWrap.name || 'NamelessComponent';
 
-  class WrappedComponent
-    extends React.PureComponent<P & WithStoreProp, ComponentState>
+  // The component that's passed in will require a `store` prop. The returned
+  // component will not require a `store` prop, so we remove it
+  type Props = ComponentPropsWithoutStore<C>;
+
+  type ComponentState = {
+    store: Store;
+  };
+
+  class WrappedComponent extends React.PureComponent<Props, ComponentState>
     implements CollectorComponent {
     state = {
       // This might be called by React when a parent component has updated with a new store,
@@ -50,9 +54,9 @@ const collect = <P extends {}>(
 
     // TODO (davidg) 2020-02-28: use private #isMounted, waiting on
     //  https://github.com/prettier/prettier/issues/7263
-    _isMounted = false;
+    private _isMounted = false;
 
-    _isMounting = true;
+    private _isMounting = true;
 
     _name = componentName;
 
@@ -89,34 +93,16 @@ const collect = <P extends {}>(
     render() {
       startRecordingGetsForComponent(this);
 
-      return <ComponentToWrap {...this.props} store={this.state.store} />;
+      const props = {
+        ...this.props,
+        store: this.state.store,
+      } as React.ComponentProps<C>;
+
+      return <ComponentToWrap {...props} />;
     }
   }
 
-  if (options && options.forwardRef) {
-    type WrappedProps = React.ComponentProps<typeof WrappedComponent>;
-
-    // TODO (davidg): why is forwardedRef not ref? ATM I would need `ref` in
-    //  props, so the parent component knows to pass this. But forwardedRef
-    //  is defined in WithStoreProp - confusing
-    const WrappedWithRef = React.forwardRef((props: WrappedProps, ref) => (
-      <WrappedComponent {...props} forwardedRef={ref} />
-    ));
-
-    // TODO (davidg): this is losing any statics in the type. See
-    //  src/tests/unit/nonReactStatics.test.tsx
-
-    // TODO (davidg): how to type this?
-    //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/a05cc538a42243c632f054e42eab483ebf1560ab/types/react/index.d.ts#L770
-    //  ??
-
-    // We recommend to the user that they define the type of Ref in their
-    // own props.
-    // @ts-ignore
-    return hoistNonReactStatics(WrappedWithRef, ComponentToWrap);
-  }
-
-  // @ts-ignore
+  // @ts-ignore - I can't work this out
   return hoistNonReactStatics(WrappedComponent, ComponentToWrap);
 };
 

@@ -1,25 +1,36 @@
-import React, { Component } from 'react';
-import { collect } from '../../src';
+/* eslint-disable react/prefer-stateless-function */
+import React from 'react';
+import { collect, WithStoreProp } from '../../src';
 
-class RawComponentWithStatic extends Component {
-  static returnCats() {
-    return 'cats';
-  }
+describe('should copy static methods to the collected component', () => {
+  it('for a class component', () => {
+    class ClassWithStaticRaw extends React.Component<WithStoreProp> {
+      static returnCats() {
+        return 'cats';
+      }
 
-  static returnDogs: () => string;
+      static returnDogs: () => string;
 
-  render() {
-    return <h1>Hi</h1>;
-  }
-}
+      render() {
+        return <h1>Hi</h1>;
+      }
+    }
 
-RawComponentWithStatic.returnDogs = () => 'dogs';
+    ClassWithStaticRaw.returnDogs = () => 'dogs';
 
-const ComponentWithStatic = collect(RawComponentWithStatic);
+    const ClassWithStatic = collect(ClassWithStaticRaw);
 
-it('should copy static methods to the collected component', () => {
-  // @ts-ignore
-  expect(ComponentWithStatic.returnCats()).toBe('cats');
-  // @ts-ignore
-  expect(ComponentWithStatic.returnDogs()).toBe('dogs');
+    expect(ClassWithStatic.returnCats()).toBe('cats');
+    expect(ClassWithStatic.returnDogs()).toBe('dogs');
+  });
+
+  it('for a function component', () => {
+    const ClassWithStaticRaw = () => <h1>Hi</h1>;
+
+    ClassWithStaticRaw.returnDogs = () => 'dogs';
+
+    const ClassWithStatic = collect(ClassWithStaticRaw);
+
+    expect(ClassWithStatic.returnDogs()).toBe('dogs');
+  });
 });

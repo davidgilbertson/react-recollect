@@ -2,21 +2,19 @@ import React, { Component } from 'react';
 import { render } from '@testing-library/react';
 import { collect, WithStoreProp } from '../../src';
 
-interface Props extends WithStoreProp {
+type Props = WithStoreProp & {
   defaultValue: string;
-  ref: any;
-}
+  inputRef: React.Ref<HTMLInputElement>;
+};
 
-const RawCleverInput: React.FC<Props> = (props) => (
+const CollectedWithRef = collect((props: Props) => (
   <label>
     The input
-    <input ref={props.forwardedRef} defaultValue={props.defaultValue} />
+    <input ref={props.inputRef} defaultValue={props.defaultValue} />
   </label>
-);
+));
 
-const CleverInput = collect(RawCleverInput, { forwardRef: true });
-
-class RawComponentWithRef extends Component {
+class ComponentWithRef extends Component {
   inputRef = React.createRef<HTMLInputElement>();
 
   render() {
@@ -30,13 +28,11 @@ class RawComponentWithRef extends Component {
           Empty the input
         </button>
 
-        <CleverInput defaultValue="some text" ref={this.inputRef} />
+        <CollectedWithRef defaultValue="some text" inputRef={this.inputRef} />
       </div>
     );
   }
 }
-
-const ComponentWithRef = collect(RawComponentWithRef);
 
 const { getByText, getByLabelText } = render(<ComponentWithRef />);
 

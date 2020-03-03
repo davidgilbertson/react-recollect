@@ -4,13 +4,13 @@ import { IS_OLD_STORE, PATH_PATH_SYMBOL } from './constants';
 /**
  * Define the shape of your store in your project - see README.
  */
-
 export interface Store {}
 
 export interface StoreUpdater {
   target: object;
   prop?: any;
   value?: any;
+  // TODO (davidg): Target type?
   updater: (target: any, value: any) => void;
 }
 
@@ -20,17 +20,12 @@ export interface StoreUpdater {
  */
 export interface WithStoreProp {
   store: Store;
-  forwardedRef?: any;
 }
 
 export interface CollectorComponent extends React.Component {
   update(): void;
   _name: string;
 }
-
-export type CollectOptions = {
-  forwardRef: boolean;
-};
 
 export type AfterChangeEvent = {
   store: Store;
@@ -49,8 +44,6 @@ export type State = {
   proxyIsMuted: boolean;
   store: Store;
 };
-
-export type GeneralProp = string | number | symbol;
 
 // For clarity. The path can contain anything that can be a Map key.
 export type PropPath = any[];

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { collect, WithStoreProp } from '../../../src';
 
-interface Props extends WithStoreProp {
+type Props = WithStoreProp & {
   onNotificationsUpdate: () => {};
-}
+};
 
 class Notifications extends Component<Props> {
   componentDidUpdate() {

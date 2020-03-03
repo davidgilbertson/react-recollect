@@ -8,6 +8,12 @@ import {
   Target,
 } from './types';
 
+export const isPlainObject = (item: any): item is ObjWithSymbols =>
+  !!item && typeof item === 'object' && item.constructor === Object;
+
+export const isArray = (item: any): item is ArrWithSymbols =>
+  Array.isArray(item);
+
 export const isMap = (item: any): item is MapWithSymbols => item instanceof Map;
 
 export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
@@ -16,20 +22,14 @@ export const isMapOrSet = (item: any) => isMap(item) || isSet(item);
 
 export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
 
-export const isPlainObject = (item: any): item is ObjWithSymbols =>
-  !!item && typeof item === 'object' && item.constructor === Object;
-
 export const isFunction = (item: any) => typeof item === 'function';
-
-export const isArray = (item: any): item is ArrWithSymbols =>
-  Array.isArray(item);
 
 export const cloneMap = (originalMap: Map<any, any>) => new Map(originalMap);
 
 export const cloneSet = (originalSet: Set<any>) => new Set(originalSet);
 
 type GetValue = {
-  (item: ObjWithSymbols, prop: number | string | symbol): any;
+  (item: ObjWithSymbols, prop: PropertyKey): any;
   (item: ArrWithSymbols, prop: number): any;
   (item: MapWithSymbols, prop: any): any;
   (item: SetWithSymbols, prop: any): any;
@@ -44,6 +44,7 @@ export const getValue: GetValue = (target: Target, prop: any) => {
 };
 
 type SetValue = {
+  // TODO (davidg): why not PropertyKey prop?
   (item: ObjWithSymbols, prop: string | symbol, value: any | null): any;
   (item: ArrWithSymbols, prop: number, value?: any): any;
   (item: MapWithSymbols, prop: any, value?: any): any;

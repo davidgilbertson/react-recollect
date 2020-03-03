@@ -7,9 +7,7 @@ export { initStore, batch } from './store';
 export const { store } = state;
 
 export { AfterChangeEvent } from './shared/types';
-export { CollectorComponent } from './shared/types';
 export { WithStoreProp } from './shared/types';
-export { State } from './shared/types';
 export { Store } from './shared/types';
 
 if (typeof window !== 'undefined') {

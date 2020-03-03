@@ -5,7 +5,7 @@ import { collect, WithStoreProp } from '../../src';
 
 interface Props extends WithStoreProp {
   defaultValue: string;
-  ref: React.Ref<HTMLInputElement>;
+  inputRef: React.Ref<HTMLInputElement>;
 }
 
 class RawCleverInput extends React.PureComponent<Props> {
@@ -14,15 +14,15 @@ class RawCleverInput extends React.PureComponent<Props> {
     return (
       <label>
         The input
-        <input ref={props.forwardedRef} defaultValue={props.defaultValue} />
+        <input ref={props.inputRef} defaultValue={props.defaultValue} />
       </label>
     );
   }
 }
 
-const CleverInput = collect(RawCleverInput, { forwardRef: true });
+const CleverInput = collect(RawCleverInput);
 
-class RawComponentWithRef extends Component {
+class ComponentWithRef extends Component {
   inputRef = React.createRef<HTMLInputElement>();
 
   render() {
@@ -38,13 +38,11 @@ class RawComponentWithRef extends Component {
           Empty the input
         </button>
 
-        <CleverInput defaultValue="some text" ref={this.inputRef} />
+        <CleverInput defaultValue="some text" inputRef={this.inputRef} />
       </div>
     );
   }
 }
-
-const ComponentWithRef = collect(RawComponentWithRef);
 
 const { getByText, getByLabelText } = render(<ComponentWithRef />);
 

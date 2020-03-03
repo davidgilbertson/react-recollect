@@ -337,53 +337,9 @@ applicable, and will fire `afterChange`.
 
 ### Passing a ref to a collected component
 
-The `collect` function takes a second parameter — an options object with one
-property: `forwardRef`. When you supply this property, you will be able to
-provide a `ref` to the wrapped component, which will be made available on that
-component as `props.forwardedRef`.
-
-The component that you're wrapping in `collect` would then look like this:
-
-```jsx
-const MyInput = (props) => (
-  <label>
-    My input
-    <input ref={props.forwardedRef} />
-  </label>
-);
-
-export default collect(MyComponent, { forwardRef: true });
-```
-
-And passing it a ref would look the same as passing a ref to any other component
-
-```jsx
-class MyParentComponent extends Component {
-  constructor(props) {
-    super(props);
-
-    this.inputRef = React.createRef();
-  }
-
-  render() {
-    return (
-      <div>
-        <MyInput ref={this.inputRef} />
-
-        <button
-          onClick={() => {
-            this.inputRef.current.focus();
-          }}
-        >
-          Focus the input for some reason
-        </button>
-      </div>
-    );
-  }
-}
-```
-
-You can forward a ref to class-based components or functional components.
+Refs just work, as long as you don't use the reserved name "ref" (React strips
+this out). You can use something like `inputRef` instead. For an example, see
+[this test](./tests/integration/forwardRefFc.test.tsx)
 
 ### Peeking into Recollect's innards
 
@@ -400,6 +356,12 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
   components.
 
 ## Usage with TypeScript
+
+Recollect uses TypeScript, and all tests are strictly typed. So if you're not
+sure how to implement something, check out [/tests](./tests).
+
+(If you'd like to contribute, see if you can work out how to resolve the
+`@ts-ignore` in [./src/collect.tsx](sellect.tsx))
 
 ### Your store
 
@@ -421,16 +383,25 @@ Put this in a declarations file such as `src/types/RecollectStore.ts`.
 Components wrapped in `collect` must define `store` in `props` - use the
 `WithStoreProp` interface for this:
 
-```ts
+```tsx
 import { collect, WithStoreProp } from 'react-recollect';
 
 interface Props extends WithStoreProp {
   someComponentProp: string;
 }
-const TaskList: React.FC<Props> = ({ store, someComponentProp }) => (
+
+const MyComponent = ({ store, someComponentProp }: Props) => (
   // < your awesome JSX here>
 );
+
 export default collect(TaskList);
+```
+
+If the only prop your component needs is `store`, you can use `WithStoreProp`
+directly.
+
+```tsx
+const MyComponent = ({ store }: WithStoreProp) => <div>Hello {store.name}</div>;
 ```
 
 # How Recollect works
