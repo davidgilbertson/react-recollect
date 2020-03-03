@@ -67,10 +67,11 @@ const TaskList = ({ store }) => (
 export default collect(TaskList);
 ```
 
-Recollect will:
+When you wrap a component in `collect`, Recollect will:
 
 - Provide a store object as a prop
-- Collect information about what data the component needs to render
+- Collect information about what data the component needs to render (which parts
+  of the store it reads from).
 - When any of that data changes, Recollect will instruct React to re-render the
   component.
 
@@ -86,8 +87,7 @@ above, access it as a prop in a component wrapped in `collect`.
 You don't need to 'create' or 'initialize' this store, it's just there, ready
 when you are.
 
-And you can treat the `store` object just like you'd treat any JavaScript
-object.
+You can treat the `store` object just like you'd treat any JavaScript object.
 
 ```js
 import { store } from 'react-recollect';
@@ -107,11 +107,6 @@ store = 'tasks'; // NOPE! (Can't reassign a constant)
 
 Recollect is always watching and it knows which components need what data from
 the store, so it will trigger updates accordingly.
-
-**Note:** when referring to the store **within a component**, it's important
-that you use the `store` object passed in as a prop, not the `store` imported
-from `react-recollect`. The reason for this is super-interesting and described
-in great detail below.
 
 ---
 
@@ -358,10 +353,12 @@ Some neat things are exposed on `window.__RR__` for tinkering in the console.
 ## Usage with TypeScript
 
 Recollect uses TypeScript, and all tests are strictly typed. So if you're not
-sure how to implement something, check out [/tests](./tests).
+sure how to implement something, check out some
+[integration tests](./tests/integration).
 
-(If you'd like to contribute, see if you can work out how to resolve the
-`@ts-ignore` in [./src/collect.tsx](sellect.tsx))
+(If you've got Mad TypeScript Skillz and would like to contribute, see if you
+can work out how to resolve the `@ts-ignore` in
+[the collect module](./src/collect.tsx))
 
 ### Your store
 

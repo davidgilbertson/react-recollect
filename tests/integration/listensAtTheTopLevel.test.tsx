@@ -3,7 +3,7 @@ import { store as globalStore, WithStoreProp } from '../../src';
 import { collectAndRender } from '../testUtils';
 
 it('should register a listener on the store object itself', () => {
-  const Comp: React.FC<WithStoreProp> = ({ store }) => (
+  const { getByText } = collectAndRender(({ store }: WithStoreProp) => (
     <div>
       {Object.keys(store).length ? (
         <div>The store has stuff in it</div>
@@ -11,8 +11,7 @@ it('should register a listener on the store object itself', () => {
         <div>The store is empty</div>
       )}
     </div>
-  );
-  const { getByText } = collectAndRender(Comp);
+  ));
 
   getByText('The store is empty');
 
@@ -22,7 +21,7 @@ it('should register a listener on the store object itself', () => {
 });
 
 it('should register a listener on the store object itself', () => {
-  const Comp: React.FC<WithStoreProp> = ({ store }) => (
+  const { getByText } = collectAndRender(({ store }: WithStoreProp) => (
     <div>
       {Object.values(store).includes('test') ? (
         <div>Has test</div>
@@ -30,8 +29,7 @@ it('should register a listener on the store object itself', () => {
         <div>Does not have test</div>
       )}
     </div>
-  );
-  const { getByText } = collectAndRender(Comp);
+  ));
 
   getByText('Does not have test');
 

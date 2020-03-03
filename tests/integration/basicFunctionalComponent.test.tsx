@@ -6,7 +6,6 @@ it('should render the title', () => {
   store.title = 'The initial title';
 
   const { getByText } = collectAndRender((props: WithStoreProp) => (
-    // @ts-ignore
     <h1>{props.store.title}</h1>
   ));
 
