@@ -79,9 +79,9 @@ const logDelete = (target: Target, prop: any) => {
  * We have different handlers (different traps) for object/array and map/set.
  */
 export const getHandlerForObject = <T extends Target>(
-  obj: T
+  targetObject: T
 ): ProxyHandler<T> => {
-  if (utils.isMap(obj) || utils.isSet(obj)) {
+  if (utils.isMap(targetObject) || utils.isSet(targetObject)) {
     // Map() and Set() get a special handler, because reads and writes all
     // happen in the get() trap (different to the get() method of the map/set!)
     return {

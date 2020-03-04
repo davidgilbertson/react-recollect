@@ -952,7 +952,23 @@ organize their contents: 'properties'.
 
 ## I'm getting a `no-param-reassign` ESLint error
 
-You can add 'store' as a special case so that ESLint allows you to mutate it.
+You can add 'store' as a special case in your ESLint config so that the rule
+allows you to mutate the properties of store.
+
+```json
+{
+  "rules": {
+    "no-param-reassign": [
+      "error",
+      {
+        "props": true,
+        "ignorePropertyModificationsFor": ["store"]
+      }
+    ]
+  }
+}
+```
+
 Check out the `no-param-reassign` rule in this repo's
 [eslint config](./.eslintrc.json) for the syntax.
 
