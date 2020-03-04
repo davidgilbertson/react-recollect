@@ -1,15 +1,11 @@
-import { createProxy, decorateWithSymbolsAndProxy } from './proxy';
-import { getHandlerForObject } from './proxyHandlers';
+import * as proxy from './proxy';
 import { notifyByPath } from './updating';
 import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
-import { Store, StoreUpdater, Target } from './shared/types';
+import { Store, Target } from './shared/types';
 
-const createProxyWithHandler = <T extends Target>(obj: T): T =>
-  createProxy(obj, getHandlerForObject(obj));
-
-state.nextStore = createProxyWithHandler({});
+state.nextStore = proxy.createShallow({});
 state.store = state.nextStore;
 
 /**
@@ -22,42 +18,36 @@ export const updateInNextStore = ({
   prop,
   value,
   updater,
-}: StoreUpdater) => {
+}: {
+  target: Target;
+  prop?: any;
+  value?: any;
+  updater: (target: Target, value: any) => void;
+}): void => {
   state.proxyIsMuted = true;
 
-  // Note that this function doesn't know anything about the prop being set. It just finds the
-  // target (the parent of the prop) and calls updater() with it.
+  // Note that this function doesn't know anything about the prop being set.
+  // It just finds the target (the parent of the prop) and
+  // calls updater() with it.
   const targetPath = paths.get(target);
   const propPath = paths.extend(target, prop);
 
-  let newValue = value;
+  // Make sure the new value is deeply wrapped in proxies
+  const newValue = proxy.createDeep(value, propPath);
 
-  // If there's a value being set, wrap it in a proxy
-  if (value !== 'undefined') {
-    const handler = getHandlerForObject(value);
-    newValue = decorateWithSymbolsAndProxy(value, propPath, handler);
-  }
-
-  if (!targetPath.length) {
-    state.nextStore = { ...state.nextStore };
-    updater(state.nextStore, newValue);
-  } else {
-    state.nextStore = utils.deepUpdate({
-      object: state.nextStore,
-      path: targetPath,
-      onClone: (original, clone) => {
-        if (paths.get(original)) {
-          paths.addProp(clone, paths.get(original));
-        }
-        return createProxyWithHandler(clone);
-      },
-      updater: (updateTarget) => {
-        updater(updateTarget, newValue);
-      },
-    });
-  }
-
-  state.nextStore = createProxyWithHandler(state.nextStore);
+  state.nextStore = utils.deepUpdate({
+    object: state.nextStore,
+    propPath: targetPath,
+    afterClone: (original, clone) => {
+      if (paths.get(original)) {
+        paths.addProp(clone, paths.get(original));
+      }
+      return proxy.createShallow(clone);
+    },
+    updater: (updateTarget) => {
+      updater(updateTarget, newValue);
+    },
+  });
 
   state.proxyIsMuted = false;
 
@@ -85,13 +75,6 @@ export const getFromNextStore = (target: Target, targetProp: any): any => {
 
 /**
  * Empty the Recollect store and replace it with new data.
- * Use this in conjunction with server rendering.
- * E.g. set window.__PRELOADED_STATE__ on the server, then
- * initStore(window.__PRELOADED_STATE__) just before calling
- * React.hydrate(<YourApp /> ...)
- *
- * Unlike collapseStore() this doesn't mute the proxy, so objects are still
- * wrapped and components are updated as a result
  */
 export const initStore = (data?: Partial<Store>) => {
   utils.replaceObject(state.store, data);

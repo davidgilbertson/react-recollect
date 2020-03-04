@@ -1,5 +1,5 @@
 import { deepUpdate } from '../../src/shared/utils';
-import { ObjWithSymbols } from '../../src/shared/types';
+import { ObjWithSymbols, Target } from '../../src/shared/types';
 
 it('should mutate the object', () => {
   const original = {
@@ -22,8 +22,8 @@ it('should mutate the object', () => {
 
   const clone = deepUpdate({
     object: original,
-    path: ['level1', 0, 'data'],
-    updater: (mutableTarget: any) => {
+    propPath: ['level1', 0, 'data'],
+    updater: (mutableTarget: Target) => {
       mutableTarget.done = false;
     },
   });
@@ -55,8 +55,8 @@ it('should mutate a Map', () => {
 
   const clone = deepUpdate({
     object: original,
-    path: ['mapOne', 123],
-    updater: (mutableTarget: any) => {
+    propPath: ['mapOne', 123],
+    updater: (mutableTarget: Target) => {
       mutableTarget.name = 'A new name';
     },
   });
@@ -87,11 +87,11 @@ it('should clone with a clone function', () => {
 
   const cloneObj = deepUpdate({
     object: originalObj,
-    path: ['mapOne', 123],
-    updater: (mutableTarget: any) => {
+    propPath: ['mapOne', 123],
+    updater: (mutableTarget: Target) => {
       mutableTarget.name = 'A new name';
     },
-    onClone: (original, mutableTarget: any) => {
+    afterClone: (original, mutableTarget: any) => {
       if (!mutableTarget.done) {
         mutableTarget.done = true;
       }

@@ -48,6 +48,22 @@ it('should add an object', () => {
   );
 });
 
+it('should allow uncommon prop types', () => {
+  store.interestingObject = {
+    level1: {},
+  };
+  store.interestingObject.level1[0] = 'numeric key';
+  const sym = Symbol('My symbol');
+  store.interestingObject.level1[sym] = 'symbol key';
+
+  expect(propPathChanges(handleChange)).toEqual([
+    'interestingObject',
+    'interestingObject.level1.0',
+    'interestingObject.level1.Symbol(My symbol)',
+  ]);
+  expect(handleChange).toHaveBeenCalledTimes(3);
+});
+
 it('should add an array', () => {
   store.newArray = [];
   expect(handleChange).toHaveBeenCalledTimes(1);
@@ -386,5 +402,60 @@ it('calls listeners with the changed path', () => {
   expect(propPathChanges(handleChange)).toEqual([
     'deepObject',
     'deepObject.objectProp.arr.2.name',
+  ]);
+});
+
+it('should handle deep Maps', () => {
+  const taskList: TaskType[] = [
+    {
+      id: 0,
+      name: 'Task zero',
+      done: false,
+    },
+    {
+      id: 1,
+      name: 'Task one',
+      done: false,
+    },
+  ];
+
+  store.deepMap = new Map([['taskList', taskList]]);
+
+  store.deepMap.get('taskList')[1].done = true;
+
+  expect(propPathChanges(handleChange)).toEqual([
+    'deepMap',
+    // TODO (davidg): 'taskList' should not be in the path.
+    //  It's fine if it's a string, but what if it's an object? The
+    //  reference will be lost when the map is clone (and actually, even if
+    //  it isn't, it would be for the set).
+    'deepMap.taskList.1.done',
+  ]);
+});
+
+it('should handle Sets', () => {
+  store.set = new Set([
+    {
+      id: 0,
+      name: 'Task zero',
+      done: false,
+    },
+    {
+      id: 1,
+      name: 'Task one',
+      done: false,
+    },
+  ]);
+
+  store.set.forEach((task: TaskType) => {
+    // eslint-disable-next-line no-param-reassign
+    task.done = true;
+  });
+
+  expect(propPathChanges(handleChange)).toEqual([
+    'set',
+    // TODO (davidg): clearly this is not ideal
+    'set.[object Object].done',
+    'set.[object Object].done',
   ]);
 });

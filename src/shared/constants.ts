@@ -7,4 +7,6 @@ export const PROP_PATH_SEP = '~~~';
 
 export const IS_OLD_STORE = Symbol('IS_OLD_STORE');
 
+export const IS_PROXY = Symbol('IS_PROXY');
+
 export const PATH_PATH_SYMBOL = Symbol('path');

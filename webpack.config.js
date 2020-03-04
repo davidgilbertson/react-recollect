@@ -1,5 +1,4 @@
 const path = require('path');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const { peerDependencies } = require('./package.json');
 
 module.exports = {
@@ -33,7 +32,6 @@ module.exports = {
       },
     ],
   },
-  plugins: [new CleanWebpackPlugin()],
   resolve: {
     extensions: ['.js', '.json', '.ts', '.tsx'],
   },

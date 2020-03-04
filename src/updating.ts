@@ -3,7 +3,7 @@ import state from './shared/state';
 import * as paths from './shared/paths';
 import * as utils from './shared/utils';
 import { PROP_PATH_SEP } from './shared/constants';
-import { AfterChangeEvent, CollectorComponent } from './shared/types';
+import { AfterChangeEvent, CollectorComponent, PropPath } from './shared/types';
 
 /**
  * Add a callback to be called every time the store changes
@@ -63,9 +63,9 @@ const flushUpdates = () => {
  *   being made available by collect()
  * - a path further down the object tree. E.g. store.tasks.2.name
  */
-export const notifyByPath = (pathArray: any[]) => {
-  const pathString = paths.makeInternalString(pathArray);
-  const userFriendlyPropPath = paths.makeUserString(pathArray);
+export const notifyByPath = (propPath: PropPath) => {
+  const pathString = paths.makeInternalString(propPath);
+  const userFriendlyPropPath = paths.makeUserString(propPath);
 
   queue.changedPaths.add(userFriendlyPropPath);
 

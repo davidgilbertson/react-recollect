@@ -4,35 +4,21 @@ import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
 import { IS_OLD_STORE } from './shared/constants';
-import { StoreUpdater, Target } from './shared/types';
+import { MapOrSetMembers, PropPath, Target } from './shared/types';
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
  * To be used when a component reads from a property
  */
-const addListener = (pathArray: any[]) => {
+const addListener = (propPath: PropPath) => {
   if (!state.currentComponent) return;
   // We use a string instead of an array because it's much easier to match
-  const pathString = paths.makeInternalString(pathArray);
+  const pathString = paths.makeInternalString(propPath);
 
   const components = state.listeners.get(pathString) || new Set();
   components.add(state.currentComponent);
   state.listeners.set(pathString, components);
 };
-
-/**
- * We bypass the proxy if we don't want to:
- * a) record a GET of a prop and add a listener for that prop path
- * b) emit a SET and trigger listeners (which re-render components)
- */
-// TODO (davidg): there's only one use of this now, move it back down
-const shouldBypassProxy = (prop: any): boolean =>
-  state.proxyIsMuted ||
-  !state.isInBrowser ||
-  !state.currentComponent ||
-  utils.isSymbol(prop) ||
-  prop === 'constructor' ||
-  prop === 'toJSON';
 
 /**
  * Is this an attempt to get something from the store outside the render cycle?
@@ -44,57 +30,44 @@ const isGettingPropOutsideOfRenderCycle = (prop: any) =>
   !state.currentComponent &&
   state.isInBrowser &&
   !utils.isSymbol(prop) &&
-  prop !== 'constructor' && // TODO (davidg): maybe 'is exotic'? Check hasOwnProps? Slow?
+  prop !== 'constructor' &&
   !state.proxyIsMuted;
 
-/**
- * This function takes an instruction to update the store. For simple properties, it will update
- * the store with target[prop] = value. It also takes an update function, allowing the caller
- * to update the store in a specific manner. E.g. target.clear(), where target is a Map.
- */
-
-const forwardSetToNextStore = ({
-  target,
-  prop,
-  value,
-  updater,
-}: StoreUpdater) => {
-  // TODO (davidg): I should mute the proxy here already, right? Do this when I no longer
-  //  call updateInNextStore() from two places below
+const logSet = (target: Target, prop: any, value?: any) => {
   debug(() => {
     console.groupCollapsed(`SET: ${paths.extendToUserString(target, prop)}`);
     console.info('From:', utils.getValue(target, prop));
     console.info('To:  ', value);
     console.groupEnd();
   });
-
-  updateInNextStore({
-    target,
-    value,
-    prop,
-    updater: (mutableTarget, newValue) => {
-      updater(mutableTarget, newValue);
-    },
-  });
-
-  return true;
 };
 
+const logDelete = (target: Target, prop: any) => {
+  debug(() => {
+    console.groupCollapsed(`DELETE: ${paths.extendToUserString(target, prop)}`);
+    console.info('Property: ', paths.extendToUserString(target, prop));
+    console.groupEnd();
+  });
+};
+
+/**
+ * We have different handlers (different traps) for object/array and map/set.
+ */
 export const getHandlerForObject = <T extends Target>(
   obj: T
 ): ProxyHandler<T> => {
   if (utils.isMapOrSet(obj)) {
+    // Map() and Set() get a special handler, because reads and writes all happen in the get() trap
+    // Even though this is in get() - don't think of these like getting values,
     return {
-      // Map() and Set() get a special handler, because reads and writes all happen in the get() trap
-      // Even though this is in get() - don't think of these like getting values,
       get(target, prop) {
         let result = Reflect.get(target, prop);
 
         // The innards of Map require this binding
         if (utils.isFunction(result)) result = result.bind(target);
 
-        // bail early for some things. Unlike objects/arrays, we will continue on even
-        // if !state.currentComponent
+        // Bail early for some things. Unlike objects/arrays, we will
+        // continue on even if !state.currentComponent
         if (
           state.proxyIsMuted ||
           !state.isInBrowser ||
@@ -106,25 +79,27 @@ export const getHandlerForObject = <T extends Target>(
         }
 
         // @ts-ignore - `.size` DOES exist, this is a Map or Set
-        if (prop === 'clear' && !target.size) return result;
+        if (prop === MapOrSetMembers.Clear && !target.size) return result;
 
         // Note: this is slightly different to arrays. With an array, you call array.push(), but
         // that will then call array[i] = 'whatever' and hit the set() trap.
         // With Map/Set this doesn't happen; nothing ever hits the set() trap.
 
         // Adding to a Map
-        if (prop === 'set') {
+        if (prop === MapOrSetMembers.Set) {
           // TODO is this slow? I'm wrapping the set result in a Proxy every time?
           //  Should I do this when first creating it?
-          return new Proxy(result, {
+          const handler: ProxyHandler<T> = {
             apply(func, applyTarget, [key, value]) {
               if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
-              return forwardSetToNextStore({
+              updateInNextStore({
                 target: applyTarget,
                 prop: key,
                 value,
                 updater: (finalTarget, newProxiedValue) => {
+                  logSet(target, prop, newProxiedValue);
+
                   // We call the set now, but with the new args
                   Reflect.apply(finalTarget[prop], finalTarget, [
                     key,
@@ -132,64 +107,84 @@ export const getHandlerForObject = <T extends Target>(
                   ]);
                 },
               });
+
+              return true;
             },
-          });
+          };
+
+          return new Proxy(result, handler);
         }
 
         // Adding to a Set
-        if (prop === 'add') {
-          return new Proxy(result, {
+        if (prop === MapOrSetMembers.Add) {
+          const handler: ProxyHandler<T> = {
             apply(func, applyTarget, [value]) {
               if (applyTarget.has(value)) return true; // Would be a no op
 
-              return forwardSetToNextStore({
+              updateInNextStore({
                 target: applyTarget,
                 prop: value,
                 value,
                 updater: (finalTarget, newProxiedValue) => {
+                  logSet(target, prop, newProxiedValue);
+
                   Reflect.apply(finalTarget[prop], finalTarget, [
                     newProxiedValue,
                   ]);
                 },
               });
+
+              return true;
             },
-          });
+          };
+
+          return new Proxy(result, handler);
         }
 
         // On either a Set or Map
-        if (prop === 'clear' || prop === 'delete') {
-          return new Proxy(result, {
+        if (prop === MapOrSetMembers.Clear || prop === MapOrSetMembers.Delete) {
+          const handler: ProxyHandler<T> = {
             apply(func, applyTarget, [key]) {
               if (prop === 'delete' && !applyTarget.has(key)) return result; // Would not be a change
 
-              return forwardSetToNextStore({
+              updateInNextStore({
                 target: applyTarget,
                 prop,
                 updater: (finalTarget) => {
+                  logSet(target, prop);
+
                   Reflect.apply(finalTarget[prop], finalTarget, [key]);
                 },
               });
+
+              return true;
             },
-          });
+          };
+
+          return new Proxy(result, handler);
         }
 
-        // Now that we've ruled out set/clear/delete, we can bail if we're not in the render cycle
+        // Now that we've ruled out set/clear/delete (modifying methods), we can
+        // just return the result if we're not in the render cycle.
         if (!state.currentComponent) return result;
+
+        // Otherwise, we're in the render cycle, so we carry on to potentially
+        // get the value from the next store
 
         // For `size` or any getter method, subscribe to size changes and return
         if (
           [
-            'size',
-            'get',
-            'entries',
-            'forEach',
-            'has',
-            'keys',
-            'values',
+            MapOrSetMembers.Entries,
+            MapOrSetMembers.ForEach,
+            MapOrSetMembers.Get,
+            MapOrSetMembers.Has,
+            MapOrSetMembers.Keys,
+            MapOrSetMembers.Size,
+            MapOrSetMembers.Values,
             // @ts-ignore - it doesn't matter that prop might be a number
           ].includes(prop)
         ) {
-          addListener(paths.extend(target, 'size'));
+          addListener(paths.extend(target, MapOrSetMembers.Size));
           // TODO (davidg): do I not log the get on some Map or Set reads?
           return result;
         }
@@ -215,16 +210,15 @@ export const getHandlerForObject = <T extends Target>(
       }
 
       const result = Reflect.get(target, prop);
-      // TODO (davidg): array.pop() when empty can bail. But that's not easy
 
       // @ts-ignore
       if (utils.isFunction(target[prop])) return result;
 
       if (
-        !state.currentComponent &&
-        state.isInBrowser &&
-        !utils.isSymbol(prop) &&
         !state.proxyIsMuted &&
+        state.isInBrowser &&
+        !state.currentComponent &&
+        !utils.isSymbol(prop) &&
         prop !== 'constructor'
       ) {
         // Note, this will result in another get(), but on the equivalent
@@ -233,7 +227,19 @@ export const getHandlerForObject = <T extends Target>(
         return getFromNextStore(target, prop);
       }
 
-      if (shouldBypassProxy(prop)) return result;
+      // We bypass the proxy if we don't want to:
+      // a) record a GET of a prop and add a listener for that prop path
+      // b) emit a SET and trigger listeners (which re-render components)
+      if (
+        state.proxyIsMuted ||
+        !state.isInBrowser ||
+        !state.currentComponent ||
+        utils.isSymbol(prop) ||
+        prop === 'constructor' ||
+        prop === 'toJSON'
+      ) {
+        return result;
+      }
 
       debug(() => {
         console.groupCollapsed(
@@ -305,14 +311,18 @@ export const getHandlerForObject = <T extends Target>(
         return Reflect.set(target, prop, value);
       }
 
-      return forwardSetToNextStore({
+      updateInNextStore({
         target,
         prop,
         value,
         updater: (finalTarget, newValueProxy) => {
+          logSet(target, prop, newValueProxy);
+
           Reflect.set(finalTarget, prop, newValueProxy);
         },
       });
+
+      return true;
     },
 
     deleteProperty(target, prop) {
@@ -320,18 +330,12 @@ export const getHandlerForObject = <T extends Target>(
         return Reflect.deleteProperty(target, prop);
       }
 
-      debug(() => {
-        console.groupCollapsed(
-          `DELETE: ${paths.extendToUserString(target, prop)}`
-        );
-        console.info('Property: ', paths.extendToUserString(target, prop));
-        console.groupEnd();
-      });
-
       updateInNextStore({
         target,
         prop,
         updater: (finalTarget) => {
+          logDelete(target, prop);
+
           Reflect.deleteProperty(finalTarget, prop);
         },
       });

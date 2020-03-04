@@ -20,6 +20,9 @@ export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
 
 export const isMapOrSet = (item: any) => isMap(item) || isSet(item);
 
+export const isProxyable = (item: any): item is Target =>
+  isPlainObject(item) || isArray(item) || isMap(item) || isSet(item);
+
 export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
 
 export const isFunction = (item: any) => typeof item === 'function';
@@ -35,6 +38,10 @@ type GetValue = {
   (item: SetWithSymbols, prop: any): any;
 };
 
+/**
+ * Get the value from an object. This is for end-user objects. E.g. not
+ * accessing a symbol property on a Map object.
+ */
 export const getValue: GetValue = (target: Target, prop: any) => {
   if (isMap(target)) return target.get(prop);
   if (isSet(target)) return prop;
@@ -44,8 +51,7 @@ export const getValue: GetValue = (target: Target, prop: any) => {
 };
 
 type SetValue = {
-  // TODO (davidg): why not PropertyKey prop?
-  (item: ObjWithSymbols, prop: string | symbol, value: any | null): any;
+  (item: ObjWithSymbols, prop: PropertyKey, value: any | null): any;
   (item: ArrWithSymbols, prop: number, value?: any): any;
   (item: MapWithSymbols, prop: any, value?: any): any;
   (item: SetWithSymbols, prop: any, value?: any): any;
@@ -70,41 +76,40 @@ export const setValue: SetValue = (
   }
 };
 
-// TODO (davidg): how does this fair with optional?.chaining?
 export const deepUpdate = <T extends Target>({
   object,
-  path,
-  onClone,
+  propPath,
+  afterClone,
   updater,
 }: {
   object: T;
-  path: PropPath;
-  onClone?: <U extends object>(original: U, clone: U) => U;
-  updater: (object: any) => void;
+  propPath: PropPath;
+  afterClone?: <U extends Target>(original: U, clone: U) => U;
+  updater: (object: Target) => void; // Target, but not necessarily T
 }) => {
-  const cloneItem = (original: T): T => {
+  const cloneItem = <V extends Target>(original: V): V => {
     let clone = original;
 
-    if (isArray(original)) clone = original.slice() as T;
-    if (isMap(original)) clone = cloneMap(original) as T;
-    if (isSet(original)) clone = cloneSet(original) as T;
+    if (isArray(original)) clone = original.slice() as V;
+    if (isMap(original)) clone = cloneMap(original) as V;
+    if (isSet(original)) clone = cloneSet(original) as V;
     if (isPlainObject(original)) clone = { ...original };
 
     // Let the caller do interesting things when cloning
-    return onClone ? onClone(original, clone) : clone;
+    return afterClone ? afterClone(original, clone) : clone;
   };
 
   const result = cloneItem(object);
 
   // This will be the case if we're updating the top-level store
-  if (!path.length) {
+  if (!propPath.length) {
     updater(result);
   } else {
-    path.reduce((item, prop, i) => {
+    propPath.reduce((item, prop, i) => {
       const nextValue = cloneItem(getValue(item, prop));
       setValue(item, prop, nextValue);
 
-      if (i === path.length - 1) {
+      if (i === propPath.length - 1) {
         updater(nextValue);
         return null; // doesn't matter
       }
