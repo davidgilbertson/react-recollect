@@ -3,8 +3,22 @@ import { debug } from './shared/debug';
 import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
-import { IS_OLD_STORE } from './shared/constants';
-import { MapOrSetMembers, PropPath, Target } from './shared/types';
+import { IS_PREV_STORE } from './shared/constants';
+import { PropPath, Target } from './shared/types';
+
+const enum MapOrSetMembers {
+  Add = 'add',
+  Clear = 'clear',
+  Delete = 'delete',
+  Entries = 'entries',
+  ForEach = 'forEach',
+  Get = 'get',
+  Has = 'has',
+  Keys = 'keys',
+  Set = 'set',
+  Size = 'size',
+  Values = 'values',
+}
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
@@ -42,6 +56,17 @@ const logSet = (target: Target, prop: any, value?: any) => {
   });
 };
 
+const logGet = (target: Target, prop?: any, value?: any) => {
+  debug(() => {
+    console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
+    console.info(`Component: <${state.currentComponent!._name}>`);
+    if (typeof value !== 'undefined') {
+      console.info('Value:', value);
+    }
+    console.groupEnd();
+  });
+};
+
 const logDelete = (target: Target, prop: any) => {
   debug(() => {
     console.groupCollapsed(`DELETE: ${paths.extendToUserString(target, prop)}`);
@@ -56,9 +81,9 @@ const logDelete = (target: Target, prop: any) => {
 export const getHandlerForObject = <T extends Target>(
   obj: T
 ): ProxyHandler<T> => {
-  if (utils.isMapOrSet(obj)) {
-    // Map() and Set() get a special handler, because reads and writes all happen in the get() trap
-    // Even though this is in get() - don't think of these like getting values,
+  if (utils.isMap(obj) || utils.isSet(obj)) {
+    // Map() and Set() get a special handler, because reads and writes all
+    // happen in the get() trap (different to the get() method of the map/set!)
     return {
       get(target, prop) {
         let result = Reflect.get(target, prop);
@@ -100,7 +125,8 @@ export const getHandlerForObject = <T extends Target>(
                 updater: (finalTarget, newProxiedValue) => {
                   logSet(target, prop, newProxiedValue);
 
-                  // We call the set now, but with the new args
+                  // We call the map.set() now, but on the item in the
+                  // nextStore, and with the new args
                   Reflect.apply(finalTarget[prop], finalTarget, [
                     key,
                     newProxiedValue,
@@ -164,7 +190,7 @@ export const getHandlerForObject = <T extends Target>(
           return new Proxy(result, handler);
         }
 
-        // Now that we've ruled out set/clear/delete (modifying methods), we can
+        // Now that we've handled any modifying methods, we can
         // just return the result if we're not in the render cycle.
         if (!state.currentComponent) return result;
 
@@ -201,19 +227,24 @@ export const getHandlerForObject = <T extends Target>(
 
   return {
     get(target, prop) {
-      if (IS_OLD_STORE in target && state.currentComponent) {
+      if (IS_PREV_STORE in target && state.currentComponent) {
         throw Error(
-          `You are trying to read "${prop.toString()}" from the global store while rendering 
-          a component. This could result in subtle bugs. Instead, read from the 
-          store object passed as a prop to your component.`
+          `You are trying to read "${prop.toString()}" from the global store 
+          while rendering a component. This could result in subtle bugs. 
+          Instead, read from the store object passed as a prop to your component.`
         );
       }
 
       const result = Reflect.get(target, prop);
 
-      // @ts-ignore
+      // @ts-ignore - wrong, symbol can be used an an index type
       if (utils.isFunction(target[prop])) return result;
 
+      // When we're outside the render cycle, we route requests to the same
+      // object in `nextStore`.
+      // Note, this will result in another get(), but on the equivalent
+      // target from the next store. muteProxy will be set so this line
+      // isn't triggered in an infinite loop
       if (
         !state.proxyIsMuted &&
         state.isInBrowser &&
@@ -221,36 +252,14 @@ export const getHandlerForObject = <T extends Target>(
         !utils.isSymbol(prop) &&
         prop !== 'constructor'
       ) {
-        // Note, this will result in another get(), but on the equivalent
-        // target from the next store. muteProxy will be set so this line
-        // isn't triggers in an infinite loop
         return getFromNextStore(target, prop);
       }
 
-      // We bypass the proxy if we don't want to:
-      // a) record a GET of a prop and add a listener for that prop path
-      // b) emit a SET and trigger listeners (which re-render components)
-      if (
-        state.proxyIsMuted ||
-        !state.isInBrowser ||
-        !state.currentComponent ||
-        utils.isSymbol(prop) ||
-        prop === 'constructor' ||
-        prop === 'toJSON'
-      ) {
-        return result;
+      if (state.currentComponent) {
+        logGet(target, prop, result);
+
+        addListener(paths.extend(target, prop));
       }
-
-      debug(() => {
-        console.groupCollapsed(
-          `GET: ${paths.extendToUserString(target, prop)}`
-        );
-        console.info(`Component: <${state.currentComponent!._name}>`);
-        console.info('Value:', result);
-        console.groupEnd();
-      });
-
-      addListener(paths.extend(target, prop));
 
       return result;
     },
@@ -259,13 +268,7 @@ export const getHandlerForObject = <T extends Target>(
       // Arrays use `has` too, but we capture a listener elsewhere for that.
       // Here we only want to capture access to objects
       if (state.currentComponent && !utils.isArray(target)) {
-        debug(() => {
-          console.groupCollapsed(
-            `GET: ${paths.extendToUserString(target, prop)}`
-          );
-          console.info(`Component: <${state.currentComponent!._name}>`);
-          console.groupEnd();
-        });
+        logGet(target, prop);
 
         addListener(paths.extend(target, prop));
       }
@@ -276,11 +279,7 @@ export const getHandlerForObject = <T extends Target>(
 
     ownKeys(target) {
       if (state.currentComponent) {
-        debug(() => {
-          console.groupCollapsed(`GET: ${paths.extendToUserString(target)}`);
-          console.info(`Component: <${state.currentComponent!._name}>`);
-          console.groupEnd();
-        });
+        logGet(target);
 
         addListener(paths.get(target));
       }

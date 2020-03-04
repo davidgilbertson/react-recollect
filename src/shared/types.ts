@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { IS_OLD_STORE, IS_PROXY, PATH_PATH_SYMBOL } from './constants';
+import { IS_PREV_STORE, IS_PROXY, PATH_PATH_SYMBOL } from './constants';
 
 /**
- * Define the shape of your store in your project - see README.
+ * Define the shape of your store in your project - see README.md
  */
-export interface Store {
-  [IS_PROXY]?: boolean; // TODO (davidg): reuse SharedBase? Or 'true' here?
-}
+export interface Store {}
 
 /**
  * Extend or intersect component `props` with `WithStoreProp`
@@ -22,10 +20,14 @@ export interface CollectorComponent extends React.Component {
 }
 
 export type AfterChangeEvent = {
-  store: Store;
+  /** The store props that changed */
   changedProps: string[];
-  renderedComponents: CollectorComponent[];
+  /** The store, after the change occurred */
+  store: Store;
+  /** The store, before the change occurred */
   prevStore: Store;
+  /** Components updated as a result of the change */
+  renderedComponents: CollectorComponent[];
 };
 
 export type State = {
@@ -47,7 +49,7 @@ export type PropPath = any[];
  */
 type SharedBase = {
   [PATH_PATH_SYMBOL]?: PropPath;
-  [IS_OLD_STORE]?: boolean;
+  [IS_PREV_STORE]?: boolean;
   [IS_PROXY]?: boolean;
   [p: string]: any;
   [p: number]: any;
@@ -68,23 +70,6 @@ export type Target =
   | MapWithSymbols
   | SetWithSymbols;
 
-/**
- * A Target is any item that can be proxied
- */
 export type ProxiedTarget<T = Target> = T & {
   [IS_PROXY]?: true;
 };
-
-export const enum MapOrSetMembers {
-  Add = 'add',
-  Clear = 'clear',
-  Delete = 'delete',
-  Entries = 'entries',
-  ForEach = 'forEach',
-  Get = 'get',
-  Has = 'has',
-  Keys = 'keys',
-  Set = 'set',
-  Size = 'size',
-  Values = 'values',
-}

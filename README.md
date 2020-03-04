@@ -138,8 +138,9 @@ Go have a play, and when you're ready for more readme, come back to read on ...
     - [Loading data with an updater](#loading-data-with-an-updater)
     - [Asynchronous updaters](#asynchronous-updaters)
     - [Testing an updater](#testing-an-updater)
-- [Questions](#questions)
+- [FAQ](#faq)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
+    - [Gotchas with Maps and Sets](#gotchas-with-maps-and-sets)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Will component state still work?](#will-component-state-still-work)
   - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
@@ -156,7 +157,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 ## API
 
 In addition to [`connect`](#the-collect-function) and
-[`store`](#the-store-object) above ...
+[`store`](#the-store-object) above, Recollect has three more functions.
 
 ### The `afterChange` function
 
@@ -340,9 +341,8 @@ this out). You can use something like `inputRef` instead. For an example, see
 
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
-- Use `__RR__.debugOn()` to turn on debugging. You can combine this with
-  Chrome's console filtering, for example to only see 'UPDATE' or 'SET' events.
-  Who needs professional, well made dev tools extensions!
+- Use `__RR__.debugOn()` to turn on debugging. Note that this can have a
+  negative impact on performance if you're reading a _lot_ of data.
 - Type `__RR__.debugOff()` and see what happens
 - `__RR__.internals` returns all sorts of interesting things. Including a live
   reference to the store. For example, typing
@@ -870,26 +870,31 @@ test('loadTasksFromServer should update the store', async () => {
 });
 ```
 
-# Questions
+# FAQ
 
 ## What sort of stuff can go in the store?
 
 Data. Anything JSON serializable, plus `Map`, `Set` and `undefined`.
 
-Beware there is only partial support for `Set`; updating a reference to an
-object in a set will not always trigger a render of components using that
-object.
-
 Things that aren't supported:
 
 - functions (e.g. getters, setters, or other methods)
 - properties defined with `Object.defineProperty()`
+- string properties on arrays, Maps and Sets
 - `RegExp` objects
 - `Date` objects (I'm working on this)
 - `Proxy`, `Uint16Array` etc.
-- `Symbol` (why you gotta be so fancy?)
 - linking (e.g. one item in the store that is just a reference to another item
   in the store)
+
+### Gotchas with Maps and Sets
+
+Updating an object _key_ of a map entry will not always trigger a render of
+components using that object. But in most cases you'd be storing your data in
+the _value_ of a map entry, and that works fine.
+
+Similarly, updating an object in a set may not trigger an update to components
+using that object (adding/removing items from a set works fine).
 
 ## Can I use this with class-based components and functional components?
 

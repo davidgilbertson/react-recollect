@@ -1,4 +1,4 @@
-import { IS_OLD_STORE } from './constants';
+import { IS_PREV_STORE } from './constants';
 import {
   ArrWithSymbols,
   MapWithSymbols,
@@ -18,8 +18,6 @@ export const isMap = (item: any): item is MapWithSymbols => item instanceof Map;
 
 export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
 
-export const isMapOrSet = (item: any) => isMap(item) || isSet(item);
-
 export const isProxyable = (item: any): item is Target =>
   isPlainObject(item) || isArray(item) || isMap(item) || isSet(item);
 
@@ -27,9 +25,12 @@ export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
 
 export const isFunction = (item: any) => typeof item === 'function';
 
-export const cloneMap = (originalMap: Map<any, any>) => new Map(originalMap);
+export const cloneArray = <T extends any[]>(item: T): T => item.slice() as T;
 
-export const cloneSet = (originalSet: Set<any>) => new Set(originalSet);
+export const cloneMap = <T extends Map<any, any>>(item: T): T =>
+  new Map(item) as T;
+
+export const cloneSet = <T extends Set<any>>(item: T): T => new Set(item) as T;
 
 type GetValue = {
   (item: ObjWithSymbols, prop: PropertyKey): any;
@@ -51,10 +52,10 @@ export const getValue: GetValue = (target: Target, prop: any) => {
 };
 
 type SetValue = {
-  (item: ObjWithSymbols, prop: PropertyKey, value: any | null): any;
-  (item: ArrWithSymbols, prop: number, value?: any): any;
-  (item: MapWithSymbols, prop: any, value?: any): any;
-  (item: SetWithSymbols, prop: any, value?: any): any;
+  (item: ObjWithSymbols, prop: PropertyKey, value: any): any;
+  (item: ArrWithSymbols, prop: number, value: any): any;
+  (item: MapWithSymbols, prop: any, value: any): any;
+  (item: SetWithSymbols, prop: any, value: any): any;
 };
 
 export const setValue: SetValue = (
@@ -90,10 +91,10 @@ export const deepUpdate = <T extends Target>({
   const cloneItem = <V extends Target>(original: V): V => {
     let clone = original;
 
-    if (isArray(original)) clone = original.slice() as V;
-    if (isMap(original)) clone = cloneMap(original) as V;
-    if (isSet(original)) clone = cloneSet(original) as V;
     if (isPlainObject(original)) clone = { ...original };
+    if (isArray(original)) clone = cloneArray(original);
+    if (isMap(original)) clone = cloneMap(original);
+    if (isSet(original)) clone = cloneSet(original);
 
     // Let the caller do interesting things when cloning
     return afterClone ? afterClone(original, clone) : clone;
@@ -154,5 +155,7 @@ export const replaceObject = (
 
   // If the user is reading this object while a component is rendering,
   // they're doing it wrong.
-  mutableTarget[IS_OLD_STORE] = true;
+  Object.defineProperty(mutableTarget, IS_PREV_STORE, {
+    value: true,
+  });
 };

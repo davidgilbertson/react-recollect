@@ -11,7 +11,7 @@ state.store = state.nextStore;
 /**
  * This function immutably updates a target in the store, returning the new store.
  * It doesn't update the target directly, but calls an update() function which
- *  will perform the update.
+ * will perform the update.
  */
 export const updateInNextStore = ({
   target,
@@ -58,10 +58,10 @@ export const updateInNextStore = ({
  * This takes a target (from one version of the store) and gets its value
  * in `nextStore`.
  */
-export const getFromNextStore = (target: Target, targetProp: any): any => {
+export const getFromNextStore = (target: Target, prop: any): any => {
   state.proxyIsMuted = true;
 
-  const propPath = paths.extend(target, targetProp);
+  const propPath = paths.extend(target, prop);
 
   const result = propPath.reduce(
     (acc, propName) => utils.getValue(acc, propName),
