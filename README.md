@@ -148,8 +148,9 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
   - [Tell me about your tests](#tell-me-about-your-tests)
-  - [How big is it?](#how-big-it-it)
+  - [How big is it?](#how-big-is-it)
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
@@ -993,8 +994,8 @@ Sure, why not! Imagine: all that time you spend getting stuff to work for a few
 users in crappy old browsers could instead be spent making awesome new features
 for the vast majority of your users.
 
-For inspiration, these brave websites have dropped the hammer and now show a
-message saying they don't support IE:
+For inspiration, these brave websites have dropped the hammer and dropped
+support for IE:
 
 - GitHub (owned by Microsoft!)
 - devdocs.io
