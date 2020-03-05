@@ -3,23 +3,37 @@ const { peerDependencies } = require('./package.json');
 
 module.exports = {
   mode: 'production',
-  entry: path.resolve(__dirname, 'src/index.js'),
+  devtool: 'source-map',
+  entry: path.resolve(__dirname, 'src/index.ts'),
   output: {
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist'),
+    library: 'ReactRecollect',
     libraryTarget: 'umd',
   },
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
-        use: 'babel-loader',
+        test: /\.(ts|tsx|js)$/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              logLevel: 'info',
+              onlyCompileBundledFiles: true, // Skip parsing tests, etc.
+            },
+          },
+        ],
+      },
+      {
+        enforce: 'pre',
+        test: /\.(ts|tsx)$/,
+        use: 'source-map-loader',
       },
     ],
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
-    modules: [__dirname, 'node_modules'],
+    extensions: ['.js', '.json', '.ts', '.tsx'],
   },
   externals: Object.keys(peerDependencies),
 };

@@ -46,7 +46,7 @@ import Task from './Task';
 
 const TaskList = ({ store }) => (
   <div>
-    {store.tasks.map(task => (
+    {store.tasks.map((task) => (
       <Task key={task.id} task={task} />
     ))}
 
@@ -67,10 +67,11 @@ const TaskList = ({ store }) => (
 export default collect(TaskList);
 ```
 
-Recollect will:
+When you wrap a component in `collect`, Recollect will:
 
 - Provide a store object as a prop
-- Collect information about what data the component needs to render
+- Collect information about what data the component needs to render (which parts
+  of the store it reads from).
 - When any of that data changes, Recollect will instruct React to re-render the
   component.
 
@@ -86,8 +87,7 @@ above, access it as a prop in a component wrapped in `collect`.
 You don't need to 'create' or 'initialize' this store, it's just there, ready
 when you are.
 
-And you can treat the `store` object just like you'd treat any JavaScript
-object.
+You can treat the `store` object just like you'd treat any JavaScript object.
 
 ```js
 import { store } from 'react-recollect';
@@ -107,11 +107,6 @@ store = 'tasks'; // NOPE! (Can't reassign a constant)
 
 Recollect is always watching and it knows which components need what data from
 the store, so it will trigger updates accordingly.
-
-**Note:** when referring to the store **within a component**, it's important
-that you use the `store` object passed in as a prop, not the `store` imported
-from `react-recollect`. The reason for this is super-interesting and described
-in great detail below.
 
 ---
 
@@ -143,8 +138,9 @@ Go have a play, and when you're ready for more readme, come back to read on ...
     - [Loading data with an updater](#loading-data-with-an-updater)
     - [Asynchronous updaters](#asynchronous-updaters)
     - [Testing an updater](#testing-an-updater)
-- [Questions](#questions)
+- [FAQ](#faq)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
+    - [Gotchas with Maps and Sets](#gotchas-with-maps-and-sets)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Will component state still work?](#will-component-state-still-work)
   - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
@@ -152,8 +148,9 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
   - [Tell me about your tests](#tell-me-about-your-tests)
-  - [How big is it?](#how-big-it-it)
+  - [How big is it?](#how-big-is-it)
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
@@ -161,7 +158,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 ## API
 
 In addition to [`connect`](#the-collect-function) and
-[`store`](#the-store-object) above ...
+[`store`](#the-store-object) above, Recollect has three more functions.
 
 ### The `afterChange` function
 
@@ -172,7 +169,7 @@ following (anywhere in your app).
 ```js
 import { afterChange } from 'react-recollect';
 
-afterChange(e => {
+afterChange((e) => {
   localStorage.siteData = JSON.stringify(e.store);
 });
 ```
@@ -201,7 +198,7 @@ window.TIME_TRAVEL = {
     const e = thePast.pop();
     theFuture.push(e);
 
-    e.renderedComponents.forEach(component => {
+    e.renderedComponents.forEach((component) => {
       component.update(e.prevStore);
     });
   },
@@ -211,13 +208,13 @@ window.TIME_TRAVEL = {
     const e = theFuture.pop();
     thePast.push(e);
 
-    e.renderedComponents.forEach(component => {
+    e.renderedComponents.forEach((component) => {
       component.update(e.store);
     });
   },
 };
 
-afterChange(e => {
+afterChange((e) => {
   if (e.renderedComponents.length) thePast.push(e);
 });
 ```
@@ -231,7 +228,7 @@ guaranteed that components will only be updated after all updates are made.
 import { batch } from 'react-recollect';
 
 const fetchData = async () => {
-  const { posts, users, meta } = await fetch('/api').then(response =>
+  const { posts, users, meta } = await fetch('/api').then((response) =>
     response.json()
   );
 
@@ -337,61 +334,16 @@ applicable, and will fire `afterChange`.
 
 ### Passing a ref to a collected component
 
-The `collect` function takes a second parameter — an options object with one
-property: `forwardRef`. When you supply this property, you will be able to
-provide a `ref` to the wrapped component, which will be made available on that
-component as `props.forwardedRef`.
-
-The component that you're wrapping in `collect` would then look like this:
-
-```jsx
-const MyInput = props => (
-  <label>
-    My input
-    <input ref={props.forwardedRef} />
-  </label>
-);
-
-export default collect(MyComponent, { forwardRef: true });
-```
-
-And passing it a ref would look the same as passing a ref to any other component
-
-```jsx
-class MyParentComponent extends Component {
-  constructor(props) {
-    super(props);
-
-    this.inputRef = React.createRef();
-  }
-
-  render() {
-    return (
-      <div>
-        <MyInput ref={this.inputRef} />
-
-        <button
-          onClick={() => {
-            this.inputRef.current.focus();
-          }}
-        >
-          Focus the input for some reason
-        </button>
-      </div>
-    );
-  }
-}
-```
-
-You can forward a ref to class-based components or functional components.
+Refs just work, as long as you don't use the reserved name "ref" (React strips
+this out). You can use something like `inputRef` instead. For an example, see
+[this test](./tests/integration/forwardRefFc.test.tsx)
 
 ### Peeking into Recollect's innards
 
 Some neat things are exposed on `window.__RR__` for tinkering in the console.
 
-- Use `__RR__.debugOn()` to turn on debugging. You can combine this with
-  Chrome's console filtering, for example to only see 'UPDATE' or 'SET' events.
-  Who needs professional, well made dev tools extensions!
+- Use `__RR__.debugOn()` to turn on debugging. Note that this can have a
+  negative impact on performance if you're reading a _lot_ of data.
 - Type `__RR__.debugOff()` and see what happens
 - `__RR__.internals` returns all sorts of interesting things. Including a live
   reference to the store. For example, typing
@@ -421,17 +373,34 @@ Put this in a declarations file such as `src/types/RecollectStore.ts`.
 Components wrapped in `collect` must define `store` in `props` - use the
 `WithStoreProp` interface for this:
 
-```ts
+```tsx
 import { collect, WithStoreProp } from 'react-recollect';
 
 interface Props extends WithStoreProp {
   someComponentProp: string;
 }
-const TaskList: React.SFC<Props> = ({ store, someComponentProp }) => (
+
+const MyComponent = ({ store, someComponentProp }: Props) => (
   // < your awesome JSX here>
 );
+
 export default collect(TaskList);
 ```
+
+If the only prop your component needs is `store`, you can use `WithStoreProp`
+directly.
+
+```tsx
+const MyComponent = ({ store }: WithStoreProp) => <div>Hello {store.name}</div>;
+```
+
+Recollect is written in TypeScript, so you can check out the
+[integration tests](./tests/integration) if you're not sure how to implement
+something.
+
+(If you've got Mad TypeScript Skillz and would like to contribute, see if you
+can work out how to resolve the `@ts-ignore` in
+[the collect module](./src/collect.tsx)).
 
 # How Recollect works
 
@@ -590,10 +559,12 @@ A simple case for a selector would be to return all incomplete tasks, sorted by
 due date.
 
 ```js
-export const getIncompleteTasksSortedByDueDate = store => {
+export const getIncompleteTasksSortedByDueDate = (store) => {
   const tasks = store.tasks.slice();
 
-  return tasks.sort((a, b) => a.dueDate - b.dueDate).filter(task => !task.done);
+  return tasks
+    .sort((a, b) => a.dueDate - b.dueDate)
+    .filter((task) => !task.done);
 };
 ```
 
@@ -611,7 +582,7 @@ const TaskList = ({ store }) => {
 
   return (
     <div>
-      {tasks.map(task => (
+      {tasks.map((task) => (
         <Task key={task.id} task={task} />
       ))}
     </div>
@@ -626,17 +597,17 @@ Let's create a second selector. And while we're at it, move repeated sorting
 code out into its own function:
 
 ```js
-const getTasksSortedByDate = tasks => {
+const getTasksSortedByDate = (tasks) => {
   const sortedTasks = tasks.slice();
 
   return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
 };
 
-export const getAllTasksSortedByDueDate = store =>
+export const getAllTasksSortedByDueDate = (store) =>
   getTasksSortedByDate(store.tasks);
 
-export const getIncompleteTasksSortedByDueDate = store =>
-  getTasksSortedByDate(store.tasks).filter(task => !task.done);
+export const getIncompleteTasksSortedByDueDate = (store) =>
+  getTasksSortedByDate(store.tasks).filter((task) => !task.done);
 ```
 
 And here's a more complex component with local state and a dropdown to show
@@ -658,13 +629,13 @@ class TaskList extends PureComponent {
 
     return (
       <div>
-        {tasks.map(task => (
+        {tasks.map((task) => (
           <Task key={task.id} task={task} />
         ))}
 
         <select
           value={this.state.filter}
-          onChange={e => {
+          onChange={(e) => {
             this.setState({ filter: e.target.value });
           }}
         >
@@ -688,7 +659,7 @@ interesting stuff happening here that's worth discussing.
 Do you remember when we did this?
 
 ```js
-const getTasksSortedByDate = tasks => {
+const getTasksSortedByDate = (tasks) => {
   const sortedTasks = tasks.slice();
 
   return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
@@ -737,7 +708,7 @@ A simple case for an updater would be to mark all tasks as done in a todo app:
 
 ```js
 export const markAllTasksAsDone = () => {
-  store.tasks.forEach(task => {
+  store.tasks.forEach((task) => {
     task.done = true;
   });
 };
@@ -900,26 +871,31 @@ test('loadTasksFromServer should update the store', async () => {
 });
 ```
 
-# Questions
+# FAQ
 
 ## What sort of stuff can go in the store?
 
 Data. Anything JSON serializable, plus `Map`, `Set` and `undefined`.
 
-Beware there is only partial support for `Set`; updating a reference to an
-object in a set will not always trigger a render of components using that
-object.
-
 Things that aren't supported:
 
 - functions (e.g. getters, setters, or other methods)
 - properties defined with `Object.defineProperty()`
+- string properties on arrays, Maps and Sets
 - `RegExp` objects
 - `Date` objects (I'm working on this)
 - `Proxy`, `Uint16Array` etc.
-- `Symbol` (why you gotta be so fancy?)
 - linking (e.g. one item in the store that is just a reference to another item
   in the store)
+
+### Gotchas with Maps and Sets
+
+Updating an object _key_ of a map entry will not always trigger a render of
+components using that object. But in most cases you'd be storing your data in
+the _value_ of a map entry, and that works fine.
+
+Similarly, updating an object in a set may not trigger an update to components
+using that object (adding/removing items from a set works fine).
 
 ## Can I use this with class-based components and functional components?
 
@@ -968,15 +944,37 @@ anywhere and at any time.
 
 ## Can I have multiple stores?
 
-You don't want multiple stores :)
+No, but you don't want multiple stores anyway :)
 
 There is no performance improvement to be had, so the desire for multiple stores
 is just an organizational preference. And objects already have a mechanism to
 organize their contents: 'properties'.
 
+## I'm getting a `no-param-reassign` ESLint error
+
+You can add 'store' as a special case in your ESLint config so that the rule
+allows you to mutate the properties of store.
+
+```json
+{
+  "rules": {
+    "no-param-reassign": [
+      "error",
+      {
+        "props": true,
+        "ignorePropertyModificationsFor": ["store"]
+      }
+    ]
+  }
+}
+```
+
+Check out the `no-param-reassign` rule in this repo's
+[eslint config](./.eslintrc.json) for the syntax.
+
 ## Tell me about your tests
 
-In the `/tests` directory you'll find:
+In the [tests](./tests) directory you'll find:
 
 - Unit tests that test the behaviour of the store directly
 - Integration tests that simulate a user interacting with React components that
@@ -987,13 +985,12 @@ In the `/tests` directory you'll find:
 
 It's about 4 KB. If you were to replace `redux`, `redux-thunk`, and
 `react-redux` with this library, you'd shed a bit over 2 KB. But if you've got a
-decent sized app you'll save much more than that just by getting rid of all your
+decent sized app the real size reduction comes from getting rid of all your
 reducers.
 
 # Dependencies
 
-Recollect has a peer dependency of React, and needs at least version 15.3 (when
-`PureComponent` was released).
+Recollect has a peer dependency of React `>=15.3`.
 
 # Alternatives
 
@@ -1005,9 +1002,7 @@ If you want a walk down memory lane, use Flux.
 
 Also there is a library that is very similar to this one (I didn't copy,
 promise) called
-[`react-easy-state`](https://github.com/solkimicreb/react-easy-state). It's more
-mature than this library, but _slightly_ more complex and has external
-dependencies.
+[`react-easy-state`](https://github.com/solkimicreb/react-easy-state).
 
 # Is it really OK to drop support for IE?
 
@@ -1015,8 +1010,8 @@ Sure, why not! Imagine: all that time you spend getting stuff to work for a few
 users in crappy old browsers could instead be spent making awesome new features
 for the vast majority of your users.
 
-For inspiration, these brave websites have dropped the hammer and now show a
-message saying they don't support IE:
+For inspiration, these brave websites have dropped the hammer and dropped
+support for IE:
 
 - GitHub (owned by Microsoft!)
 - devdocs.io
