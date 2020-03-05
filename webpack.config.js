@@ -10,6 +10,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     library: 'ReactRecollect',
     libraryTarget: 'umd',
+    globalObject: 'this',
   },
   module: {
     rules: [

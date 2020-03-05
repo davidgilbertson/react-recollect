@@ -32,7 +32,6 @@ export type AfterChangeEvent = {
 
 export type State = {
   currentComponent: CollectorComponent | null;
-  isInBrowser: boolean;
   isBatchUpdating: boolean;
   listeners: Map<string, Set<CollectorComponent>>;
   manualListeners: ((e: AfterChangeEvent) => void)[];

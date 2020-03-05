@@ -42,7 +42,6 @@ const addListener = (propPath: PropPath) => {
  */
 const isGettingPropOutsideOfRenderCycle = (prop: any) =>
   !state.currentComponent &&
-  state.isInBrowser &&
   !utils.isSymbol(prop) &&
   prop !== 'constructor' &&
   !state.proxyIsMuted;
@@ -95,7 +94,6 @@ export const getHandlerForObject = <T extends Target>(
         // continue on even if !state.currentComponent
         if (
           state.proxyIsMuted ||
-          !state.isInBrowser ||
           utils.isSymbol(prop) ||
           prop === 'constructor' ||
           prop === 'toJSON'
@@ -247,7 +245,6 @@ export const getHandlerForObject = <T extends Target>(
       // isn't triggered in an infinite loop
       if (
         !state.proxyIsMuted &&
-        state.isInBrowser &&
         !state.currentComponent &&
         !utils.isSymbol(prop) &&
         prop !== 'constructor'
@@ -306,7 +303,7 @@ export const getHandlerForObject = <T extends Target>(
       // @ts-ignore - target[prop] is fine
       if (prop !== 'length' && target[prop] === value) return true;
 
-      if (state.proxyIsMuted || !state.isInBrowser) {
+      if (state.proxyIsMuted) {
         return Reflect.set(target, prop, value);
       }
 
@@ -325,7 +322,7 @@ export const getHandlerForObject = <T extends Target>(
     },
 
     deleteProperty(target, prop) {
-      if (state.proxyIsMuted || !state.isInBrowser) {
+      if (state.proxyIsMuted) {
         return Reflect.deleteProperty(target, prop);
       }
 
