@@ -1,7 +1,16 @@
 {
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "extends": [
-    "airbnb",
+    "airbnb-typescript",
     "plugin:prettier/recommended",
+    "prettier/@typescript-eslint",
     "prettier/react"
   ],
   "env": {
@@ -10,11 +19,10 @@
     "jest": true,
     "es2020": false
   },
-  "settings": {
-    "import/resolver": "webpack"
-  },
   "rules": {
-    "no-plusplus": "off",
+    "import/no-cycle": "off",
+    "import/prefer-default-export": "off",
+    "jsx-a11y/label-has-associated-control": "off",
     "no-console": [
       "error",
       {
@@ -30,6 +38,17 @@
         ]
       }
     ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": true,
+        "ignorePropertyModificationsFor": [
+          "mutableTarget",
+          "store"
+        ]
+      }
+    ],
+    "no-plusplus": "off",
     "no-underscore-dangle": [
       "error",
       {
@@ -41,20 +60,11 @@
         ]
       }
     ],
-    "import/no-cycle": "off",
-    "no-param-reassign": [
-      "error",
-      {
-        "props": true,
-        "ignorePropertyModificationsFor": [
-          "mutableTarget",
-          "store"
-        ]
-      }
-    ],
-    "jsx-a11y/label-has-associated-control": "off",
+    "react/button-has-type": "off",
     "react/destructuring-assignment": "off",
     "react/jsx-props-no-spreading": "off",
-    "react/button-has-type": "off"
+    "react/prop-types": "off",
+    "react/state-in-constructor": ["error", "never"],
+    "react/static-property-placement": ["error" ,"static public field"]
   }
 }
