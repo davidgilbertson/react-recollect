@@ -20,7 +20,6 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              logLevel: 'info',
               onlyCompileBundledFiles: true, // Skip parsing tests, etc.
             },
           },
