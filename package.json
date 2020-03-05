@@ -28,7 +28,7 @@
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx",
     "test": "jest --watchAll",
     "test:ci": "jest --ci",
-    "prepublish": "npm run checkall",
+    "prepare": "npm run checkall",
     "preversion": "npm run checkall"
   },
   "dependencies": {
