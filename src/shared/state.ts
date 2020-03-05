@@ -6,7 +6,6 @@ import { State } from './types';
  */
 const state: State = {
   currentComponent: null,
-  isInBrowser: typeof window !== 'undefined',
   listeners: new Map(),
   manualListeners: [],
   nextStore: {},

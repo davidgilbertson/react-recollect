@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Simple state management for react",
   "keywords": [
     "flux",
@@ -26,8 +26,9 @@
     "build:watch": "webpack --watch --mode=\"development\"",
     "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx",
-    "test": "jest --watchAll",
-    "test:ci": "jest --ci",
+    "nodeTest": "node ./tests/integration/nodeJs.js",
+    "test": "npm run nodeTest && jest --watchAll",
+    "test:ci": "npm run nodeTest && jest --ci",
     "prepare": "npm run checkall",
     "preversion": "npm run checkall"
   },
