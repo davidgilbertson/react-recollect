@@ -24,10 +24,12 @@
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch --mode=\"development\"",
+    "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx",
     "test": "jest --watchAll",
     "test:ci": "jest --ci",
-    "preversion": "npm run build && jest"
+    "prepublish": "npm run checkall",
+    "preversion": "npm run checkall"
   },
   "dependencies": {
     "hoist-non-react-statics": "^3.3.2"
