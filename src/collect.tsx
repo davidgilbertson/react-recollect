@@ -6,6 +6,8 @@ import { debug } from './shared/debug';
 import { CollectorComponent, Store, WithStoreProp } from './shared/types';
 
 const startRecordingGetsForComponent = (component: CollectorComponent) => {
+  if (!state.isInBrowser) return;
+
   removeListenersForComponent(component);
 
   debug(() => {
@@ -16,6 +18,8 @@ const startRecordingGetsForComponent = (component: CollectorComponent) => {
 };
 
 const stopRecordingGetsForComponent = () => {
+  if (!state.isInBrowser) return;
+
   debug(() => {
     console.groupEnd();
   });

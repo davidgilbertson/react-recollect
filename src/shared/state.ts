@@ -6,11 +6,12 @@ import { State } from './types';
  */
 const state: State = {
   currentComponent: null,
+  isBatchUpdating: false,
+  isInBrowser: typeof window !== 'undefined',
   listeners: new Map(),
   manualListeners: [],
   nextStore: {},
   proxyIsMuted: false,
-  isBatchUpdating: false,
   store: {},
 };
 
