@@ -269,7 +269,7 @@ const app = express();
 
 // Read the HTML template on start up (this is the create-react-app output)
 const htmlTemplate = fs.readFileSync(
-  path.resolve(__dirname, '../../build/index.html'),
+  path.resolve(__dirname, './index.html'),
   'utf8'
 );
 
