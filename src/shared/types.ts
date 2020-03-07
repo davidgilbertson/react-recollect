@@ -33,6 +33,7 @@ export type AfterChangeEvent = {
 export type State = {
   currentComponent: CollectorComponent | null;
   isBatchUpdating: boolean;
+  isInBrowser: boolean;
   listeners: Map<string, Set<CollectorComponent>>;
   manualListeners: ((e: AfterChangeEvent) => void)[];
   nextStore: Store;
