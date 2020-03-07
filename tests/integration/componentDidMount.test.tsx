@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { expectToThrow } from '../testUtils';
+import { expectToLogError } from '../testUtils';
 import { collect, WithStoreProp } from '../../src';
 
 const TestComponentBad = collect(
@@ -43,7 +43,7 @@ const TestComponentGood = collect(
 );
 
 it('should fail if setting the state during mounting', () => {
-  expectToThrow(() => {
+  expectToLogError(() => {
     render(<TestComponentBad />);
   });
 });

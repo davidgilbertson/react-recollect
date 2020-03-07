@@ -1,11 +1,11 @@
 import React from 'react';
 import { store as globalStore, WithStoreProp } from '../../src';
-import { collectAndRender, expectToThrow } from '../testUtils';
+import { collectAndRender, expectToLogError } from '../testUtils';
 
 it('should throw an error if I read from the wrong store', () => {
   globalStore.meta = { title: 'Hello' };
 
-  expectToThrow(() => {
+  expectToLogError(() => {
     collectAndRender(({ store }: WithStoreProp) => (
       <div>
         <p>{`${store.meta.title} from the store`}</p>
