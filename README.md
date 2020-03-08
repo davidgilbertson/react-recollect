@@ -249,14 +249,14 @@ in the console how often your components are being rendered, and why.
 
 ### The `initStore` function
 
-When you're only using Recollect in the browser, you don't need to 'create' or
-'initialize' the store.
+The `initStore` function will *replace* the contents of the store with the object
+you pass in. If you don't pass anything, it will empty the store.
+
+If you're only using Recollect in the browser, you probably won't need to use this.
 
 When you render on the server though, you _do_ need to initialize the store,
 because unlike a browser, a server is shared between many users and state needs
 to be fresh for each request.
-
-Enter the `initStore` function, which you use on the server and in the browser.
 
 #### On the server
 
