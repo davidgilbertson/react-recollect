@@ -12,16 +12,18 @@ export const collectAndRender = (Comp: React.ComponentType<any>) => {
 export const propPathChanges = (handleChangeMock: jest.Mock) =>
   handleChangeMock.mock.calls.map((call) => call[0].changedProps[0]);
 
-export const expectToThrow = (func: () => void) => {
+export const expectToLogError = (func: () => void) => {
   // Even though the error is caught, it still gets printed to the console
   // so we mock that out to avoid the wall of red text.
   jest.spyOn(console, 'error');
-  const mockedConsole = mocked(console.error, true);
-  mockedConsole.mockImplementation(() => {});
+  const mockedConsoleError = mocked(console.error, true);
+  mockedConsoleError.mockImplementation(() => {});
 
-  expect(func).toThrow();
+  func();
 
-  mockedConsole.mockRestore();
+  expect(mockedConsoleError).toHaveBeenCalled();
+
+  mockedConsoleError.mockRestore();
 };
 
 export type TaskType = {

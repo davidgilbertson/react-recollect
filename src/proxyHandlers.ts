@@ -226,10 +226,12 @@ export const getHandlerForObject = <T extends Target>(
   return {
     get(target, prop) {
       if (IS_PREV_STORE in target && state.currentComponent) {
-        throw Error(
-          `You are trying to read "${prop.toString()}" from the global store 
-          while rendering a component. This could result in subtle bugs. 
-          Instead, read from the store object passed as a prop to your component.`
+        console.error(
+          [
+            `You are trying to read "${prop.toString()}" from the global store `,
+            `while rendering a component. This could result in subtle bugs. `,
+            `Instead, read from the store object passed as a prop to your component.`,
+          ].join('')
         );
       }
 
@@ -286,12 +288,15 @@ export const getHandlerForObject = <T extends Target>(
 
     set(target, prop, value) {
       if (state.currentComponent) {
-        throw Error(
-          `You are modifying the store during a render cycle. Don't do this.
-          You're setting "${prop.toString()}" to "${value}" somewhere; check the stack 
-          trace below.
-          If you're changing the store in componentDidMount, wrap your code in a
-          setTimeout() to allow the render cycle to complete before changing the store.`
+        console.error(
+          [
+            `You are attempting to modify the store during a render cycle. `,
+            `(You're setting "${prop.toString()}" to "${value}" somewhere)\n`,
+            `This could result in subtle bugs. `,
+            `If you're changing the store in componentDidMount, wrap your `,
+            `code in a setTimeout() to allow the render cycle to complete `,
+            `before changing the store.`,
+          ].join('')
         );
       }
 
