@@ -1,4 +1,4 @@
-import { debug } from './shared/debug';
+import { logUpdate } from './shared/debug';
 import state from './shared/state';
 import * as paths from './shared/paths';
 import * as utils from './shared/utils';
@@ -28,11 +28,7 @@ const flushUpdates = () => {
   queue.timeoutPending = false;
 
   queue.components.forEach((propsUpdated, component) => {
-    debug(() => {
-      console.groupCollapsed(`UPDATE:  <${component._name}>`);
-      console.info('Changed properties:', Array.from(propsUpdated));
-      console.groupEnd();
-    });
+    logUpdate(component, Array.from(propsUpdated));
 
     component.update();
   });
@@ -50,7 +46,6 @@ const flushUpdates = () => {
   queue.changedPaths.clear();
 
   state.proxyIsMuted = true;
-  // TODO (davidg): rename to prevStore/store
   utils.replaceObject(state.store, state.nextStore);
   state.proxyIsMuted = false;
 };
