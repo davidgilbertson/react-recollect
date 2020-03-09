@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Simple state management for react",
   "keywords": [
     "flux",
