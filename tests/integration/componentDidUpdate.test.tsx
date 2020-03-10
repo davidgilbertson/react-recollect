@@ -1,48 +1,125 @@
+// eslint-disable-next-line max-classes-per-file
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
-import { collect, store, WithStoreProp } from '../../src';
+import { collect, store as globalStore, WithStoreProp } from '../../src';
 
 interface Props extends WithStoreProp {
-  fetchData: () => {};
+  reportUserChange: (comp: string, prev: number, next: number) => {};
 }
 
-class RawClassComponent extends Component<Props> {
-  componentDidUpdate(prevProps: Props) {
-    if (this.props.store.userId !== prevProps.store.userId) {
-      this.props.fetchData();
+// This test has multiple collected components to test a specific scenario
+// https://github.com/davidgilbertson/react-recollect/issues/82
+
+const LevelTwo = collect(
+  class LevelTwoRaw extends Component<Props> {
+    componentDidUpdate(prevProps: Props) {
+      this.props.reportUserChange(
+        'LevelTwo',
+        prevProps.store.userId,
+        this.props.store.userId
+      );
+    }
+
+    render() {
+      return <p>User ID: {this.props.store.userId}</p>;
     }
   }
+);
 
-  render() {
-    return (
-      <div>
-        <p>User ID: {this.props.store.userId}</p>
-        <button
-          onClick={() => {
-            this.props.store.userId++;
-          }}
-        >
-          Switch user
-        </button>
-      </div>
-    );
+const LevelOneA = collect(
+  class LevelOneARaw extends Component<Props> {
+    componentDidUpdate(prevProps: Props) {
+      this.props.reportUserChange(
+        'LevelOneA',
+        prevProps.store.userId,
+        this.props.store.userId
+      );
+    }
+
+    render() {
+      return (
+        <div>
+          <p>User ID: {this.props.store.userId}</p>
+
+          <LevelTwo {...this.props} />
+        </div>
+      );
+    }
   }
-}
+);
 
-const ClassComponent = collect(RawClassComponent);
+const LevelOneB = collect(
+  class LevelOneBRaw extends Component<Props> {
+    componentDidUpdate(prevProps: Props) {
+      this.props.reportUserChange(
+        'LevelOneB',
+        prevProps.store.userId,
+        this.props.store.userId
+      );
+    }
 
-const fetchData = jest.fn();
+    render() {
+      return <p>User ID: {this.props.store.userId}</p>;
+    }
+  }
+);
+
+const ParentComponent = collect(
+  class ParentComponentRaw extends Component<Props> {
+    componentDidUpdate(prevProps: Props) {
+      this.props.reportUserChange(
+        'ParentComponentRaw',
+        prevProps.store.userId,
+        this.props.store.userId
+      );
+    }
+
+    render() {
+      return (
+        <div>
+          <p>User ID: {this.props.store.userId}</p>
+          <button
+            onClick={() => {
+              this.props.store.userId++;
+            }}
+          >
+            Switch user
+          </button>
+
+          <LevelOneA {...this.props} />
+          <LevelOneB {...this.props} />
+        </div>
+      );
+    }
+  }
+);
+
+const reportUserChange = jest.fn();
 
 it('should handle a change in a value', () => {
-  store.userId = 1;
+  globalStore.userId = 1;
 
-  const { getByText } = render(<ClassComponent fetchData={fetchData} />);
+  const { getByText } = render(
+    <ParentComponent
+      reportUserChange={reportUserChange}
+    />
+  );
 
-  expect(fetchData).toHaveBeenCalledTimes(0);
+  expect(reportUserChange).toHaveBeenCalledTimes(0);
 
   getByText('Switch user').click();
 
-  expect(fetchData).toHaveBeenCalledTimes(1);
+  expect(reportUserChange).toHaveBeenCalledTimes(4);
+
+  expect(reportUserChange).toHaveBeenNthCalledWith(1, 'LevelTwo', 1, 2);
+  expect(reportUserChange).toHaveBeenNthCalledWith(2, 'LevelOneA', 1, 2);
+  expect(reportUserChange).toHaveBeenNthCalledWith(3, 'LevelOneB', 1, 2);
+  expect(reportUserChange).toHaveBeenNthCalledWith(
+    4,
+    'ParentComponentRaw',
+    1,
+    2
+  );
 });
 
 // it should listen for changes on props not called in the render() method.

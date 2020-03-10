@@ -1,5 +1,5 @@
 import { getFromNextStore, updateInNextStore } from './store';
-import { debug } from './shared/debug';
+import { logGet, logSet, logDelete } from './shared/debug';
 import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
@@ -32,46 +32,6 @@ const addListener = (propPath: PropPath) => {
   const components = state.listeners.get(pathString) || new Set();
   components.add(state.currentComponent);
   state.listeners.set(pathString, components);
-};
-
-/**
- * Is this an attempt to get something from the store outside the render cycle?
- * This might be store.tasks.push() in a click event right after doing store.tasks = []
- * In this case, we should always return from nextStore.
- * @see setStoreTwiceInOnClick.test.js
- */
-const isGettingPropOutsideOfRenderCycle = (prop: any) =>
-  !state.currentComponent &&
-  !utils.isSymbol(prop) &&
-  prop !== 'constructor' &&
-  !state.proxyIsMuted;
-
-const logSet = (target: Target, prop: any, value?: any) => {
-  debug(() => {
-    console.groupCollapsed(`SET: ${paths.extendToUserString(target, prop)}`);
-    console.info('From:', utils.getValue(target, prop));
-    console.info('To:  ', value);
-    console.groupEnd();
-  });
-};
-
-const logGet = (target: Target, prop?: any, value?: any) => {
-  debug(() => {
-    console.groupCollapsed(`GET: ${paths.extendToUserString(target, prop)}`);
-    console.info(`Component: <${state.currentComponent!._name}>`);
-    if (typeof value !== 'undefined') {
-      console.info('Value:', value);
-    }
-    console.groupEnd();
-  });
-};
-
-const logDelete = (target: Target, prop: any) => {
-  debug(() => {
-    console.groupCollapsed(`DELETE: ${paths.extendToUserString(target, prop)}`);
-    console.info('Property: ', paths.extendToUserString(target, prop));
-    console.groupEnd();
-  });
 };
 
 /**
@@ -214,7 +174,16 @@ export const getHandlerForObject = <T extends Target>(
         }
 
         // TODO (davidg): does 'size' need to be below this? Would I be getting the wrong size?
-        if (isGettingPropOutsideOfRenderCycle(prop)) {
+        // Is this an attempt to get something from the store outside the
+        // render cycle? This might be store.tasks.push() in a click event
+        // right after `doing store.tasks = []`
+        // In this case, we should always return from nextStore.
+        // See setStoreTwiceInOnClick.test.js
+        if (
+          !utils.isSymbol(prop) &&
+          prop !== 'constructor' &&
+          !state.proxyIsMuted
+        ) {
           return getFromNextStore(target, prop);
         }
 

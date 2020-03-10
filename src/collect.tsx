@@ -5,6 +5,10 @@ import state from './shared/state';
 import { debug } from './shared/debug';
 import { CollectorComponent, Store, WithStoreProp } from './shared/types';
 
+// As we render down into a tree of collected components, we will start/stop
+// recording
+const componentStack: CollectorComponent[] = [];
+
 const startRecordingGetsForComponent = (component: CollectorComponent) => {
   if (!state.isInBrowser) return;
 
@@ -15,6 +19,7 @@ const startRecordingGetsForComponent = (component: CollectorComponent) => {
   });
 
   state.currentComponent = component;
+  componentStack.push(state.currentComponent);
 };
 
 const stopRecordingGetsForComponent = () => {
@@ -24,7 +29,8 @@ const stopRecordingGetsForComponent = () => {
     console.groupEnd();
   });
 
-  state.currentComponent = null;
+  componentStack.pop();
+  state.currentComponent = componentStack[componentStack.length - 1] || null;
 };
 
 type RemoveStore<T> = Pick<T, Exclude<keyof T, keyof WithStoreProp>>;
