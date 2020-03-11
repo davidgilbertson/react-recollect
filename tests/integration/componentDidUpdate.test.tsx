@@ -1,7 +1,8 @@
-// eslint-disable-next-line max-classes-per-file
-import React, { Component } from 'react';
-import { render } from '@testing-library/react';
+/* eslint-disable max-classes-per-file */
+import React, { Component, useEffect } from 'react';
+import { render, wait } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 interface Props extends WithStoreProp {
   reportUserChange: (comp: string, prev: number, next: number) => {};
@@ -100,9 +101,7 @@ it('should handle a change in a value', () => {
   globalStore.userId = 1;
 
   const { getByText } = render(
-    <ParentComponent
-      reportUserChange={reportUserChange}
-    />
+    <ParentComponent reportUserChange={reportUserChange} />
   );
 
   expect(reportUserChange).toHaveBeenCalledTimes(0);
@@ -122,9 +121,52 @@ it('should handle a change in a value', () => {
   );
 });
 
-// it should listen for changes on props not called in the render() method.
-// for example, if this.props.store.userId is read in componentDidUpdate but not in render()
-// then currently it won't be subscribed to changes.
-// I have no idea how to do this.
-// Oh, can I wrap a component in a proxy, then call all it's lifecycle methods and catch the reads
-// of the store?
+it('should re-render on a hidden prop read (FAILS)', () => {
+  const sideEffectMock = jest.fn();
+  globalStore.loaded = false;
+
+  testUtils.collectAndRender(
+    class extends Component<WithStoreProp> {
+      componentDidUpdate(prevProps: Readonly<WithStoreProp>) {
+        if (!prevProps.store.loaded && this.props.store.loaded) {
+          sideEffectMock('I loaded!');
+        }
+      }
+
+      render() {
+        return <h1>Hello</h1>;
+      }
+    }
+  );
+
+  globalStore.loaded = true;
+
+  // Note: this logically should have been called, but this demonstrates an
+  // issue with Recollect: https://github.com/davidgilbertson/react-recollect/issues/85
+  expect(sideEffectMock).toHaveBeenCalledTimes(0); // Should be 1!
+  // The test below this one uses hooks and behaves as expected
+});
+
+it('should re-render on a hidden prop read with hooks', async () => {
+  const sideEffectMock = jest.fn();
+  globalStore.loaded = false;
+
+  testUtils.collectAndRender(({ store }: WithStoreProp) => {
+    useEffect(() => {
+      if (store.loaded) {
+        sideEffectMock('I loaded!');
+      }
+    }, [store.loaded]);
+
+    return <h1>Hello</h1>;
+  });
+
+  expect(sideEffectMock).toHaveBeenCalledTimes(0);
+
+  globalStore.loaded = true;
+
+  await wait();
+
+  expect(sideEffectMock).toHaveBeenCalledTimes(1);
+  expect(sideEffectMock).toHaveBeenCalledWith('I loaded!');
+});
