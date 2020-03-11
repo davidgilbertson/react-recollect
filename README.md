@@ -117,14 +117,18 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 
 # Advanced usage
 
-- [Advanced usage](#advanced-usage)
-  - [The `afterChange` function](#the-afterchange-function)
-  - [The `batch` function](#the-batch-function)
-  - [The `initStore` function](#the-initstore-function)
-    - [On the server](#on-the-server)
-    - [In the browser](#in-the-browser)
-  - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
-  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+  - [API](#api)
+    - [The `afterChange` function](#the-afterchange-function)
+    - [The `batch` function](#the-batch-function)
+    - [The `initStore` function](#the-initstore-function)
+      - [On the server](#on-the-server)
+      - [In the browser](#in-the-browser)
+    - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
+    - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
   - [Usage with TypeScript](#usage-with-typescript)
     - [Your store](#your-store)
     - [Using collect](#using-collect)
@@ -142,10 +146,12 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
     - [Gotchas with Maps and Sets](#gotchas-with-maps-and-sets)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
+  - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
   - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
-  - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
+  - [Why isn't my `componentDidUpdate` code firing?](#why-isnt-my-componentdidupdate-code-firing)
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
+  - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
   - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
@@ -154,6 +160,8 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## API
 
@@ -249,10 +257,11 @@ in the console how often your components are being rendered, and why.
 
 ### The `initStore` function
 
-The `initStore` function will *replace* the contents of the store with the object
-you pass in. If you don't pass anything, it will empty the store.
+The `initStore` function will _replace_ the contents of the store with the
+object you pass in. If you don't pass anything, it will empty the store.
 
-If you're only using Recollect in the browser, you probably won't need to use this.
+If you're only using Recollect in the browser, you don't _need_ to use this, but
+it's handy to set the default state of your store.
 
 When you render on the server though, you _do_ need to initialize the store,
 because unlike a browser, a server is shared between many users and state needs
@@ -901,20 +910,33 @@ using that object (adding/removing items from a set works fine).
 
 Yep and yep.
 
+## Hooks?
+
+Yep.
+
 ## Will component state still work?
 
 Yep. Recollect has no effect on state and the updates triggered as a result of
-calling `this.setState`.
+calling `this.setState` or changes via `useState`.
 
 ## Do lifecycle methods still fire?
 
 Yep. Recollect has no effect on `componentDidMount`, `componentDidUpdate` and
 friends.
 
-## Can I wrap a `PureComponent` or `React.memo` in `collect`?
+## Why isn't my `componentDidUpdate` code firing?
 
-The `collect` function wraps your component in a `PureComponent` and there's no
-point in having two of them.
+If you have a store prop that you _only_ refer to in `componentDidUpdate` (e.g.
+`store.loaded`), then your component won't be subscribed to changes in that
+prop. So when `store.loaded` changes, your component might not be updated.
+
+Issue: https://github.com/davidgilbertson/react-recollect/issues/85
+
+There are two workarounds:
+
+1. Use React's `useEffect` hook (React 16.8+). See
+   [these tests](./tests/integration/componentDidUpdate.test.tsx)
+2. Pass in `loaded` as a prop from the parent component.
 
 ## Can I use this with `shouldComponentUpdate()`?
 
@@ -933,6 +955,16 @@ So, if you're using `shouldComponentUpdate` for _performance_ reasons, then you
 don't need it anymore. If the `shouldComponentUpdate` method is executing, it's
 because Recollect has _told_ React to update the component, which means a value
 that it needs to render has changed.
+
+## Can I wrap a `PureComponent` or `React.memo` in `collect`?
+
+There's no need. The `collect` function wraps your component in a
+`PureComponent` and there's no benefit to having two of them.
+
+But it's generally a good idea to wrap other components in `PureComponent` or
+`React.memo` - especially components that are rendered in an array, like
+`<Todo>`. If you have a hundred todos, and add one to the list, you can skip a
+render for all the existing `<Todo>` components if they're marked as pure.
 
 ## Can I use this with `Context`?
 
