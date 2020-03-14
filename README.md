@@ -120,18 +120,17 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
-  - [API](#api)
-    - [The `afterChange` function](#the-afterchange-function)
-    - [The `batch` function](#the-batch-function)
-    - [The `initStore` function](#the-initstore-function)
-      - [On the server](#on-the-server)
-      - [In the browser](#in-the-browser)
-    - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
-    - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
-  - [Usage with TypeScript](#usage-with-typescript)
-    - [Your store](#your-store)
-    - [Using collect](#using-collect)
+- [API](#api)
+  - [The `afterChange` function](#the-afterchange-function)
+  - [The `batch` function](#the-batch-function)
+  - [The `initStore` function](#the-initstore-function)
+    - [On the server](#on-the-server)
+    - [In the browser](#in-the-browser)
+  - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
+  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+- [Usage with TypeScript](#usage-with-typescript)
+  - [Your store](#your-store)
+  - [Using collect](#using-collect)
 - [How Recollect works](#how-recollect-works)
 - [Project structure guidelines](#project-structure-guidelines)
   - [Concepts](#concepts)
@@ -149,11 +148,12 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
   - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
-  - [Why isn't my `componentDidUpdate` code firing?](#why-isnt-my-componentdidupdate-code-firing)
+    - [Why isn't my `componentDidUpdate` code firing?](#why-isnt-my-componentdidupdate-code-firing)
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
   - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [Can I use this without React?](#can-i-use-this-without-react)
   - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
   - [Tell me about your tests](#tell-me-about-your-tests)
   - [How big is it?](#how-big-is-it)
@@ -889,6 +889,7 @@ Data. Anything JSON serializable, plus `Map`, `Set` and `undefined`.
 Things that aren't supported:
 
 - functions (e.g. getters, setters, or other methods)
+- class instances (if this would be useful to you, log an issue and we'll chat)
 - properties defined with `Object.defineProperty()`
 - string properties on arrays, Maps and Sets
 - `RegExp` objects
@@ -924,7 +925,7 @@ calling `this.setState` or changes via `useState`.
 Yep. Recollect has no effect on `componentDidMount`, `componentDidUpdate` and
 friends.
 
-## Why isn't my `componentDidUpdate` code firing?
+### Why isn't my `componentDidUpdate` code firing?
 
 If you have a store prop that you _only_ refer to in `componentDidUpdate` (e.g.
 `store.loaded`), then your component won't be subscribed to changes in that
@@ -961,26 +962,29 @@ that it needs to render has changed.
 There's no need. The `collect` function wraps your component in a
 `PureComponent` and there's no benefit to having two of them.
 
-But it's generally a good idea to wrap other components in `PureComponent` or
-`React.memo` - especially components that are rendered in an array, like
-`<Todo>`. If you have a hundred todos, and add one to the list, you can skip a
-render for all the existing `<Todo>` components if they're marked as pure.
+It's a good idea to wrap _other_ components in `PureComponent` or `React.memo`
+though - especially components that are rendered in an array, like `<Todo>`. If
+you have a hundred todos, and add one to the list, you can skip a render for all
+the existing `<Todo>` components if they're marked as pure.
 
 ## Can I use this with `Context`?
 
-That's a wrong question.
+Yes. Recollect doesn't interfere with other libraries that use `Context`.
 
-Context is a way to share data across your components. You don't need this now
-that you have a global `store` object that you can read from and write to
-anywhere and at any time.
+You shouldn't need to use `Context` yourself though. You have a global
+`store` object that you can read from and write to anywhere.
 
 ## Can I have multiple stores?
 
-No, but you don't want multiple stores anyway :)
+No. There is no performance improvement to be had, so the desire for multiple
+stores is just an organizational preference. For this, you can use 'selectors'
+to focus on a subset of your store.
 
-There is no performance improvement to be had, so the desire for multiple stores
-is just an organizational preference. And objects already have a mechanism to
-organize their contents: 'properties'.
+## Can I use Recollect without React?
+
+Yes! You can use `store` without using `collect`. Pair this with `afterChange`
+to have an object that notifies you when its changed. For an example, check out
+[tests/integration/nodeJs.js](./tests/integration/nodeJs.js)
 
 ## I'm getting a `no-param-reassign` ESLint error
 

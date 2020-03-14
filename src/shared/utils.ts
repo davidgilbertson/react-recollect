@@ -1,4 +1,4 @@
-import { IS_PREV_STORE } from './constants';
+import { ORIGINAL } from './constants';
 import {
   ArrWithSymbols,
   MapWithSymbols,
@@ -7,6 +7,7 @@ import {
   SetWithSymbols,
   Target,
 } from './types';
+import state from './state';
 
 export const isPlainObject = (item: any): item is ObjWithSymbols =>
   !!item && typeof item === 'object' && item.constructor === Object;
@@ -131,12 +132,20 @@ export const replaceObject = (
   mutableTarget: ObjWithSymbols,
   nextObject?: ObjWithSymbols
 ) => {
+  const unproxiedTarget = mutableTarget[ORIGINAL];
+  // This `if` is because delete can't be called with undefined
+  if (unproxiedTarget) {
+    state.nextVersionMap.delete(unproxiedTarget);
+  }
+
   if (nextObject) {
     // From the new data, add to the old data anything that's new
     // (from the top level props only)
     Object.entries(nextObject).forEach(([prop, value]) => {
       if (mutableTarget[prop] !== value) {
         mutableTarget[prop] = value;
+        // TODO (davidg): do I need this? Do it elsewhere?
+        // state.nextVersionMap.delete(value);
       }
     });
 
@@ -152,10 +161,4 @@ export const replaceObject = (
       delete mutableTarget[prop];
     });
   }
-
-  // If the user is reading this object while a component is rendering,
-  // they're doing it wrong.
-  Object.defineProperty(mutableTarget, IS_PREV_STORE, {
-    value: true,
-  });
 };

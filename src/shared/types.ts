@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { IS_PREV_STORE, IS_PROXY, PATH_PATH_SYMBOL } from './constants';
+import { IS_GLOBAL_STORE, ORIGINAL, PATH } from './constants';
 
 /**
  * Define the shape of your store in your project - see README.md
@@ -24,8 +24,6 @@ export type AfterChangeEvent = {
   changedProps: string[];
   /** The store, after the change occurred */
   store: Store;
-  /** The store, before the change occurred */
-  prevStore: Store;
   /** Components updated as a result of the change */
   renderedComponents: CollectorComponent[];
 };
@@ -36,7 +34,8 @@ export type State = {
   isInBrowser: boolean;
   listeners: Map<string, Set<CollectorComponent>>;
   manualListeners: ((e: AfterChangeEvent) => void)[];
-  nextStore: Store;
+  /** Records the next version of any target */
+  nextVersionMap: WeakMap<Target, Target>;
   proxyIsMuted: boolean;
   store: Store;
 };
@@ -48,9 +47,9 @@ export type PropPath = any[];
  * All proxyable objects have these shared keys.
  */
 type SharedBase = {
-  [PATH_PATH_SYMBOL]?: PropPath;
-  [IS_PREV_STORE]?: boolean;
-  [IS_PROXY]?: boolean;
+  [PATH]?: PropPath;
+  [IS_GLOBAL_STORE]?: boolean;
+  [ORIGINAL]?: Target;
   [p: string]: any;
   [p: number]: any;
   // [p: symbol]: any; // one day, we'll be able to do this - https://github.com/microsoft/TypeScript/issues/1863
@@ -70,6 +69,24 @@ export type Target =
   | MapWithSymbols
   | SetWithSymbols;
 
+// TODO (davidg): maybe ditch ProxiedTarget. In a few places I just don't know.
+// createDeep() called with an unproxiable will return Target, else
+// ProxiedTarget
 export type ProxiedTarget<T = Target> = T & {
-  [IS_PROXY]?: true;
+  [ORIGINAL]?: Target;
+};
+
+type Updater = {
+  (target: Target, value: any): void;
+};
+
+export type UpdateInStoreNextProps = {
+  target: Target;
+  prop?: any;
+  value?: any;
+  updater: Updater;
+};
+
+export type UpdateInNextStore = {
+  (props: UpdateInStoreNextProps): void;
 };

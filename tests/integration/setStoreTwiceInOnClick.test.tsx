@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, WithStoreProp } from '../../src';
+import { collect, store as globalStore, WithStoreProp } from '../../src';
 
 const TestComponent = collect(({ store }: WithStoreProp) => (
   <div>
@@ -33,15 +33,29 @@ const TestComponent = collect(({ store }: WithStoreProp) => (
     >
       Add a task
     </button>
+
+    {!!store.page && (
+      <>
+        <button
+          onClick={() => {
+            store.page.status += '!';
+            store.page.status += '!';
+            store.page.status += '!';
+          }}
+        >
+          Pump the jams
+        </button>
+        <div>{`Status: ${store.page.status}`}</div>
+      </>
+    )}
   </div>
 ));
 
-const { getByText } = render(<TestComponent />);
-
 it('should allow the user to set the store twice in one callback without a re-render', () => {
+  const { getByText } = render(<TestComponent />);
   getByText('You have no tasks');
 
-  // This click will do store.tasks = [], which is added to the nextStore
+  // This click will do store.tasks = [], which is added to the store
   // Immediately followed by store.tasks.push().
   // That second call should be routed to the next store
   getByText('Add a task').click();
@@ -55,4 +69,16 @@ it('should allow the user to set the store twice in one callback without a re-re
   getByText('Add a task').click();
 
   getByText('A new task');
+});
+
+it('should increment string', () => {
+  globalStore.page = {
+    status: 'Happy',
+  };
+
+  const { getByText } = render(<TestComponent />);
+
+  getByText('Pump the jams').click();
+
+  getByText('Status: Happy!!!');
 });

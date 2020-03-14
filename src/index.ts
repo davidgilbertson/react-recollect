@@ -2,7 +2,7 @@ import { debugOff, debugOn } from './shared/debug';
 import state from './shared/state';
 
 export { default as collect } from './collect';
-export { afterChange } from './updating';
+export { afterChange } from './shared/pubSub';
 export { initStore, batch } from './store';
 export const { store } = state;
 
