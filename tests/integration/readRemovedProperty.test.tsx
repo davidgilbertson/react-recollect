@@ -15,6 +15,30 @@ it('should keep a reference', () => {
   expect(david.name).toBe('David');
 });
 
+it('should handle shuffling arrays about', () => {
+  store.stackOne = [{ id: 1 }, { id: 2 }];
+  store.stackTwo = [];
+
+  store.stackTwo.push(store.stackOne.pop());
+
+  expect(store.stackOne).toEqual([{ id: 1 }]);
+  expect(store.stackTwo).toEqual([{ id: 2 }]);
+
+  store.stackTwo.push(store.stackOne.pop());
+
+  expect(store.stackOne).toEqual([]);
+  expect(store.stackTwo).toEqual([{ id: 2 }, { id: 1 }]);
+
+  store.stackTwo.forEach((item: { id: number }) => {
+    // eslint-disable-next-line no-param-reassign
+    item.id *= 5;
+  });
+
+  const [second, first] = store.stackTwo;
+  store.stackTwo = [first, second];
+  expect(store.stackTwo).toEqual([{ id: 5 }, { id: 10 }]);
+});
+
 it('should keep a reference async', async () => {
   store.testArray = [{ name: 'David' }];
   const arr = store.testArray;

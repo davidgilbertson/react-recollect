@@ -1,15 +1,11 @@
 /**
  * This file is unfortunate. I would prefer for the proxy handler to call
- * `updateInNextStore` directly, but there is circular logic:
+ * `updateStore` directly, but there is circular logic:
  * object change » handler » update store » clone » create proxy » handler
  * The logic is sound (?), but the import loop needs to be broken somewhere,
  * hence this file.
  */
-import {
-  AfterChangeEvent,
-  UpdateInNextStore,
-  UpdateInStoreNextProps,
-} from './types';
+import { AfterChangeEvent, UpdateInStore, UpdateInStoreProps } from './types';
 import state from './state';
 
 const enum ActionTypes {
@@ -17,16 +13,16 @@ const enum ActionTypes {
 }
 
 type Subscribers = {
-  UpdateNextStore?: UpdateInNextStore;
+  UpdateNextStore?: UpdateInStore;
 };
 
 const subscribers: Subscribers = {};
 
-export const onUpdateInNextStore = (func: UpdateInNextStore) => {
+export const onUpdateInNextStore = (func: UpdateInStore) => {
   subscribers[ActionTypes.UpdateNextStore] = func;
 };
 
-export const dispatchUpdateInNextStore = (data: UpdateInStoreNextProps) => {
+export const dispatchUpdateInNextStore = (data: UpdateInStoreProps) => {
   const func = subscribers[ActionTypes.UpdateNextStore];
   if (func) func(data);
 };

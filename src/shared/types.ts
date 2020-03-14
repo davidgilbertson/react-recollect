@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { IS_GLOBAL_STORE, ORIGINAL, PATH } from './constants';
+import { ORIGINAL, PATH } from './constants';
 
 /**
  * Define the shape of your store in your project - see README.md
  */
-export interface Store {}
+export interface Store {
+}
 
 /**
  * Extend or intersect component `props` with `WithStoreProp`
@@ -43,12 +44,26 @@ export type State = {
 // For clarity. The path can contain anything that can be a Map key.
 export type PropPath = any[];
 
+type Updater = {
+  (target: Target, value: any): void;
+};
+
+export type UpdateInStoreProps = {
+  target: Target;
+  prop?: any;
+  value?: any;
+  updater: Updater;
+};
+
+export type UpdateInStore = {
+  (props: UpdateInStoreProps): void;
+};
+
 /**
  * All proxyable objects have these shared keys.
  */
 type SharedBase = {
   [PATH]?: PropPath;
-  [IS_GLOBAL_STORE]?: boolean;
   [ORIGINAL]?: Target;
   [p: string]: any;
   [p: number]: any;
@@ -68,25 +83,3 @@ export type Target =
   | ArrWithSymbols
   | MapWithSymbols
   | SetWithSymbols;
-
-// TODO (davidg): maybe ditch ProxiedTarget. In a few places I just don't know.
-// createDeep() called with an unproxiable will return Target, else
-// ProxiedTarget
-export type ProxiedTarget<T = Target> = T & {
-  [ORIGINAL]?: Target;
-};
-
-type Updater = {
-  (target: Target, value: any): void;
-};
-
-export type UpdateInStoreNextProps = {
-  target: Target;
-  prop?: any;
-  value?: any;
-  updater: Updater;
-};
-
-export type UpdateInNextStore = {
-  (props: UpdateInStoreNextProps): void;
-};

@@ -1,4 +1,3 @@
-import { ORIGINAL } from './constants';
 import {
   ArrWithSymbols,
   MapWithSymbols,
@@ -7,7 +6,6 @@ import {
   SetWithSymbols,
   Target,
 } from './types';
-import state from './state';
 
 export const isPlainObject = (item: any): item is ObjWithSymbols =>
   !!item && typeof item === 'object' && item.constructor === Object;
@@ -79,14 +77,14 @@ export const setValue: SetValue = (
 };
 
 export const deepUpdate = <T extends Target>({
-  object,
+  mutableTarget,
   propPath,
   afterClone,
   updater,
 }: {
-  object: T;
+  mutableTarget: T;
   propPath: PropPath;
-  afterClone?: <U extends Target>(original: U, clone: U) => U;
+  afterClone: <U extends Target>(original: U, clone: U) => U;
   updater: (object: Target) => void; // Target, but not necessarily T
 }) => {
   const cloneItem = <V extends Target>(original: V): V => {
@@ -98,29 +96,20 @@ export const deepUpdate = <T extends Target>({
     if (isSet(original)) clone = cloneSet(original);
 
     // Let the caller do interesting things when cloning
-    return afterClone ? afterClone(original, clone) : clone;
+    return afterClone(original, clone);
   };
 
-  const result = cloneItem(object);
+  // Walk down into the object, mutating each node
+  propPath.reduce((item, prop, i) => {
+    const nextValue = cloneItem(getValue(item, prop));
+    setValue(item, prop, nextValue);
 
-  // This will be the case if we're updating the top-level store
-  if (!propPath.length) {
-    updater(result);
-  } else {
-    propPath.reduce((item, prop, i) => {
-      const nextValue = cloneItem(getValue(item, prop));
-      setValue(item, prop, nextValue);
+    if (i === propPath.length - 1) {
+      updater(nextValue);
+    }
 
-      if (i === propPath.length - 1) {
-        updater(nextValue);
-        return null; // doesn't matter
-      }
-
-      return nextValue;
-    }, result);
-  }
-
-  return result;
+    return nextValue;
+  }, mutableTarget);
 };
 
 /**
@@ -132,20 +121,12 @@ export const replaceObject = (
   mutableTarget: ObjWithSymbols,
   nextObject?: ObjWithSymbols
 ) => {
-  const unproxiedTarget = mutableTarget[ORIGINAL];
-  // This `if` is because delete can't be called with undefined
-  if (unproxiedTarget) {
-    state.nextVersionMap.delete(unproxiedTarget);
-  }
-
   if (nextObject) {
     // From the new data, add to the old data anything that's new
     // (from the top level props only)
     Object.entries(nextObject).forEach(([prop, value]) => {
       if (mutableTarget[prop] !== value) {
         mutableTarget[prop] = value;
-        // TODO (davidg): do I need this? Do it elsewhere?
-        // state.nextVersionMap.delete(value);
       }
     });
 

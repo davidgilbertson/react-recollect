@@ -4,8 +4,8 @@ import state from './shared/state';
 import * as utils from './shared/utils';
 import { isProxyable } from './shared/utils';
 import * as paths from './shared/paths';
-import { IS_GLOBAL_STORE, ORIGINAL } from './shared/constants';
-import { PropPath, ProxiedTarget, Target } from './shared/types';
+import { ORIGINAL } from './shared/constants';
+import { PropPath, Target } from './shared/types';
 
 const enum MapOrSetMembers {
   Add = 'add',
@@ -27,6 +27,7 @@ const enum MapOrSetMembers {
  */
 const addListener = (propPath: PropPath) => {
   if (!state.currentComponent) return;
+
   // We use a string instead of an array because it's much easier to match
   const pathString = paths.makeInternalString(propPath);
 
@@ -196,16 +197,6 @@ export const getHandlerForObject = <T extends Target>(
 
       if (state.proxyIsMuted) return Reflect.get(target, prop);
 
-      if (IS_GLOBAL_STORE in target && state.currentComponent) {
-        console.error(
-          [
-            `You are trying to read "${prop.toString()}" from the global store `,
-            `while rendering a component. This could result in subtle bugs. `,
-            `Instead, read from the store object passed as a prop to your component.`,
-          ].join('')
-        );
-      }
-
       const result = Reflect.get(target, prop);
 
       // @ts-ignore - wrong, symbol can be used an an index type
@@ -321,31 +312,27 @@ export const getHandlerForObject = <T extends Target>(
   };
 };
 
-type CreateShallow = {
-  <T extends Target>(item: T): ProxiedTarget<T>; // can be proxied
-  <T extends any>(item: T): T; // can't be proxied
-};
-
-export const createShallow: CreateShallow = <T extends any>(
-  item: T
-): T | ProxiedTarget<T> => {
+/**
+ * Wrap an item in a proxy
+ */
+export const createShallow = <T extends any>(item: T): T => {
   if (!item) return item;
 
   if (!utils.isProxyable(item)) return item;
 
   const handler = getHandlerForObject(item);
 
-  return new Proxy(item as Target, handler) as ProxiedTarget<T>;
+  return new Proxy(item as Target, handler) as T;
 };
 
+/**
+ * Wrap an item, and all proxiable children, in proxies
+ */
 export const createDeep = <T extends Target>(
   parentObject: T,
   parentPropPath: PropPath = []
-): ProxiedTarget<T> => {
-  const proxyThisLevel = <U extends any>(
-    target: U,
-    propPath: PropPath
-  ): ProxiedTarget<U> => {
+): T => {
+  const proxyThisLevel = <U extends any>(target: U, propPath: PropPath): U => {
     if (!isProxyable(target)) return target;
 
     let next = target;

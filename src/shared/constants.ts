@@ -5,8 +5,6 @@
  */
 export const PROP_PATH_SEP = '~~~';
 
-export const IS_GLOBAL_STORE = Symbol('IS_GLOBAL_STORE');
-
 export const PATH = Symbol('PATH');
 
 export const ORIGINAL = Symbol('ORIGINAL');

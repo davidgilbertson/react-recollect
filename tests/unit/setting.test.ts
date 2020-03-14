@@ -4,6 +4,7 @@ import { propPathChanges, TaskType } from '../testUtils';
 declare module '../../src' {
   interface Store {
     // Add a few things used in this file
+    taskList?: TaskType[];
     longArrayToCompareSort?: TaskType[];
     shortArrayToCompareSort?: TaskType[];
   }
@@ -258,6 +259,27 @@ it('should sort()', () => {
       `Skipping the array.sort() test for V8 ${process.versions.v8}`
     );
   }
+});
+
+it('should update the paths in a sorted array', () => {
+  store.taskList = [
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+    { id: 2, name: 'Task 2' },
+    { id: 1, name: 'Task 1' },
+  ];
+  const { taskList } = store;
+
+  taskList.sort((a, b) => a.id - b.id);
+
+  jest.resetAllMocks();
+
+  // Check the sort works
+  expect(taskList[0].id).toBe(1);
+
+  taskList[0].name = 'A new name';
+
+  expect(propPathChanges(handleChange)).toEqual(['taskList.0.name']);
 });
 
 it('should pop()', () => {
