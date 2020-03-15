@@ -1,4 +1,6 @@
-![Node.js CI](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
+![Size](https://img.shields.io/bundlephobia/minzip/react-recollect?label=Size)
+![version](https://img.shields.io/github/package-json/v/davidgilbertson/react-recollect?label=Version)
+![Tests](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
 
 # React Recollect
 
