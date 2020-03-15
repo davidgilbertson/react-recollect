@@ -25,7 +25,7 @@ The result is simpler code and a faster app. Take it for a spin in this
 
 ---
 
-:warning: There is no support for any version of IE, Opera mini, or Android
+**Caution:** there is no support for any version of IE, Opera mini, or Android
 browser 4.4 (because Recollect uses the `Proxy` object). Check out the latest
 usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 
@@ -35,7 +35,7 @@ usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 npm i react-recollect
 ```
 
-There’s two things you need to know about: the `store` object and the `collect`
+There's two things you need to know about: the `store` object and the `collect`
 function.
 
 The store is where your data goes, and you can treat it just like you'd treat
@@ -101,7 +101,6 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [API](#api)
   - [`store`](#store)
@@ -250,7 +249,7 @@ app.get('/', async (req, res) => {
 });
 ```
 
-It’s important that you populate the store using `initStore`, and do so before
+It's important that you populate the store using `initStore`, and do so before
 rendering your app with `ReactDOMServer.renderToString()`.
 
 This is because your Node server might receive several requests from several
@@ -315,7 +314,7 @@ an actual performance improvement.
 
 ## `window.__RR__`
 
-`window.__RR__` is there to assist in troubleshooting/development (they’re the
+`window.__RR__` is there to assist in troubleshooting/development (they're the
 same thing, right?). It has these properties:
 
 - `debugOn()` will turn on debugging. This shows you what's updating in the
@@ -869,7 +868,7 @@ object that you can read from and write to anywhere.
 
 ## Can I use this with `ref`s?
 
-Yes, refs just work, as long as you don’t use the reserved name ‘ref’ (React
+Yes, refs just work, as long as you don't use the reserved name 'ref' (React
 strips this out). You can use something like `inputRef` instead. For an example,
 see [this test](./tests/integration/forwardRefFc.test.tsx)
 
@@ -918,10 +917,9 @@ In the [tests](./tests) directory you'll find:
 
 ## How big is it?
 
-It's about 4 KB. If you were to replace `redux`, `redux-thunk`, and
-`react-redux` with this library, you'd shed a bit over 2 KB. But if you've got a
-decent sized app the real size reduction comes from getting rid of all your
-reducers.
+It's about 5 KB. If you were to replace `redux` and `react-redux` with this
+library, you'd save a bit over 1 KB. But if you've got a decent sized app, the
+real size reduction comes from getting rid of all your reducers.
 
 # Dependencies
 
