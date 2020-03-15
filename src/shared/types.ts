@@ -4,8 +4,7 @@ import { ORIGINAL, PATH } from './constants';
 /**
  * Define the shape of your store in your project - see README.md
  */
-export interface Store {
-}
+export interface Store {}
 
 /**
  * Extend or intersect component `props` with `WithStoreProp`
