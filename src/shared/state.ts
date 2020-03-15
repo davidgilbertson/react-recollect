@@ -10,7 +10,7 @@ const state: State = {
   isInBrowser: typeof window !== 'undefined',
   listeners: new Map(),
   manualListeners: [],
-  nextStore: {},
+  nextVersionMap: new WeakMap(),
   proxyIsMuted: false,
   store: {},
 };

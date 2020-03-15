@@ -1,9 +1,10 @@
-import { getFromNextStore, updateInNextStore } from './store';
-import { logGet, logSet, logDelete } from './shared/debug';
+import * as pubSub from './shared/pubSub';
+import { logDelete, logGet, logSet } from './shared/debug';
 import state from './shared/state';
 import * as utils from './shared/utils';
+import { isProxyable } from './shared/utils';
 import * as paths from './shared/paths';
-import { IS_PREV_STORE } from './shared/constants';
+import { ORIGINAL } from './shared/constants';
 import { PropPath, Target } from './shared/types';
 
 const enum MapOrSetMembers {
@@ -22,10 +23,11 @@ const enum MapOrSetMembers {
 
 /**
  * Add a new listener to be notified when a particular value in the store changes
- * To be used when a component reads from a property
+ * To be used when a component reads from a property.
  */
 const addListener = (propPath: PropPath) => {
   if (!state.currentComponent) return;
+
   // We use a string instead of an array because it's much easier to match
   const pathString = paths.makeInternalString(propPath);
 
@@ -35,7 +37,13 @@ const addListener = (propPath: PropPath) => {
 };
 
 /**
- * We have different handlers (different traps) for object/array and map/set.
+ * These are the proxy handlers. Notes:
+ * * We have different handlers (different traps) for object/array and
+ *    map/set.
+ * * When the proxy is muted, use Reflect[trap] and bypass any logic. The
+ *    exception is Map/Set methods, where we must bind `this` first
+ * * `ORIGINAL` lets us unwrap a proxied object
+ * * We redirect to the 'next version' of a target if it has been changed
  */
 export const getHandlerForObject = <T extends Target>(
   targetObject: T
@@ -45,9 +53,10 @@ export const getHandlerForObject = <T extends Target>(
     // happen in the get() trap (different to the get() method of the map/set!)
     return {
       get(target, prop) {
+        if (prop === ORIGINAL) return target;
         let result = Reflect.get(target, prop);
 
-        // The innards of Map require this binding
+        // The innards of Map and Set require this binding
         if (utils.isFunction(result)) result = result.bind(target);
 
         // Bail early for some things. Unlike objects/arrays, we will
@@ -60,6 +69,9 @@ export const getHandlerForObject = <T extends Target>(
         ) {
           return result;
         }
+
+        const nextVersion = state.nextVersionMap.get(target);
+        if (nextVersion) return Reflect.get(nextVersion, prop);
 
         // @ts-ignore - `.size` DOES exist, this is a Map or Set
         if (prop === MapOrSetMembers.Clear && !target.size) return result;
@@ -76,7 +88,7 @@ export const getHandlerForObject = <T extends Target>(
             apply(func, applyTarget, [key, value]) {
               if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
-              updateInNextStore({
+              pubSub.dispatchUpdateInNextStore({
                 target: applyTarget,
                 prop: key,
                 value,
@@ -84,7 +96,7 @@ export const getHandlerForObject = <T extends Target>(
                   logSet(target, prop, newProxiedValue);
 
                   // We call the map.set() now, but on the item in the
-                  // nextStore, and with the new args
+                  // store, and with the new args
                   Reflect.apply(finalTarget[prop], finalTarget, [
                     key,
                     newProxiedValue,
@@ -105,7 +117,7 @@ export const getHandlerForObject = <T extends Target>(
             apply(func, applyTarget, [value]) {
               if (applyTarget.has(value)) return true; // Would be a no op
 
-              updateInNextStore({
+              pubSub.dispatchUpdateInNextStore({
                 target: applyTarget,
                 prop: value,
                 value,
@@ -131,7 +143,7 @@ export const getHandlerForObject = <T extends Target>(
             apply(func, applyTarget, [key]) {
               if (prop === 'delete' && !applyTarget.has(key)) return result; // Would not be a change
 
-              updateInNextStore({
+              pubSub.dispatchUpdateInNextStore({
                 target: applyTarget,
                 prop,
                 updater: (finalTarget) => {
@@ -173,20 +185,6 @@ export const getHandlerForObject = <T extends Target>(
           return result;
         }
 
-        // TODO (davidg): does 'size' need to be below this? Would I be getting the wrong size?
-        // Is this an attempt to get something from the store outside the
-        // render cycle? This might be store.tasks.push() in a click event
-        // right after `doing store.tasks = []`
-        // In this case, we should always return from nextStore.
-        // See setStoreTwiceInOnClick.test.js
-        if (
-          !utils.isSymbol(prop) &&
-          prop !== 'constructor' &&
-          !state.proxyIsMuted
-        ) {
-          return getFromNextStore(target, prop);
-        }
-
         return result;
       },
     };
@@ -194,15 +192,10 @@ export const getHandlerForObject = <T extends Target>(
 
   return {
     get(target, prop) {
-      if (IS_PREV_STORE in target && state.currentComponent) {
-        console.error(
-          [
-            `You are trying to read "${prop.toString()}" from the global store `,
-            `while rendering a component. This could result in subtle bugs. `,
-            `Instead, read from the store object passed as a prop to your component.`,
-          ].join('')
-        );
-      }
+      // This allows getting the un-proxied version of a proxied object
+      if (prop === ORIGINAL) return target;
+
+      if (state.proxyIsMuted) return Reflect.get(target, prop);
 
       const result = Reflect.get(target, prop);
 
@@ -210,17 +203,17 @@ export const getHandlerForObject = <T extends Target>(
       if (utils.isFunction(target[prop])) return result;
 
       // When we're outside the render cycle, we route requests to the same
-      // object in `nextStore`.
+      // object in `store`.
       // Note, this will result in another get(), but on the equivalent
       // target from the next store. muteProxy will be set so this line
       // isn't triggered in an infinite loop
       if (
-        !state.proxyIsMuted &&
         !state.currentComponent &&
         !utils.isSymbol(prop) &&
         prop !== 'constructor'
       ) {
-        return getFromNextStore(target, prop);
+        const nextVersion = state.nextVersionMap.get(target);
+        if (nextVersion) return Reflect.get(nextVersion, prop);
       }
 
       if (state.currentComponent) {
@@ -233,6 +226,7 @@ export const getHandlerForObject = <T extends Target>(
     },
 
     has(target, prop) {
+      if (state.proxyIsMuted) return Reflect.has(target, prop);
       // Arrays use `has` too, but we capture a listener elsewhere for that.
       // Here we only want to capture access to objects
       if (state.currentComponent && !utils.isArray(target)) {
@@ -241,11 +235,18 @@ export const getHandlerForObject = <T extends Target>(
         addListener(paths.extend(target, prop));
       }
 
-      // TODO (davidg): should this be from the next store? Test, etc.
+      const nextVersion = state.nextVersionMap.get(target);
+      if (nextVersion) return Reflect.has(nextVersion, prop);
+
       return Reflect.has(target, prop);
     },
 
     ownKeys(target) {
+      if (state.proxyIsMuted) return Reflect.ownKeys(target);
+
+      const nextVersion = state.nextVersionMap.get(target);
+      if (nextVersion) return Reflect.ownKeys(nextVersion);
+
       if (state.currentComponent) {
         logGet(target);
 
@@ -256,6 +257,8 @@ export const getHandlerForObject = <T extends Target>(
     },
 
     set(target, prop, value) {
+      if (state.proxyIsMuted) return Reflect.set(target, prop, value);
+
       if (state.currentComponent) {
         console.error(
           [
@@ -277,11 +280,7 @@ export const getHandlerForObject = <T extends Target>(
       // @ts-ignore - target[prop] is fine
       if (prop !== 'length' && target[prop] === value) return true;
 
-      if (state.proxyIsMuted) {
-        return Reflect.set(target, prop, value);
-      }
-
-      updateInNextStore({
+      pubSub.dispatchUpdateInNextStore({
         target,
         prop,
         value,
@@ -296,11 +295,9 @@ export const getHandlerForObject = <T extends Target>(
     },
 
     deleteProperty(target, prop) {
-      if (state.proxyIsMuted) {
-        return Reflect.deleteProperty(target, prop);
-      }
+      if (state.proxyIsMuted) return Reflect.deleteProperty(target, prop);
 
-      updateInNextStore({
+      pubSub.dispatchUpdateInNextStore({
         target,
         prop,
         updater: (finalTarget) => {
@@ -313,4 +310,67 @@ export const getHandlerForObject = <T extends Target>(
       return true;
     },
   };
+};
+
+/**
+ * Wrap an item in a proxy
+ */
+export const createShallow = <T extends any>(target: T): T => {
+  if (!target || !utils.isProxyable(target)) return target;
+
+  const handler = getHandlerForObject(target);
+
+  return new Proxy(target as Target, handler) as T;
+};
+
+/**
+ * Wrap an item, and all proxiable children, in proxies
+ */
+export const createDeep = <T extends Target>(
+  rootTarget: T,
+  rootTargetPropPath: PropPath
+): T => {
+  const proxyThisLevel = <U extends any>(target: U, propPath: PropPath): U => {
+    if (!isProxyable(target)) return target;
+
+    let next = target;
+
+    if (utils.isPlainObject(target)) {
+      next = {} as U; // U is ObjWithSymbols
+
+      Object.entries(target).forEach(([prop, value]) => {
+        next[prop] = proxyThisLevel(value, [...propPath, prop]);
+      });
+    }
+
+    if (utils.isArray(target)) {
+      next = target.map((item: any, i: number) => {
+        return proxyThisLevel(item, [...propPath, i]);
+      }) as U; // U is ArrWithSymbols
+    }
+
+    if (utils.isMap(target)) {
+      // @ts-ignore - U is MapWithSymbols
+      next = new Map() as U;
+
+      target.forEach((value: any, key: any) => {
+        next.set(key, proxyThisLevel(value, [...propPath, key]));
+      });
+    }
+
+    if (utils.isSet(target)) {
+      // @ts-ignore - U is SetWithSymbols
+      next = new Set() as U;
+
+      target.forEach((value: any, i: number) => {
+        next.add(proxyThisLevel(value, [...propPath, i]));
+      });
+    }
+
+    if (propPath.length) paths.addProp(next, propPath);
+
+    return createShallow(next);
+  };
+
+  return proxyThisLevel(rootTarget, rootTargetPropPath);
 };

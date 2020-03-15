@@ -4,6 +4,7 @@ import { propPathChanges, TaskType } from '../testUtils';
 declare module '../../src' {
   interface Store {
     // Add a few things used in this file
+    taskList?: TaskType[];
     longArrayToCompareSort?: TaskType[];
     shortArrayToCompareSort?: TaskType[];
   }
@@ -62,6 +63,31 @@ it('should allow uncommon prop types', () => {
     'interestingObject.level1.Symbol(My symbol)',
   ]);
   expect(handleChange).toHaveBeenCalledTimes(3);
+});
+
+it('should allow dates', () => {
+  const dateObject = new Date('2007-07-07T07:07:07');
+  store.data = {
+    dateObject,
+    foo: 'bar',
+  };
+
+  const date = store.data.dateObject;
+  store.data.foo = 'baz';
+  expect(date).toBe(dateObject);
+});
+
+it('should allow regex', () => {
+  const regExLiteral = /(.*)\.js$/;
+  store.data = {
+    regExLiteral,
+    foo: 'bar',
+  };
+
+  const regEx = store.data.regExLiteral;
+  store.data.foo = 'baz';
+  expect(regEx).toBe(regExLiteral);
+  expect('filename.js'.match(store.data.regExLiteral)![1]).toBe('filename');
 });
 
 it('should add an array', () => {
@@ -200,64 +226,75 @@ it('should sort()', () => {
     ])
   );
 
-  // Sorting with a compare function fails in < V8 7.0. (Node 10)
-  // So we disable the test for older versions, for now.
-  // Fix in https://github.com/davidgilbertson/react-recollect/issues/71
-  if (parseInt(process.versions.v8, 10) >= 7) {
-    // V8 uses a different algorithm for < and > 10 items
-    // So we test both
-    store.longArrayToCompareSort = [
-      { id: 3, name: 'Task 3' },
-      { id: 4, name: 'Task 4' },
-      { id: 11, name: 'Task 11' },
-      { id: 2, name: 'Task 2' },
-      { id: 1, name: 'Task 1' },
-      { id: 5, name: 'Task 5' },
-      { id: 10, name: 'Task 10' },
-      { id: 6, name: 'Task 6' },
-      { id: 7, name: 'Task 7' },
-      { id: 8, name: 'Task 8' },
-      { id: 9, name: 'Task 9' },
-      { id: 12, name: 'Task 12' },
-    ];
+  // V8 uses a different algorithm for < and > 10 items, so we test both
+  store.longArrayToCompareSort = [
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+    { id: 11, name: 'Task 11' },
+    { id: 2, name: 'Task 2' },
+    { id: 1, name: 'Task 1' },
+    { id: 5, name: 'Task 5' },
+    { id: 10, name: 'Task 10' },
+    { id: 6, name: 'Task 6' },
+    { id: 7, name: 'Task 7' },
+    { id: 8, name: 'Task 8' },
+    { id: 9, name: 'Task 9' },
+    { id: 12, name: 'Task 12' },
+  ];
 
-    store.longArrayToCompareSort.sort((a, b) => a.id - b.id);
+  store.longArrayToCompareSort.sort((a, b) => a.id - b.id);
 
-    expect(store.longArrayToCompareSort).toEqual([
-      { id: 1, name: 'Task 1' },
-      { id: 2, name: 'Task 2' },
-      { id: 3, name: 'Task 3' },
-      { id: 4, name: 'Task 4' },
-      { id: 5, name: 'Task 5' },
-      { id: 6, name: 'Task 6' },
-      { id: 7, name: 'Task 7' },
-      { id: 8, name: 'Task 8' },
-      { id: 9, name: 'Task 9' },
-      { id: 10, name: 'Task 10' },
-      { id: 11, name: 'Task 11' },
-      { id: 12, name: 'Task 12' },
-    ]);
+  expect(store.longArrayToCompareSort).toEqual([
+    { id: 1, name: 'Task 1' },
+    { id: 2, name: 'Task 2' },
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+    { id: 5, name: 'Task 5' },
+    { id: 6, name: 'Task 6' },
+    { id: 7, name: 'Task 7' },
+    { id: 8, name: 'Task 8' },
+    { id: 9, name: 'Task 9' },
+    { id: 10, name: 'Task 10' },
+    { id: 11, name: 'Task 11' },
+    { id: 12, name: 'Task 12' },
+  ]);
 
-    store.shortArrayToCompareSort = [
-      { id: 3, name: 'Task 3' },
-      { id: 4, name: 'Task 4' },
-      { id: 2, name: 'Task 2' },
-      { id: 1, name: 'Task 1' },
-    ];
+  store.shortArrayToCompareSort = [
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+    { id: 2, name: 'Task 2' },
+    { id: 1, name: 'Task 1' },
+  ];
 
-    store.shortArrayToCompareSort.sort((a, b) => a.id - b.id);
+  store.shortArrayToCompareSort.sort((a, b) => a.id - b.id);
 
-    expect(store.shortArrayToCompareSort).toEqual([
-      { id: 1, name: 'Task 1' },
-      { id: 2, name: 'Task 2' },
-      { id: 3, name: 'Task 3' },
-      { id: 4, name: 'Task 4' },
-    ]);
-  } else {
-    console.warn(
-      `Skipping the array.sort() test for V8 ${process.versions.v8}`
-    );
-  }
+  expect(store.shortArrayToCompareSort).toEqual([
+    { id: 1, name: 'Task 1' },
+    { id: 2, name: 'Task 2' },
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+  ]);
+});
+
+it('should update the paths in a sorted array', () => {
+  store.taskList = [
+    { id: 3, name: 'Task 3' },
+    { id: 4, name: 'Task 4' },
+    { id: 2, name: 'Task 2' },
+    { id: 1, name: 'Task 1' },
+  ];
+  const { taskList } = store;
+
+  taskList.sort((a, b) => a.id - b.id);
+
+  jest.resetAllMocks();
+
+  // Check the sort works
+  expect(taskList[0].id).toBe(1);
+
+  taskList[0].name = 'A new name';
+
+  expect(propPathChanges(handleChange)).toEqual(['taskList.0.name']);
 });
 
 it('should pop()', () => {

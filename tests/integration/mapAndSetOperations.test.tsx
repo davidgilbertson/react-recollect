@@ -16,8 +16,8 @@ afterChange(handleChange);
 
 beforeEach(() => {
   initStore({
-    map: new Map([['one', 'the value of one']]),
-    set: new Set(['one']),
+    myMap: new Map([['one', 'the value of one']]),
+    mySet: new Set(['one']),
   });
 
   renderCount = 0;
@@ -32,13 +32,13 @@ const RawComponent = ({ store }: WithStoreProp) => {
   return (
     <div>
       <h1>Map() stuff</h1>
-      <p data-testid="map-size">Size: {store.map.size}</p>
-      <p data-testid="map-one">One: {store.map.get('one') || 'nothing!'}</p>
+      <p data-testid="map-size">Size: {store.myMap.size}</p>
+      <p data-testid="map-one">One: {store.myMap.get('one') || 'nothing!'}</p>
 
       <button
         onClick={() => {
-          store.map.set('two', 'the value of two');
-          log(store.map.size);
+          store.myMap.set('two', 'the value of two');
+          log(store.myMap.size);
         }}
       >
         Add two to Map
@@ -46,40 +46,40 @@ const RawComponent = ({ store }: WithStoreProp) => {
 
       <button
         onClick={() => {
-          store.map.delete('two');
+          store.myMap.delete('two');
         }}
       >
         Delete two from Map
       </button>
 
-      <p data-testid="map-two">Two: {store.map.get('two') || 'nothing!'}</p>
+      <p data-testid="map-two">Two: {store.myMap.get('two') || 'nothing!'}</p>
 
       <button
         onClick={() => {
-          store.map.clear();
+          store.myMap.clear();
         }}
       >
         Clear Map
       </button>
 
-      <p data-testid="map-keys">{Array.from(store.map.keys()).join(', ')}</p>
+      <p data-testid="map-keys">{Array.from(store.myMap.keys()).join(', ')}</p>
 
       <button
         onClick={() => {
-          store.map.set('three', 'the value of three');
-          store.map.set('four', 'the value of four');
+          store.myMap.set('three', 'the value of three');
+          store.myMap.set('four', 'the value of four');
         }}
       >
         Add two things to Map
       </button>
 
       <h1>Set() stuff</h1>
-      <p data-testid="set-size">Size: {store.set.size}</p>
-      <p data-testid="set-one">Has one?: {store.set.has('one').toString()}</p>
+      <p data-testid="set-size">Size: {store.mySet.size}</p>
+      <p data-testid="set-one">Has one?: {store.mySet.has('one').toString()}</p>
 
       <button
         onClick={() => {
-          store.set.add('two');
+          store.mySet.add('two');
         }}
       >
         Add two to set
@@ -87,28 +87,28 @@ const RawComponent = ({ store }: WithStoreProp) => {
 
       <button
         onClick={() => {
-          store.set.delete('two');
+          store.mySet.delete('two');
         }}
       >
         Delete two from set
       </button>
 
-      <p data-testid="set-two">Has two?: {store.set.has('two').toString()}</p>
+      <p data-testid="set-two">Has two?: {store.mySet.has('two').toString()}</p>
 
       <button
         onClick={() => {
-          store.set.clear();
+          store.mySet.clear();
         }}
       >
         Clear set
       </button>
 
-      <p data-testid="set-keys">{Array.from(store.set.keys()).join(', ')}</p>
+      <p data-testid="set-keys">{Array.from(store.mySet.keys()).join(', ')}</p>
 
       <button
         onClick={() => {
-          store.set.add('three');
-          store.set.add('four');
+          store.mySet.add('three');
+          store.mySet.add('four');
         }}
       >
         Add two things to set
@@ -122,12 +122,12 @@ const Component = collect(RawComponent);
 it('should operate on a Map in a component', () => {
   const { getByText, getByTestId } = render(<Component />);
   expect(renderCount).toBe(1);
-  expect(globalStore.map.size).toBe(1);
+  expect(globalStore.myMap.size).toBe(1);
   expect(getByTestId('map-size')).toHaveTextContent('Size: 1');
   expect(getByTestId('map-one')).toHaveTextContent('One: the value of one');
 
   getByText('Add two to Map').click();
-  expect(globalStore.map.size).toBe(2);
+  expect(globalStore.myMap.size).toBe(2);
   expect(log).toHaveBeenCalledWith(2);
   expect(renderCount).toBe(2);
   expect(getByTestId('map-size')).toHaveTextContent('Size: 2');
@@ -169,7 +169,7 @@ it('should operate on a Set', () => {
 
   getByText('Add two to set').click();
   expect(renderCount).toBe(2);
-  expect(globalStore.set.size).toBe(2);
+  expect(globalStore.mySet.size).toBe(2);
   expect(getByTestId('set-size')).toHaveTextContent('Size: 2');
   expect(getByTestId('set-keys')).toHaveTextContent('one, two');
   expect(getByTestId('set-two')).toHaveTextContent('Has two?: true');
@@ -180,14 +180,14 @@ it('should operate on a Set', () => {
 
   getByText('Delete two from set').click();
   expect(renderCount).toBe(3);
-  expect(globalStore.set.size).toBe(1);
+  expect(globalStore.mySet.size).toBe(1);
   expect(getByTestId('set-size')).toHaveTextContent('Size: 1');
   expect(getByTestId('set-keys')).toHaveTextContent('one');
   expect(getByTestId('set-two')).toHaveTextContent('Has two?: false');
 
   getByText('Clear set').click();
   expect(renderCount).toBe(4);
-  expect(globalStore.set.size).toBe(0);
+  expect(globalStore.mySet.size).toBe(0);
   expect(getByTestId('set-size')).toHaveTextContent('Size: 0');
   expect(getByTestId('set-keys')).toHaveTextContent('');
   expect(getByTestId('set-one')).toHaveTextContent('Has one?: false');
@@ -199,7 +199,7 @@ it('should operate on a Set', () => {
 
   getByText('Add two things to set').click();
   expect(renderCount).toBe(5); // just one render
-  expect(globalStore.set.size).toBe(2);
+  expect(globalStore.mySet.size).toBe(2);
   expect(getByTestId('set-size')).toHaveTextContent('Size: 2');
   expect(getByTestId('set-keys')).toHaveTextContent('three, four');
 

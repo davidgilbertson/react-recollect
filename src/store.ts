@@ -1,29 +1,31 @@
-import * as proxy from './proxy';
+import * as proxyManager from './proxyManager';
+import * as pubSub from './shared/pubSub';
 import { notifyByPath } from './updating';
 import state from './shared/state';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
-import { Store, Target } from './shared/types';
-
-state.nextStore = proxy.createShallow({});
-state.store = state.nextStore;
+import { Store, UpdateInStore } from './shared/types';
+import { ORIGINAL } from './shared/constants';
 
 /**
- * This function immutably updates a target in the store, returning the new store.
- * It doesn't update the target directly, but calls an update() function which
- * will perform the update.
+ * This is the store, as exported to the user. When the store is passed to a
+ * component, it is shallow cloned. This leaves us free to mutate the root
+ * level directly.
  */
-export const updateInNextStore = ({
+state.store = proxyManager.createShallow({});
+
+/**
+ * Deep update the store, the following rules are followed:
+ * - If updating the root level, the store object itself is mutated.
+ * - For any other (deep) update we clone each node along the path to
+ *   the target to update (the target is cloned too).
+ */
+export const updateStore: UpdateInStore = ({
   target,
   prop,
   value,
   updater,
-}: {
-  target: Target;
-  prop?: any;
-  value?: any;
-  updater: (target: Target, value: any) => void;
-}): void => {
+}) => {
   state.proxyIsMuted = true;
 
   // Note that this function doesn't know anything about the prop being set.
@@ -33,45 +35,38 @@ export const updateInNextStore = ({
   const propPath = paths.extend(target, prop);
 
   // Make sure the new value is deeply wrapped in proxies
-  const newValue = proxy.createDeep(value, propPath);
+  const newValue = proxyManager.createDeep(value, propPath);
 
-  state.nextStore = utils.deepUpdate({
-    object: state.nextStore,
-    propPath: targetPath,
-    afterClone: (original, clone) => {
-      if (paths.get(original)) {
-        paths.addProp(clone, paths.get(original));
-      }
-      return proxy.createShallow(clone);
-    },
-    updater: (updateTarget) => {
-      updater(updateTarget, newValue);
-    },
-  });
+  if (!targetPath.length) {
+    // If the target is the store root, it's mutated in place.
+    updater(state.store, newValue);
+  } else {
+    utils.deepUpdate({
+      mutableTarget: state.store,
+      propPath: targetPath,
+      afterClone: (original, clone) => {
+        if (paths.get(original)) {
+          paths.addProp(clone, paths.get(original));
+        }
+
+        return proxyManager.createShallow(clone);
+      },
+      updater: (updateTarget) => {
+        updater(updateTarget, newValue);
+
+        // `target` may or may not be wrapped in a proxy (Maps and Sets are)
+        // So we check/get the unproxied version
+        state.nextVersionMap.set(target[ORIGINAL] || target, updateTarget);
+      },
+    });
+  }
 
   state.proxyIsMuted = false;
 
   notifyByPath(propPath);
 };
 
-/**
- * This takes a target (from one version of the store) and gets its value
- * in `nextStore`.
- */
-export const getFromNextStore = (target: Target, prop: any): any => {
-  state.proxyIsMuted = true;
-
-  const propPath = paths.extend(target, prop);
-
-  const result = propPath.reduce(
-    (acc, propName) => utils.getValue(acc, propName),
-    state.nextStore
-  );
-
-  state.proxyIsMuted = false;
-
-  return result;
-};
+pubSub.onUpdateInNextStore(updateStore);
 
 /**
  * Empty the Recollect store and replace it with new data.

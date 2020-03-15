@@ -1,6 +1,7 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { removeListenersForComponent } from './updating';
+import * as proxyManager from './proxyManager';
 import state from './shared/state';
 import { debug } from './shared/debug';
 import { CollectorComponent, Store, WithStoreProp } from './shared/types';
@@ -38,6 +39,26 @@ type ComponentPropsWithoutStore<C extends React.ComponentType> = RemoveStore<
   React.ComponentProps<C>
 >;
 
+/**
+ * This shallow clones the store to pass as state to the collected
+ * component.
+ */
+const getStoreClone = () => {
+  state.proxyIsMuted = true;
+
+  // We'll shallow clone the store so React knows it's new
+  const shallowClone = { ...state.store };
+
+  // ... but redirect all reads to the real store
+  state.nextVersionMap.set(shallowClone, state.store);
+
+  const storeClone = proxyManager.createShallow(shallowClone);
+
+  state.proxyIsMuted = false;
+
+  return storeClone;
+};
+
 const collect = <C extends React.ComponentType<any>>(
   ComponentToWrap: C
 ): React.ComponentType<ComponentPropsWithoutStore<C>> &
@@ -59,7 +80,7 @@ const collect = <C extends React.ComponentType<any>>(
     state = {
       // This might be called by React when a parent component has updated with a new store,
       // we want this component (if it's a child) to have that next store as well.
-      store: state.nextStore,
+      store: getStoreClone(),
     };
 
     // TODO (davidg) 2020-02-28: use private #isMounted, waiting on
@@ -96,7 +117,7 @@ const collect = <C extends React.ComponentType<any>>(
       //    render cycle.
       //    For example, if a user sets store.loading to true in App.componentDidMount
       if (this._isMounted || this._isMounting) {
-        this.setState({ store: state.nextStore });
+        this.setState({ store: getStoreClone() });
       }
     }
 

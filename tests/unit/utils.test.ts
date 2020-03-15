@@ -2,7 +2,7 @@ import { deepUpdate } from '../../src/shared/utils';
 import { ObjWithSymbols, Target } from '../../src/shared/types';
 
 it('should mutate the object', () => {
-  const original = {
+  const data = {
     level1: [
       {
         name: 'Task one',
@@ -20,78 +20,77 @@ it('should mutate the object', () => {
     },
   } as ObjWithSymbols;
 
-  const clone = deepUpdate({
-    object: original,
+  const originalLevel1 = data.level1;
+  const originalLevel1FirstData = data.level1[0].data;
+
+  deepUpdate({
+    mutableTarget: data,
     propPath: ['level1', 0, 'data'],
+    afterClone: (a, b) => b,
     updater: (mutableTarget: Target) => {
       mutableTarget.done = false;
     },
   });
 
-  expect(original.level1[0].data.done).toBe(true);
-  expect(clone.level1[0].data.done).toBe(false);
+  expect(originalLevel1[0].data.done).toBe(true);
+  expect(data.level1[0].data.done).toBe(false);
 
   // Cloned
-  expect(clone).not.toBe(original);
-  expect(clone.level1).not.toBe(original.level1);
-  expect(clone.level1[0]).not.toBe(original.level1[0]);
-  expect(clone.level1[0].data).not.toBe(original.level1[0].data);
-
-  // Not cloned
-  expect(clone.level1[1]).toBe(original.level1[1]);
-  expect(clone.level1[1].data).toBe(original.level1[1].data);
-  expect(clone.level2).toBe(original.level2);
+  expect(data.level1).not.toBe(originalLevel1);
+  expect(data.level1[0].data).not.toBe(originalLevel1FirstData);
 });
 
 it('should mutate a Map', () => {
-  const original = {
+  const data = {
     mapOne: new Map(),
     mapTwo: new Map(),
   };
 
-  original.mapOne.set('123', { id: 1, name: 'Task one' });
-  original.mapOne.set(123, { id: 2, name: 'Task one (number key)' });
-  original.mapOne.set('two', { id: 3, name: 'Task two' });
+  const originalMapOne = data.mapOne;
 
-  const clone = deepUpdate({
-    object: original,
+  data.mapOne.set('123', { id: 1, name: 'Task one' });
+  data.mapOne.set(123, { id: 2, name: 'Task one (number key)' });
+  data.mapOne.set('two', { id: 3, name: 'Task two' });
+
+  deepUpdate({
+    mutableTarget: data,
     propPath: ['mapOne', 123],
+    afterClone: (a, b) => b,
     updater: (mutableTarget: Target) => {
       mutableTarget.name = 'A new name';
     },
   });
 
-  expect(original.mapOne.get(123)!.name).toBe('Task one (number key)');
-  expect(clone.mapOne.get(123).name).toBe('A new name');
+  expect(originalMapOne.get(123)!.name).toBe('Task one (number key)');
+  expect(data.mapOne.get(123).name).toBe('A new name');
 
   // Cloned
-  expect(clone).not.toBe(original);
-  expect(clone.mapOne).not.toBe(original.mapOne);
-  expect(clone.mapOne.get(123)).not.toBe(original.mapOne.get(123));
+  expect(data.mapOne).not.toBe(originalMapOne);
+  expect(data.mapOne.get(123)).not.toBe(originalMapOne.get(123));
 
   // Not cloned
-  expect(clone.mapTwo).toBe(original.mapTwo);
-  expect(clone.mapOne.get('123')).toBe(original.mapOne.get('123'));
-  expect(clone.mapOne.get('two')).toBe(original.mapOne.get('two'));
+  expect(data.mapTwo).toBe(data.mapTwo);
+  expect(data.mapOne.get('123')).toBe(data.mapOne.get('123'));
+  expect(data.mapOne.get('two')).toBe(data.mapOne.get('two'));
 });
 
 it('should clone with a clone function', () => {
-  const originalObj = {
+  const original = {
     mapOne: new Map(),
     mapTwo: new Map(),
   };
 
-  originalObj.mapOne.set('123', { name: 'Task one', done: true });
-  originalObj.mapOne.set(123, { name: 'Task one (number key)', done: false });
-  originalObj.mapOne.set('two', { name: 'Task two', done: true });
+  original.mapOne.set('123', { name: 'Task one', done: true });
+  original.mapOne.set(123, { name: 'Task one (number key)', done: false });
+  original.mapOne.set('two', { name: 'Task two', done: true });
 
-  const cloneObj = deepUpdate({
-    object: originalObj,
+  deepUpdate({
+    mutableTarget: original,
     propPath: ['mapOne', 123],
     updater: (mutableTarget: Target) => {
       mutableTarget.name = 'A new name';
     },
-    afterClone: (original, mutableTarget: any) => {
+    afterClone: (_, mutableTarget: any) => {
       if (!mutableTarget.done) {
         mutableTarget.done = true;
       }
@@ -99,8 +98,6 @@ it('should clone with a clone function', () => {
     },
   });
 
-  expect(originalObj.mapOne.get(123).name).toBe('Task one (number key)');
-  expect(originalObj.mapOne.get(123).done).toBe(false);
-  expect(cloneObj.mapOne.get(123).name).toBe('A new name');
-  expect(cloneObj.mapOne.get(123).done).toBe(true);
+  expect(original.mapOne.get(123).name).toBe('A new name');
+  expect(original.mapOne.get(123).done).toBe(true);
 });
