@@ -102,16 +102,16 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [API](#api)
-  - [The `store` object](#the-store-object)
-  - [The `collect` function](#the-collect-function)
-  - [The `afterChange` function](#the-afterchange-function)
-  - [The `batch` function](#the-batch-function)
-  - [The `initStore` function](#the-initstore-function)
+  - [`store`](#store)
+  - [`collect(ReactComponent)`](#collectreactcomponent)
+  - [`afterChange(callback)`](#afterchangecallback)
+  - [`initStore(data)`](#initstoredata)
     - [On the server](#on-the-server)
     - [In the browser](#in-the-browser)
-  - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
-  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+  - [`batch(callback)`](#batchcallback)
+  - [`window.__RR__`](#window__rr__)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
@@ -133,6 +133,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
   - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
+  - [Can I use this with `ref`s?](#can-i-use-this-with-refs)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
   - [Can I use Recollect without React?](#can-i-use-recollect-without-react)
   - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
