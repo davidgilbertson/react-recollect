@@ -102,7 +102,11 @@ if ('tasks' in store) {
 
 delete store.tasks; // No problem
 
-store = 'tasks'; // NOPE! (Can't reassign a constant)
+store.site = { title: 'Page one' }; // Acceptable
+
+Object.assign(store.site, { title: 'Page two' }); // Neato
+
+store = 'foo'; // NOPE! (Can't reassign a constant)
 ```
 
 Recollect is always watching and it knows which components need what data from
@@ -120,40 +124,38 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
-  - [API](#api)
-    - [The `afterChange` function](#the-afterchange-function)
-    - [The `batch` function](#the-batch-function)
-    - [The `initStore` function](#the-initstore-function)
-      - [On the server](#on-the-server)
-      - [In the browser](#in-the-browser)
-    - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
-    - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
-  - [Usage with TypeScript](#usage-with-typescript)
-    - [Your store](#your-store)
-    - [Using collect](#using-collect)
+- [API](#api)
+  - [The `afterChange` function](#the-afterchange-function)
+  - [The `batch` function](#the-batch-function)
+  - [The `initStore` function](#the-initstore-function)
+    - [On the server](#on-the-server)
+    - [In the browser](#in-the-browser)
+  - [Passing a ref to a collected component](#passing-a-ref-to-a-collected-component)
+  - [Peeking into Recollect's innards](#peeking-into-recollects-innards)
+- [Usage with TypeScript](#usage-with-typescript)
+  - [Your store](#your-store)
+  - [Using collect](#using-collect)
 - [How Recollect works](#how-recollect-works)
 - [Project structure guidelines](#project-structure-guidelines)
   - [Concepts](#concepts)
   - [Selectors](#selectors)
-    - [Keeping references to objects in the store](#keeping-references-to-objects-in-the-store)
-    - [Always pass the store to selectors](#always-pass-the-store-to-selectors)
   - [Updaters](#updaters)
     - [Loading data with an updater](#loading-data-with-an-updater)
     - [Asynchronous updaters](#asynchronous-updaters)
     - [Testing an updater](#testing-an-updater)
 - [FAQ](#faq)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
-    - [Gotchas with Maps and Sets](#gotchas-with-maps-and-sets)
+    - [Map and Set limitations](#map-and-set-limitations)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
   - [Do lifecycle methods still fire?](#do-lifecycle-methods-still-fire)
-  - [Why isn't my `componentDidUpdate` code firing?](#why-isnt-my-componentdidupdate-code-firing)
+    - [Why isn't my `componentDidUpdate` code firing?](#why-isnt-my-componentdidupdate-code-firing)
   - [Can I use this with `shouldComponentUpdate()`?](#can-i-use-this-with-shouldcomponentupdate)
   - [Can I wrap a `PureComponent` or `React.memo` in `collect`?](#can-i-wrap-a-purecomponent-or-reactmemo-in-collect)
   - [Can I use this with `Context`?](#can-i-use-this-with-context)
   - [Can I have multiple stores?](#can-i-have-multiple-stores)
+  - [Can I use Recollect without React?](#can-i-use-recollect-without-react)
   - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
   - [Tell me about your tests](#tell-me-about-your-tests)
   - [How big is it?](#how-big-is-it)
@@ -416,104 +418,41 @@ can work out how to resolve the `@ts-ignore` in
 > This section is for the curious, you don't need to know any of this to use
 > Recollect.
 
-The `store` object that Recollect exposes is designed to _feel_ like a plain old
-mutable JavaScript object, but it isn't.
+The `store` object that Recollect exposes is designed to behave like a plain old
+JavaScript object, but it isn't.
 
-If you do something like `store.site.title = 'Page two'`, Recollect will **not**
-mutate the store object (the `Proxy` object that wraps the store will block the
-`.set()` operation). Instead, it will create a new store where the site title is
-'Page two'. It will then re-render any React components that need to know about
-the title, passing this _new_ store.
+Every object you add to the Recollect store gets wrapped in a `Proxy`. These
+proxies allow Recollect to intercept reads and writes. It's similar to defining
+getters and setters, but far more powerful.
 
-During that next render cycle, if a React component looks at `prevProps` inside
-`componentDidUpdate()` it will see the previous version of the store, just like
-you're used to with state, context, or Redux.
-
-Immediately after the components have re-rendered, the contents of the global
-`store` object are replaced with the contents of the new store. This is all
-synchronous, so in your code you can treat the store as though it was mutated.
-
-Let's summarise in code:
+If you were to execute the code below, that `site` object would be wrapped in a
+proxy.
 
 ```js
-store.site.title = 'Page two';
-
-// - the attempted change is blocked
-// - a new store is created
-// - relevant React components are updated with the new store
-// - the global store object will have its contents replaced with the new store
-// - and then this code will continue to execute...
-
-console.log(store.site.title); // 'Page two'. Like you would expect
+store.site = {
+  title: 'Page one',
+};
 ```
 
-So the end result is exactly the same behaviour as a mutable object.
+(Items are deeply/recursively wrapped, not just the top level object you add.)
 
-Sweet.
+Now, if you execute the code `store.site.title = 'Page two'`, Recollect won't
+mutate the `site` object to set the `title` property. Recollect will block the
+operation and instead create a clone of the object where `title` is
+`'Page two'`. Recollect keeps a reference between the old and the new `site`
+objects, so any attempt to read from or write to the 'old version' will be
+redirected to the 'new version' of that object.
 
-Hiding away immutability like this allows for simpler code, but there may be
-times when you're left scratching your head.
+In addition to intercepting _write_ operations, the proxies also allow Recollect
+to know when data is being _read_ from the store. When you wrap a component in
+`collect`, you're instructing Recollect to monitor when that component starts
+and stops rendering. Any read from the store while a component is rendering
+results in that component being 'subscribed' to the property that was read.
 
-If you read from the _global_ store object inside the render method of a
-component, you'd actually be getting the previous version of the data, because
-the 'update components' step comes before the 'update the global store' step.
-
-Another example:
-
-```js
-const firstTask = store.tasks[0];
-const secondTask = store.tasks[1];
-
-store.tasks[0].done = true;
-
-console.log(store.tasks[0].done); // true
-
-console.log(firstTask === store.tasks[0]); // false. This task was changed
-console.log(secondTask === store.tasks[1]); // true. This task wasn't changed
-```
-
-`firstTask` starts life as a reference to `store.tasks[0]`, but when the store
-is updated, `store.tasks[0]` is _replaced_ with a new version of the task. So it
-is no longer the same thing as `firstTask`.
-
-Note also that Recollect is not just doing a full clone of the store, it only
-clones the object that was changed (and its ancestors), just like Redux
-reducers.
-
-Now for something a bit weird:
-
-```js
-const firstTask = store.tasks[0];
-
-firstTask.done = true;
-
-console.log(firstTask.done); // false - wot?!
-console.log(store.tasks[0].done); // true - double-wot??!!
-```
-
-This is not so weird when you remember that any attempted change to the store
-will create a new version of the store, then copy it back into the store object.
-So when I set `firstTask.done`, Recollect is going to create a new store where
-that task is done. It doesn't matter if I do `store.tasks[0].done` or
-`firstTask.done` - at the point where I do this they're the same object.
-
-But when the new version of the store is created, and then written back into the
-`store` object, the link between `store.tasks[0]` and `firstTask` is broken. So
-`firstTask` is still pointing to the original version of the task (where `done`
-is `false`).
-
-This sucks a bit - no one likes confusing things - but it's necessary to allow
-React to compare current and previous versions of state (which allows it to
-cleverly not update components where props didn't change).
-
-Just remember:
-
-- you are safe if you read from the `store` object, you will get the most recent
-  version of the store always.
-- deep references to items in the store may be broken if you modify the store.
-  I'd be interested to hear about cases where this is proving unpleasant. Please
-  feel free to open an issue with a code snippet, even if you think it's
-  something that can't be fixed.
+Bringing it all together: when some of your code attempts to write to the store,
+Recollect will clone as described above, then notify all the components that use
+the property that was updated, passing those components the 'next' version of
+the store.
 
 # Project structure guidelines
 
@@ -577,15 +516,12 @@ export const getIncompleteTasksSortedByDueDate = (store) => {
 };
 ```
 
-You would then use this function by importing it:
-
-```js
-import { getIncompleteTasksSortedByDueDate } from '../store/selectors/taskSelectors';
-```
-
-And referencing it in your component:
+You would then use this function by importing it and referencing it in your
+component:
 
 ```jsx
+import { getIncompleteTasksSortedByDueDate } from '../store/selectors/taskSelectors';
+
 const TaskList = ({ store }) => {
   const tasks = getIncompleteTasksSortedByDueDate(store);
 
@@ -599,7 +535,10 @@ const TaskList = ({ store }) => {
 };
 ```
 
-Apologies for the long variable name if you're reading this on mobile.
+In this example, I'm passing the `store` object into the `selector`. But you
+could also do `import { store } from 'react-recollect'` in the selector file.
+(In Recollect version 4 and earlier, you _had_ to pass the store through. From
+v5 onwards, you can use `props.store` _or_ import the store.)
 
 Maybe we want to conditionally show either all tasks or only incomplete tasks.
 Let's create a second selector. And while we're at it, move repeated sorting
@@ -660,62 +599,17 @@ class TaskList extends PureComponent {
 Now, when a user changes the dropdown, the component state will update, a
 re-render will be triggered, and as a result, a different selector will be used.
 
-So far none of this has anything to do with Recollect. But there's some
-interesting stuff happening here that's worth discussing.
-
-### Keeping references to objects in the store
-
-Do you remember when we did this?
-
-```js
-const getTasksSortedByDate = (tasks) => {
-  const sortedTasks = tasks.slice();
-
-  return sortedTasks.sort((a, b) => a.dueDate - b.dueDate);
-};
-```
-
-That `tasks.slice()` part is very important, but first, a history lesson.
-
-When the people that made JavaScript were coming up with array methods, for each
-one they would do a shot of tequila and flip a coin to decide whether or not it
-should mutate the original array. So `splice` mutates an array, `slice` does
-not, `push` does, `concat` does not.
-
-And our friend `sort` _does_ mutate the original array.
-
-But we don't want to change the order of tasks in the store — some other part of
-the app might be using them. So we `slice()` the array to create a shallow copy.
-'Shallow' means that the tasks in the resulting array are still a reference to
-the actual tasks in the store. So if we call `task.done = true` on one of them,
-the store will update.
-
-Or more accurately, when you do `task.done = true` Recollect will orchestrate
-immutably updating the store and re-render any React components that had read
-that task's `done` property during their last render.
-
-So, it's important that if you return an object from a selector (e.g. a task),
-and you want to set a property on that object later (e.g. mark it as done), then
-you need to make sure you're returning a reference to an item in the store, not
-a copy.
-
-As long as you don't use `Object.assign()` or spread operators or some deep
-clone function, you'll be fine.
-
-### Always pass the store to selectors
-
-For the same reason as above, you _must_ pass the store to selectors, and it
-_must_ be the store that was passed to the component as a prop (not the one you
-can import directly from `react-recollect`). If you try to get data from the
-store imported from `react-recollect`, you will get an error.
-
 ## Updaters
 
-An 'updater' is a function that updates the store in some way.
+An 'updater' is a function that updates the store in some way. As with
+selectors, you don't _need_ to use updaters, they're just an organizational
+concept to minimize the amount of data logic you have in your component files.
 
 A simple case for an updater would be to mark all tasks as done in a todo app:
 
 ```js
+import { store } from 'react-recollect';
+
 export const markAllTasksAsDone = () => {
   store.tasks.forEach((task) => {
     task.done = true;
@@ -723,25 +617,24 @@ export const markAllTasksAsDone = () => {
 };
 ```
 
-(Remember, this _looks_ like it's mutating the store, but it ain't.)
-
-You would reference this from a component by importing it:
-
-```js
-import { markAllTasksAsDone } from '../store/updaters/taskUpdaters';
-```
-
-Then calling it in response to some user action:
+You would reference this from a component by importing it then calling it in
+response to some user action:
 
 ```jsx
-<button onClick={markAllTasksAsDone}>Mark all as done</button>
+import { markAllTasksAsDone } from '../store/updaters/taskUpdaters';
+
+const Footer = () => (
+  <button onClick={markAllTasksAsDone}>Mark all as done</button>
+);
+
+export default Footer;
 ```
 
 You don't need to 'dispatch' an 'action' from an 'action creator' to a
 'reducer'; you're just calling a function that updates the store.
 
 And since these are just plain functions, they're 'composable'. Or in other
-words, if you want an updater that calls three other updaters, go nuts.
+words, if you want an updater that calls three other updaters, go for it.
 
 ### Loading data with an updater
 
@@ -782,10 +675,8 @@ class TaskList extends React.Component {
 ### Asynchronous updaters
 
 Did you notice that we've already covered the super-complex topic of
-asynchronicity?
-
-And you didn't even need to install
-`react-recollect-immutable-thunk-saga-helper` :)
+asynchronicity? You can update the Recollect store whenever you like, so you
+don't need to do anything special to get asynchronous code to work.
 
 ### Testing an updater
 
@@ -884,20 +775,52 @@ test('loadTasksFromServer should update the store', async () => {
 
 ## What sort of stuff can go in the store?
 
-Data. Anything JSON serializable, plus `Map`, `Set` and `undefined`.
+You can store anything that's valid JSON. If that's all you want to do, you can
+skip the rest of this section.
 
-Things that aren't supported:
+Recollect will store data of any type, including (but not limited to):
 
-- functions (e.g. getters, setters, or other methods)
-- properties defined with `Object.defineProperty()`
-- string properties on arrays, Maps and Sets
+- `undefined`
+- `Map`
+- `Set`
 - `RegExp` objects
-- `Date` objects (I'm working on this)
-- `Proxy`, `Uint16Array` etc.
-- linking (e.g. one item in the store that is just a reference to another item
-  in the store)
+- `Date` objects
 
-### Gotchas with Maps and Sets
+Recollect will _monitor_ changes to:
+
+- Primitives (string, number, boolean, null, undefined, symbol)
+- Plain objects
+- Arrays
+- Maps (see limitations below)
+- Sets (see limitations below)
+
+Recollect will store, but not monitor attempted mutations to other objects. For
+example:
+
+- `store.date = new Date()` is fine.
+- `store.date.setDate(7)` will not trigger an update.
+- `store.uIntArray = new Uint8Array([3, 2, 1])` is fine.
+- `store.uIntArray.sort()` will not trigger an update.
+
+The same applies to `WeakMap`, `DataView`, `ArrayBuffer` and any other object
+you can think of.
+
+If there's a data type you want to store and mutate that isn't supported, log an
+issue and we'll chat.
+
+Other things that aren't supported:
+
+- Functions (e.g. getters, setters, or other methods)
+- Class instances (if this would be useful to you, log an issue and we'll chat)
+- Properties defined with `Object.defineProperty()`
+- String properties on arrays, Maps and Sets (I don't mean string _keys_ in
+  maps, I mean actually creating a property on the object itself - a fairly
+  unusual thing to do)
+- `Proxy` objects (if this would be useful to you, log an issue and we'll chat)
+- Linking (e.g. one item in the store that is a reference to another item in the
+  store)
+
+### Map and Set limitations
 
 Updating an object _key_ of a map entry will not always trigger a render of
 components using that object. But in most cases you'd be storing your data in
@@ -924,7 +847,7 @@ calling `this.setState` or changes via `useState`.
 Yep. Recollect has no effect on `componentDidMount`, `componentDidUpdate` and
 friends.
 
-## Why isn't my `componentDidUpdate` code firing?
+### Why isn't my `componentDidUpdate` code firing?
 
 If you have a store prop that you _only_ refer to in `componentDidUpdate` (e.g.
 `store.loaded`), then your component won't be subscribed to changes in that
@@ -961,26 +884,29 @@ that it needs to render has changed.
 There's no need. The `collect` function wraps your component in a
 `PureComponent` and there's no benefit to having two of them.
 
-But it's generally a good idea to wrap other components in `PureComponent` or
-`React.memo` - especially components that are rendered in an array, like
-`<Todo>`. If you have a hundred todos, and add one to the list, you can skip a
-render for all the existing `<Todo>` components if they're marked as pure.
+It's a good idea to wrap _other_ components in `PureComponent` or `React.memo`
+though - especially components that are rendered in an array, like `<Todo>`. If
+you have a hundred todos, and add one to the list, you can skip a render for all
+the existing `<Todo>` components if they're marked as pure.
 
 ## Can I use this with `Context`?
 
-That's a wrong question.
+Yes. Recollect doesn't interfere with other libraries that use `Context`.
 
-Context is a way to share data across your components. You don't need this now
-that you have a global `store` object that you can read from and write to
-anywhere and at any time.
+You shouldn't need to use `Context` yourself though. You have a global `store`
+object that you can read from and write to anywhere.
 
 ## Can I have multiple stores?
 
-No, but you don't want multiple stores anyway :)
+No. There is no performance improvement to be had, so the desire for multiple
+stores is just an organizational preference. For this, you can use 'selectors'
+to focus on a subset of your store.
 
-There is no performance improvement to be had, so the desire for multiple stores
-is just an organizational preference. And objects already have a mechanism to
-organize their contents: 'properties'.
+## Can I use Recollect without React?
+
+Yes! You can use `store` without using `collect`. Pair this with `afterChange`
+to have an object that notifies you when its changed. For an example, check out
+[tests/integration/nodeJs.js](./tests/integration/nodeJs.js)
 
 ## I'm getting a `no-param-reassign` ESLint error
 

@@ -1,16 +1,8 @@
 import { logUpdate } from './shared/debug';
 import state from './shared/state';
 import * as paths from './shared/paths';
-import * as utils from './shared/utils';
 import { PROP_PATH_SEP } from './shared/constants';
-import { AfterChangeEvent, CollectorComponent, PropPath } from './shared/types';
-
-/**
- * Add a callback to be called every time the store changes
- */
-export const afterChange = (cb: (e: AfterChangeEvent) => void) => {
-  state.manualListeners.push(cb);
-};
+import { CollectorComponent, PropPath } from './shared/types';
 
 type Queue = {
   components: Map<CollectorComponent, Set<string>>;
@@ -37,17 +29,12 @@ const flushUpdates = () => {
     cb({
       changedProps: Array.from(queue.changedPaths),
       renderedComponents: Array.from(queue.components.keys()),
-      prevStore: state.store,
-      store: state.nextStore,
+      store: state.store,
     })
   );
 
   queue.components.clear();
   queue.changedPaths.clear();
-
-  state.proxyIsMuted = true;
-  utils.replaceObject(state.store, state.nextStore);
-  state.proxyIsMuted = false;
 };
 
 /**

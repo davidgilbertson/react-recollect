@@ -5,8 +5,6 @@
  */
 export const PROP_PATH_SEP = '~~~';
 
-export const IS_PREV_STORE = Symbol('IS_PREV_STORE');
+export const PATH = Symbol('PATH');
 
-export const IS_PROXY = Symbol('IS_PROXY');
-
-export const PATH_PATH_SYMBOL = Symbol('path');
+export const ORIGINAL = Symbol('ORIGINAL');

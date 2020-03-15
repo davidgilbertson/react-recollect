@@ -1,4 +1,4 @@
-import { PATH_PATH_SYMBOL, PROP_PATH_SEP } from './constants';
+import { PATH, PROP_PATH_SEP } from './constants';
 import { PropPath, Target } from './types';
 
 // Joins an array that potentially contains symbols, which need an explicit
@@ -19,7 +19,7 @@ export const makeInternalString = (propPath: PropPath) =>
  * combined
  */
 export const extend = (target: Target, prop?: any): PropPath => {
-  const basePath = target[PATH_PATH_SYMBOL] || [];
+  const basePath = target[PATH] || [];
 
   if (typeof prop === 'undefined') return basePath;
 
@@ -35,16 +35,16 @@ export const extendToUserString = (target: Target, prop?: any): string =>
 export const addProp = (target: Target, propPath: PropPath) => {
   if (!target) return;
 
-  Object.defineProperty(target, PATH_PATH_SYMBOL, {
+  Object.defineProperty(target, PATH, {
     value: propPath,
     writable: true, // paths can be updated. E.g. store.tasks.2 could become store.tasks.1
   });
 };
 
-export const get = (target: Target) => target[PATH_PATH_SYMBOL] || [];
+export const get = (target: Target) => target[PATH] || [];
 
-export const has = (target: Target) => PATH_PATH_SYMBOL in target;
+export const has = (target: Target) => PATH in target;
 
 export const set = (mutableTarget: Target, propPath: PropPath) => {
-  mutableTarget[PATH_PATH_SYMBOL] = propPath;
+  mutableTarget[PATH] = propPath;
 };
