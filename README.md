@@ -4,9 +4,11 @@
 
 # React Recollect
 
-Recollect is a state management library, an alternative to Redux.
+## What?
 
-## Why does this exist?
+Recollect is a state management library for React, an alternative to Redux.
+
+## Why?
 
 Recollect aims to solve two problems with the traditional React/Redux approach:
 
@@ -14,7 +16,7 @@ Recollect aims to solve two problems with the traditional React/Redux approach:
 2. Components can be re-rendered as a result of a store change, even if they
    don't use the data that changed.
 
-## How does it solve this?
+## How?
 
 1. The Recollect store is immutable, but the implementation is hidden. So, you
    can interact with the store as though it was a plain JavaScript object.
