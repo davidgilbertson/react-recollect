@@ -43,15 +43,11 @@ export type State = {
 // For clarity. The path can contain anything that can be a Map key.
 export type PropPath = any[];
 
-type Updater = {
-  (target: Target, value: any): void;
-};
-
 export type UpdateInStoreProps = {
   target: Target;
   prop?: any;
   value?: any;
-  updater: Updater;
+  updater: (target: Target, value: any) => void;
 };
 
 export type UpdateInStore = {

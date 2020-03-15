@@ -41,9 +41,7 @@ export const addProp = (target: Target, propPath: PropPath) => {
   });
 };
 
-export const get = (target: Target) => {
-  return target[PATH] || [];
-};
+export const get = (target: Target) => target[PATH] || [];
 
 export const has = (target: Target) => PATH in target;
 

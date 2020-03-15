@@ -102,7 +102,11 @@ if ('tasks' in store) {
 
 delete store.tasks; // No problem
 
-store = 'tasks'; // NOPE! (Can't reassign a constant)
+store.site = { title: 'Page one' }; // Acceptable
+
+Object.assign(store.site, { title: 'Page two' }); // Neato
+
+store = 'foo'; // NOPE! (Can't reassign a constant)
 ```
 
 Recollect is always watching and it knows which components need what data from
@@ -433,17 +437,17 @@ store.site = {
 (Items are deeply/recursively wrapped, not just the top level object you add.)
 
 Now, if you execute the code `store.site.title = 'Page two'`, Recollect won't
-mutate the `site` object to set the `title` property. The proxy will block the
-operation and instead create a clone of the object where `title` is set to
-`Page two`. Recollect keeps a reference between the old and the new `site`
+mutate the `site` object to set the `title` property. Recollect will block the
+operation and instead create a clone of the object where `title` is
+`'Page two'`. Recollect keeps a reference between the old and the new `site`
 objects, so any attempt to read from or write to the 'old version' will be
-redirected (by the proxy) to the new version of that object.
+redirected to the 'new version' of that object.
 
 In addition to intercepting _write_ operations, the proxies also allow Recollect
 to know when data is being _read_ from the store. When you wrap a component in
-`collect`, you're allowing Recollect to know when that component starts and
-stops rendering. Any read from the store while a component is rendering results
-in that component being 'subscribed' to the property that was read.
+`collect`, you're instructing Recollect to monitor when that component starts
+and stops rendering. Any read from the store while a component is rendering
+results in that component being 'subscribed' to the property that was read.
 
 Bringing it all together: when some of your code attempts to write to the store,
 Recollect will clone as described above, then notify all the components that use
@@ -790,12 +794,16 @@ Recollect will _monitor_ changes to:
 - Maps (see limitations below)
 - Sets (see limitations below)
 
-Recollect will not monitor mutations to any other non-primitives. For example:
+Recollect will store, but not monitor attempted mutations to other objects. For
+example:
 
 - `store.date = new Date()` is fine.
 - `store.date.setDate(7)` will not trigger an update.
 - `store.uIntArray = new Uint8Array([3, 2, 1])` is fine.
 - `store.uIntArray.sort()` will not trigger an update.
+
+The same applies to `WeakMap`, `DataView`, `ArrayBuffer` and any other object
+you can think of.
 
 If there's a data type you want to store and mutate that isn't supported, log an
 issue and we'll chat.
@@ -820,8 +828,6 @@ the _value_ of a map entry, and that works fine.
 
 Similarly, updating an object in a set may not trigger an update to components
 using that object (adding/removing items from a set works fine).
-
-`WeakMap` and `WeakSet` are not supported.
 
 ## Can I use this with class-based components and functional components?
 

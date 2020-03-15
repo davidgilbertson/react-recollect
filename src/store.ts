@@ -11,18 +11,14 @@ import { ORIGINAL } from './shared/constants';
  * This is the store, as exported to the user. When the store is passed to a
  * component, it is shallow cloned. This leaves us free to mutate the root
  * level directly.
- * When updating, the following rules are followed:
- * - If updating the root level, the store object itself is mutated.
- * - For any other update (deep update) we clone each node along the path to
- *   the target to update (the target is cloned too).
  */
 state.store = proxyManager.createShallow({});
 
 /**
- * This function immutably updates a target in the store, returning the new store.
- * If the target is the store root, it's mutated in place.
- * It doesn't update the target directly, but calls an update() function which
- * will perform the update.
+ * Deep update the store, the following rules are followed:
+ * - If updating the root level, the store object itself is mutated.
+ * - For any other (deep) update we clone each node along the path to
+ *   the target to update (the target is cloned too).
  */
 export const updateStore: UpdateInStore = ({
   target,
@@ -42,6 +38,7 @@ export const updateStore: UpdateInStore = ({
   const newValue = proxyManager.createDeep(value, propPath);
 
   if (!targetPath.length) {
+    // If the target is the store root, it's mutated in place.
     updater(state.store, newValue);
   } else {
     utils.deepUpdate({

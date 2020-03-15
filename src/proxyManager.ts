@@ -315,22 +315,20 @@ export const getHandlerForObject = <T extends Target>(
 /**
  * Wrap an item in a proxy
  */
-export const createShallow = <T extends any>(item: T): T => {
-  if (!item) return item;
+export const createShallow = <T extends any>(target: T): T => {
+  if (!target || !utils.isProxyable(target)) return target;
 
-  if (!utils.isProxyable(item)) return item;
+  const handler = getHandlerForObject(target);
 
-  const handler = getHandlerForObject(item);
-
-  return new Proxy(item as Target, handler) as T;
+  return new Proxy(target as Target, handler) as T;
 };
 
 /**
  * Wrap an item, and all proxiable children, in proxies
  */
 export const createDeep = <T extends Target>(
-  parentObject: T,
-  parentPropPath: PropPath = []
+  rootTarget: T,
+  rootTargetPropPath: PropPath
 ): T => {
   const proxyThisLevel = <U extends any>(target: U, propPath: PropPath): U => {
     if (!isProxyable(target)) return target;
@@ -374,5 +372,5 @@ export const createDeep = <T extends Target>(
     return createShallow(next);
   };
 
-  return proxyThisLevel(parentObject, parentPropPath);
+  return proxyThisLevel(rootTarget, rootTargetPropPath);
 };
