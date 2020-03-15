@@ -1,15 +1,14 @@
-/* eslint-disable react/prefer-stateless-function */
 import React from 'react';
 import { collect, WithStoreProp } from '../../src';
 
 describe('should copy static methods to the collected component', () => {
   it('for a class component', () => {
     class ClassWithStaticRaw extends React.Component<WithStoreProp> {
+      static returnDogs: () => string;
+
       static returnCats() {
         return 'cats';
       }
-
-      static returnDogs: () => string;
 
       render() {
         return <h1>Hi</h1>;
