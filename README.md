@@ -109,6 +109,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
+  - [`ignore(CallbackFunction)`](#ignorecallbackfunction)
   - [`afterChange(callback)`](#afterchangecallback)
   - [`initStore(data)`](#initstoredata)
     - [On the server](#on-the-server)
