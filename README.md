@@ -39,12 +39,13 @@ usage stats for proxies at [caniuse.com](https://caniuse.com/#feat=proxy).
 npm i react-recollect
 ```
 
-There's two things you need to know about: the `store` object and the `collect`
-function.
+The `store` object and the `collect` function are all you need to know to get
+started.
 
-The store is where your data goes, and you can treat it just like you'd treat
-any JavaScript object. You can import, read from, and write to the store in any
-file.
+The store is where your data goes; you can treat it just like you'd treat any
+JavaScript object. You can import, read from, and write to the store in any
+file. Here's an abundance of examples to break you out of that immutability
+mindset...
 
 ```js
 import { store } from 'react-recollect';
@@ -53,18 +54,18 @@ store.tasks = ['one', 'two', 'three']; // Fine
 
 store.tasks.push('four'); // Good
 
-if ('tasks' in store) {
-  // Nice one
-}
-
-delete store.tasks; // No problem
-
 store.site = { title: 'Page one' }; // Acceptable
+
+store.site.title += '!'; // Exciting!
 
 Object.assign(store.site, { title: 'Page two' }); // Neato
 
+delete store.site; // Seems extreme, but works a treat
+
 store = 'foo'; // Nope! (can't reassign a constant)
 ```
+
+(Internally, none of that mutated the store contents.)
 
 The `collect` function wraps a React component, allowing Recollect to take care
 of it. This will provide the store as a prop, and update the component when it
@@ -106,6 +107,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -118,7 +120,6 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
-- [How Recollect works](#how-recollect-works)
 - [Project structure guidelines](#project-structure-guidelines)
   - [Selectors](#selectors)
   - [Updaters](#updaters)
@@ -126,6 +127,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
     - [Asynchronous updaters](#asynchronous-updaters)
     - [Testing an updater](#testing-an-updater)
 - [FAQ](#faq)
+  - [How does it work?](#how-does-it-work)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
     - [Map and Set limitations](#map-and-set-limitations)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
@@ -142,6 +144,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [I'm getting a `no-param-reassign` ESLint error](#im-getting-a-no-param-reassign-eslint-error)
   - [Tell me about your tests](#tell-me-about-your-tests)
   - [How big is it?](#how-big-is-it)
+  - [Is reading/writing via a proxy slow?](#is-readingwriting-via-a-proxy-slow)
 - [Dependencies](#dependencies)
 - [Alternatives](#alternatives)
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
@@ -203,10 +206,14 @@ afterChange((e) => {
 ## `initStore(data)`
 
 The `initStore` function will _replace_ the contents of the store with the
-object you pass in. If you don't pass anything, it will empty the store.
+object you pass in.
+
+`data` is optional — if you don't pass anything, the store will be emptied.
 
 If you're only using Recollect in the browser, you don't _need_ to use this, but
-it's handy to set the default state of your store.
+it's handy to set the default state of your store. Remember that you can also
+use `Object.assign(store, { foo: 'bar' })` if you want to shallow-merge new data
+into the store.
 
 When you render on the server though, you _do_ need to initialize the store,
 because unlike a browser, a server is shared between many users and state needs
@@ -360,7 +367,7 @@ Put this in a declarations file such as `src/types/RecollectStore.ts`.
 
 ## Using collect
 
-Components wrapped in `collect` must define `store` in `props` - use the
+Components wrapped in `collect` must define `store` in `props` — use the
 `WithStoreProp` interface for this:
 
 ```tsx
@@ -391,44 +398,6 @@ something.
 (If you've got Mad TypeScript Skillz and would like to contribute, see if you
 can work out how to resolve the `@ts-ignore` in
 [the collect module](./src/collect.tsx)).
-
-# How Recollect works
-
-> This section is for the curious, you don't need to know any of this to use
-> Recollect.
-
-Every object you add to the Recollect store gets wrapped in a `Proxy`. These
-proxies allow Recollect to intercept reads and writes. It's similar to defining
-getters and setters, but far more powerful.
-
-If you were to execute the code below, that `site` object would be wrapped in a
-proxy.
-
-```js
-store.site = {
-  title: 'Page one',
-};
-```
-
-(Items are deeply/recursively wrapped, not just the top level object you add.)
-
-Now, if you execute the code `store.site.title = 'Page two'`, Recollect won't
-mutate the `site` object to set the `title` property. Recollect will block the
-operation and instead create a clone of the object where `title` is
-`'Page two'`. Recollect keeps a reference between the old and the new `site`
-objects, so any attempt to read from or write to the 'old version' will be
-redirected to the 'new version' of that object.
-
-In addition to intercepting _write_ operations, the proxies also allow Recollect
-to know when data is being _read_ from the store. When you wrap a component in
-`collect`, you're instructing Recollect to monitor when that component starts
-and stops rendering. Any read from the store while a component is rendering
-results in that component being 'subscribed' to the property that was read.
-
-Bringing it all together: when some of your code attempts to write to the store,
-Recollect will clone as described above, then notify all the components that use
-the property that was updated, passing those components the 'next' version of
-the store.
 
 # Project structure guidelines
 
@@ -747,6 +716,41 @@ test('loadTasksFromServer should update the store', async () => {
 
 # FAQ
 
+## How does it work?
+
+Every object you add to the Recollect store gets wrapped in a `Proxy`. These
+proxies allow Recollect to intercept reads and writes. It's similar to defining
+getters and setters, but far more powerful.
+
+If you were to execute the code below, that `site` object would be wrapped in a
+proxy.
+
+```js
+store.site = {
+  title: 'Page one',
+};
+```
+
+(Items are deeply/recursively wrapped, not just the top level object you add.)
+
+Now, if you execute the code `store.site.title = 'Page two'`, Recollect won't
+mutate the `site` object to set the `title` property. Recollect will block the
+operation and instead create a clone of the object where `title` is
+`'Page two'`. Recollect keeps a reference between the old and the new `site`
+objects, so any attempt to read from or write to the 'old version' will be
+redirected to the 'new version' of that object.
+
+In addition to intercepting _write_ operations, the proxies also allow Recollect
+to know when data is being _read_ from the store. When you wrap a component in
+`collect`, you're instructing Recollect to monitor when that component starts
+and stops rendering. Any read from the store while a component is rendering
+results in that component being 'subscribed' to the property that was read.
+
+Bringing it all together: when some of your code attempts to write to the store,
+Recollect will clone as described above, then notify all the components that use
+the property that was updated, passing those components the 'next' version of
+the store.
+
 ## What sort of stuff can go in the store?
 
 You can store anything that's valid JSON. If that's all you want to do, you can
@@ -788,7 +792,7 @@ Other things that aren't supported:
 - Class instances (if this would be useful to you, log an issue and we'll chat)
 - Properties defined with `Object.defineProperty()`
 - String properties on arrays, Maps and Sets (I don't mean string _keys_ in
-  maps, I mean actually creating a property on the object itself - a fairly
+  maps, I mean actually creating a property on the object itself — a fairly
   unusual thing to do)
 - `Proxy` objects (if this would be useful to you, log an issue and we'll chat)
 - Linking (e.g. one item in the store that is a reference to another item in the
@@ -859,7 +863,7 @@ There's no need. The `collect` function wraps your component in a
 `PureComponent` and there's no benefit to having two of them.
 
 It's a good idea to wrap _other_ components in `PureComponent` or `React.memo`
-though - especially components that are rendered in an array, like `<Todo>`. If
+though — especially components that are rendered in an array, like `<Todo>`. If
 you have a hundred todos, and add one to the list, you can skip a render for all
 the existing `<Todo>` components if they're marked as pure.
 
@@ -916,7 +920,7 @@ In the [tests](./tests) directory you'll find:
 
 - Unit tests that test the behaviour of the store directly
 - Integration tests that simulate a user interacting with React components that
-  use `store` and `collect` - these might be interesting to you if you want to
+  use `store` and `collect` — these might be interesting to you if you want to
   see examples of `store`/`collect` being used.
 
 ## How big is it?
@@ -924,6 +928,19 @@ In the [tests](./tests) directory you'll find:
 It's about 5 KB. If you were to replace `redux` and `react-redux` with this
 library, you'd save a bit over 1 KB. But if you've got a decent sized app, the
 real size reduction comes from getting rid of all your reducers.
+
+## Is reading/writing via a proxy slow?
+
+Slow, no. Slower than vanilla object operations, yes.
+
+Let's quantify with a case study: in an app that has a store with ~80,000
+properties, ~30,000 of them proxied objects and ~1,000 component listeners,
+updating a chunk of data requiring 50 new proxies takes ~2 milliseconds (on
+desktop). For that app, 2ms was considered insignificant compared to the ~90ms
+spent on the resulting render cycle.
+
+If you're processing big data and facing performance troubles, open an issue and
+we'll chat.
 
 # Dependencies
 
