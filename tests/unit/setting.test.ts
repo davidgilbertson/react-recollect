@@ -49,6 +49,46 @@ it('should add an object', () => {
   );
 });
 
+it('should Object.assign() just fine', () => {
+  store.level1 = {
+    level2: 'text',
+  };
+
+  Object.assign(store.level1, {
+    level2B: 'new text',
+  });
+
+  expect(store).toEqual({
+    level1: {
+      level2: 'text',
+      level2B: 'new text',
+    },
+  });
+
+  Object.assign(store.level1, {
+    level2: 'new text',
+  });
+
+  expect(store).toEqual({
+    level1: {
+      level2: 'new text',
+      level2B: 'new text',
+    },
+  });
+
+  Object.assign(store, {
+    level1B: 'new text',
+  });
+
+  expect(store).toEqual({
+    level1: {
+      level2: 'new text',
+      level2B: 'new text',
+    },
+    level1B: 'new text',
+  });
+});
+
 it('should allow uncommon prop types', () => {
   store.interestingObject = {
     level1: {},
