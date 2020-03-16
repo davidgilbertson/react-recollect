@@ -164,6 +164,17 @@ anything.
 When the store is then passed to a component, React can do its clever shallow
 comparisons to know that something has changed and update efficiently.
 
+## `ignore(CallbackFunction)`
+
+The `ignore` function that Recollect exposes accepts a callback- a plain
+Javascript function. While this function is being called, Recollect ignores
+any and all changes to the store.
+
+This should only be used as a performance optimisation and when updating a
+particular value in the store should never trigger any re-renders, for
+example with a controlled textarea where the contents of the textarea are
+written to the store with every keystroke.
+
 ## `collect(ReactComponent)`
 
 When you wrap a component in `collect`, Recollect will:
