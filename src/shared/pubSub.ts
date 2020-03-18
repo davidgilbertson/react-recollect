@@ -23,8 +23,7 @@ export const onUpdateInNextStore = (func: UpdateInStore) => {
 };
 
 export const dispatchUpdateInNextStore = (data: UpdateInStoreProps) => {
-  const func = subscribers[ActionTypes.UpdateNextStore];
-  if (func) func(data);
+  return subscribers[ActionTypes.UpdateNextStore]!(data);
 };
 
 /**

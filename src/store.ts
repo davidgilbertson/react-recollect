@@ -24,22 +24,34 @@ export const updateStore: UpdateInStore = ({
   target,
   prop,
   value,
+  notifyTarget = false,
   updater,
 }) => {
   state.proxyIsMuted = true;
+  let result: any;
+  const initialSize = utils.getSize(target);
 
-  // Note that this function doesn't know anything about the prop being set.
+  // This function doesn't know anything about the prop being set.
   // It just finds the target (the parent of the prop) and
   // calls updater() with it.
   const targetPath = paths.get(target);
+
+  // Note that if this update is a method (e.g. arr.push()) then prop can be
+  // undefined, meaning the prop path won't be extended, and will just be
+  // the path of the target (the array) which is correct.
   const propPath = paths.extend(target, prop);
+
+  // If we change the length/size of an array/map/set, we will want to
+  // trigger a render of the parent path.
+  let targetChangedSize = false;
 
   // Make sure the new value is deeply wrapped in proxies
   const newValue = proxyManager.createDeep(value, propPath);
 
   if (!targetPath.length) {
     // If the target is the store root, it's mutated in place.
-    updater(state.store, newValue);
+    result = updater(state.store, newValue);
+    targetChangedSize = utils.getSize(state.store) !== initialSize;
   } else {
     utils.deepUpdate({
       mutableTarget: state.store,
@@ -52,7 +64,8 @@ export const updateStore: UpdateInStore = ({
         return proxyManager.createShallow(clone);
       },
       updater: (updateTarget) => {
-        updater(updateTarget, newValue);
+        result = updater(updateTarget, newValue);
+        targetChangedSize = utils.getSize(updateTarget) !== initialSize;
 
         // `target` may or may not be wrapped in a proxy (Maps and Sets are)
         // So we check/get the unproxied version
@@ -63,7 +76,17 @@ export const updateStore: UpdateInStore = ({
 
   state.proxyIsMuted = false;
 
-  notifyByPath(propPath);
+  // If the 'size' of a target changes, it's reasonable to assume that
+  // target is going to need to re-render, so we target it.
+  const notifyPath = notifyTarget || targetChangedSize ? targetPath : propPath;
+
+  notifyByPath(notifyPath);
+
+  if (process.env.NODE_ENV === 'development') {
+    if (!result) throw Error('no updater was passed, or it did not return');
+  }
+
+  return result;
 };
 
 pubSub.onUpdateInNextStore(updateStore);

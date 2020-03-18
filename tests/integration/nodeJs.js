@@ -6,15 +6,15 @@ const assert = require('assert');
 const { store, afterChange } = require('../../dist');
 
 // Very sophisticated test framework.
-const test = (name, func) => {
+const runTest = (name, func) => {
   try {
     func();
   } catch (err) {
-    console.error(name, err);
+    throw Error(`${name}: ${err}`);
   }
 };
 
-test('The store should work without `window` present', () => {
+runTest('The store should work without `window` present', () => {
   assert.equal(typeof window, 'undefined');
 
   store.anObject = {
@@ -47,7 +47,7 @@ test('The store should work without `window` present', () => {
   assert.deepStrictEqual(store, {});
 });
 
-test('should trigger afterChange', () => {
+runTest('should trigger afterChange', () => {
   const changes = [];
 
   afterChange((e) => {
@@ -57,6 +57,12 @@ test('should trigger afterChange', () => {
   store.prop1 = {};
   store.prop1.prop2 = {};
   store.prop1.prop2.foo = 'bar';
+  store.prop1.prop2.foo = 'baz';
 
-  assert.deepStrictEqual(changes, ['prop1', 'prop1.prop2', 'prop1.prop2.foo']);
+  assert.deepStrictEqual(changes, [
+    '',
+    'prop1',
+    'prop1.prop2',
+    'prop1.prop2.foo',
+  ]);
 });

@@ -237,25 +237,37 @@ type Person = {
 // The below test operates directly on the store, not via the component
 it('should handle a Map', () => {
   globalStore.testMap = new Map([['david', { name: 'David', age: 100 }]]);
+
+  expect(propPathChanges(handleChange)).toEqual(['']);
+  jest.resetAllMocks();
+
   globalStore.testMap.set('erica', {
     name: 'Erica',
     age: 45,
   });
+
+  // Note that the change was fired at `testMap` because this changed the
+  // size of the map.
+  expect(propPathChanges(handleChange)).toEqual(['testMap']);
+  jest.resetAllMocks();
+
+  globalStore.testMap.set('erica', {
+    name: 'Erica',
+    age: 42,
+  });
+
+  // This time, we just updated an existing item, so the change is fired more
+  // precisely
+  expect(propPathChanges(handleChange)).toEqual(['testMap.erica']);
 
   expect(globalStore.testMap.get('david')).toEqual({
     name: 'David',
     age: 100,
   });
 
-  expect(propPathChanges(handleChange)).toEqual([
-    'testMap',
-    // Note that 'david' isn't here since it was part of the initial map
-    'testMap.erica',
-  ]);
-
   expect(globalStore.testMap.get('erica')).toEqual({
     name: 'Erica',
-    age: 45,
+    age: 42,
   });
 
   handleChange.mockClear();
@@ -271,7 +283,7 @@ it('should handle a Map', () => {
   const entries = Array.from(globalStore.testMap.entries());
   expect(entries).toEqual([
     ['david', { name: 'David', age: 100 }],
-    ['erica', { name: 'Erica', age: 45 }],
+    ['erica', { name: 'Erica', age: 42 }],
   ]);
 
   const forOfResult: Person[] = [];
@@ -285,7 +297,7 @@ it('should handle a Map', () => {
   const values = Array.from(globalStore.testMap.values());
   expect(values).toEqual([
     { name: 'David', age: 100 },
-    { name: 'Erica', age: 45 },
+    { name: 'Erica', age: 42 },
   ]);
 
   const forEachResult: Person[] = [];
@@ -299,30 +311,26 @@ it('should handle a Map', () => {
   expect(handleChange).not.toHaveBeenCalled();
 
   globalStore.testMap.delete('david');
-  expect(propPathChanges(handleChange)).toEqual(['testMap.delete']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap']);
   expect(globalStore.testMap.get('david')).toBeUndefined();
   expect(globalStore.testMap.size).toBe(1);
 
   handleChange.mockClear();
   globalStore.testMap.set(0, 'a numeric key');
-  expect(propPathChanges(handleChange)).toEqual(['testMap.0']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap']);
   expect(globalStore.testMap.get(0)).toBe('a numeric key');
   expect(globalStore.testMap.size).toBe(2);
 
   handleChange.mockClear();
   globalStore.testMap.clear();
-  expect(propPathChanges(handleChange)).toEqual(['testMap.clear']);
+  expect(propPathChanges(handleChange)).toEqual(['testMap']);
   expect(globalStore.testMap.get(0)).toBeUndefined();
   expect(globalStore.testMap.size).toBe(0);
 
   handleChange.mockClear();
   const objectKey = { an: 'object' };
   globalStore.testMap.set(objectKey, 'an object!');
-  expect(propPathChanges(handleChange)).toEqual([
-    // TODO (davidg): it's not great that the keys aren't unique if they're objects.
-    //  It should work fine, but might over-notify
-    'testMap.[object Object]',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['testMap']);
   handleChange.mockClear();
 
   expect(globalStore.testMap.get(objectKey)).toBe('an object!');

@@ -1,4 +1,4 @@
-import { deepUpdate } from '../../src/shared/utils';
+import * as utils from '../../src/shared/utils';
 import { ObjWithSymbols, Target } from '../../src/shared/types';
 
 it('should mutate the object', () => {
@@ -23,7 +23,7 @@ it('should mutate the object', () => {
   const originalLevel1 = data.level1;
   const originalLevel1FirstData = data.level1[0].data;
 
-  deepUpdate({
+  utils.deepUpdate({
     mutableTarget: data,
     propPath: ['level1', 0, 'data'],
     afterClone: (a, b) => b,
@@ -52,7 +52,7 @@ it('should mutate a Map', () => {
   data.mapOne.set(123, { id: 2, name: 'Task one (number key)' });
   data.mapOne.set('two', { id: 3, name: 'Task two' });
 
-  deepUpdate({
+  utils.deepUpdate({
     mutableTarget: data,
     propPath: ['mapOne', 123],
     afterClone: (a, b) => b,
@@ -84,7 +84,7 @@ it('should clone with a clone function', () => {
   original.mapOne.set(123, { name: 'Task one (number key)', done: false });
   original.mapOne.set('two', { name: 'Task two', done: true });
 
-  deepUpdate({
+  utils.deepUpdate({
     mutableTarget: original,
     propPath: ['mapOne', 123],
     updater: (mutableTarget: Target) => {
@@ -100,4 +100,48 @@ it('should clone with a clone function', () => {
 
   expect(original.mapOne.get(123).name).toBe('A new name');
   expect(original.mapOne.get(123).done).toBe(true);
+});
+
+it('should update deep', () => {
+  const data = {
+    level1: [
+      {
+        name: 'Task one',
+        data: { done: true, date: 1234 },
+      },
+      {
+        name: 'Task two',
+        data: { done: true, date: 5678 },
+      },
+    ],
+    level2: {
+      deep: {
+        data: 'the result',
+      },
+    },
+  };
+
+  const paths: any[] = [];
+
+  utils.updateDeep(data, (item: any, path: any[]) => {
+    paths.push(path);
+  });
+
+  expect(paths).toEqual([
+    [],
+    ['level1'],
+    ['level1', 0],
+    ['level1', 0, 'name'],
+    ['level1', 0, 'data'],
+    ['level1', 0, 'data', 'done'],
+    ['level1', 0, 'data', 'date'],
+    ['level1', 1],
+    ['level1', 1, 'name'],
+    ['level1', 1, 'data'],
+    ['level1', 1, 'data', 'done'],
+    ['level1', 1, 'data', 'date'],
+    ['level2'],
+    ['level2', 'deep'],
+    ['level2', 'deep', 'data'],
+  ]);
 });
