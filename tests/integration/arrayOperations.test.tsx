@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { render } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
-import { TaskType } from '../testUtils';
+import * as testUtils from '../testUtils';
 
 let renderCount: number;
 let taskNumber: number;
@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 type Props = {
-  task: TaskType;
+  task: testUtils.TaskType;
 };
 
 const Task = (props: Props) => <div>{props.task.name}</div>;
@@ -113,4 +113,120 @@ it('should operate on arrays', () => {
   expect(renderCount).toBe(6);
 
   expect(queryByText('Task list')).toBeNull();
+});
+
+it('should push then update', () => {
+  globalStore.arr = [];
+  globalStore.arr.push({ name: 'A two', done: false });
+  globalStore.arr.unshift({ name: 'Task one', done: false });
+  globalStore.arr[0].done = true;
+
+  expect(globalStore.arr).toEqual([
+    { name: 'Task one', done: true },
+    { name: 'A two', done: false },
+  ]);
+});
+
+/**
+ * This tests that array mutator methods behave as expected, and that they
+ * only re-render the component once each.
+ */
+it('should update once for array mutator methods', () => {
+  globalStore.arr = [];
+  type Props = {
+    store: {
+      arr: number[];
+    };
+  };
+
+  renderCount = 0;
+
+  const { getByText } = testUtils.collectAndRender(({ store }: Props) => {
+    renderCount++;
+
+    return <div>{`Array: ${store.arr?.join(', ') || 'none'}`}</div>;
+  });
+
+  expect(testUtils.getAllListeners()).toEqual(['arr']);
+
+  getByText('Array: none');
+  expect(renderCount).toBe(1);
+  renderCount = 0;
+  let result;
+
+  const prevArray = globalStore.arr;
+  globalStore.arr.push(22, 11, 33, 77, 44, 55, 66);
+
+  // Confirm that the array is cloned
+  expect(prevArray).not.toBe(globalStore.arr);
+
+  getByText('Array: 22, 11, 33, 77, 44, 55, 66');
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.sort();
+  getByText('Array: 11, 22, 33, 44, 55, 66, 77');
+  expect(result).toEqual([11, 22, 33, 44, 55, 66, 77]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.sort((a: number, b: number) => b - a);
+  getByText('Array: 77, 66, 55, 44, 33, 22, 11');
+  expect(result).toEqual([77, 66, 55, 44, 33, 22, 11]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.reverse();
+  getByText('Array: 11, 22, 33, 44, 55, 66, 77');
+  expect(result).toEqual([11, 22, 33, 44, 55, 66, 77]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.pop();
+  getByText('Array: 11, 22, 33, 44, 55, 66');
+  expect(result).toBe(77);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.shift();
+  getByText('Array: 22, 33, 44, 55, 66');
+  expect(result).toBe(11);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.splice(0, 2);
+  getByText('Array: 44, 55, 66');
+  expect(result).toEqual([22, 33]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.unshift(11, 22, 33);
+  getByText('Array: 11, 22, 33, 44, 55, 66');
+  expect(result).toBe(6);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.copyWithin(0, -3, -2);
+  getByText('Array: 44, 22, 33, 44, 55, 66');
+  expect(result).toEqual([44, 22, 33, 44, 55, 66]);
+  expect(renderCount).toBe(1);
+
+  // Here's an invalid copyWithin. It's fine that this updates
+  renderCount = 0;
+  result = globalStore.arr.copyWithin(0, 2, 2);
+  getByText('Array: 44, 22, 33, 44, 55, 66');
+  expect(result).toEqual([44, 22, 33, 44, 55, 66]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  result = globalStore.arr.fill(11, 1, 3);
+  getByText('Array: 44, 11, 11, 44, 55, 66');
+  expect(result).toEqual([44, 11, 11, 44, 55, 66]);
+  expect(renderCount).toBe(1);
+
+  renderCount = 0;
+  globalStore.arr.length = 0;
+  getByText('Array: none');
+  expect(result).toEqual([]);
+  expect(renderCount).toBe(1);
 });

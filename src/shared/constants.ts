@@ -8,3 +8,28 @@ export const PROP_PATH_SEP = '~~~';
 export const PATH = Symbol('PATH');
 
 export const ORIGINAL = Symbol('ORIGINAL');
+
+/** Some of the map and set methods */
+export const enum MapOrSetMembers {
+  Get = 'get',
+  Add = 'add',
+  Clear = 'clear',
+  Delete = 'delete',
+  Set = 'set',
+}
+
+/** Some of the array methods, and length */
+export const enum ArrayMembers {
+  // Mutating methods
+  CopyWithin = 'copyWithin',
+  Fill = 'fill',
+  Pop = 'pop',
+  Push = 'push',
+  Reverse = 'reverse',
+  Shift = 'shift',
+  Sort = 'sort',
+  Splice = 'splice',
+  Unshift = 'unshift',
+  // Properties
+  Length = 'length',
+}

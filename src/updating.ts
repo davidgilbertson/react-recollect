@@ -1,7 +1,6 @@
 import { logUpdate } from './shared/debug';
 import state from './shared/state';
 import * as paths from './shared/paths';
-import { PROP_PATH_SEP } from './shared/constants';
 import { CollectorComponent, PropPath } from './shared/types';
 
 type Queue = {
@@ -39,11 +38,11 @@ const flushUpdates = () => {
 
 /**
  * Updates any component listening to:
- * - the exact propPath that has been changed. E.g. tasks.2
- * - a path further up the object tree. E.g. store.tasks - this is because a component in an array
- *   will typically get its values from its parent component. Not directly from the store
- *   being made available by collect()
- * - a path further down the object tree. E.g. store.tasks.2.name
+ * - the exact propPath that has been changed. E.g. `tasks.2`
+ * - a path further up the object tree. E.g. a component listening
+ *   on `tasks.0` need to know if `tasks = 'foo'` happens
+ * And if the path being notified is the top level (an empty path), everyone
+ * gets updated.
  */
 export const notifyByPath = (propPath: PropPath) => {
   const pathString = paths.makeInternalString(propPath);
@@ -53,10 +52,8 @@ export const notifyByPath = (propPath: PropPath) => {
 
   state.listeners.forEach((components, listenerPath) => {
     if (
-      listenerPath === '' || // listening directly to the store object
-      pathString === listenerPath || // direct match
-      pathString.startsWith(`${listenerPath}${PROP_PATH_SEP}`) || // listener for parent pathString
-      listenerPath.startsWith(`${pathString}${PROP_PATH_SEP}`) // listener for child path
+      pathString === '' || // Notify everyone for top-level changes
+      pathString === listenerPath
     ) {
       components.forEach((component) => {
         const propsUpdated = queue.components.get(component) || new Set();

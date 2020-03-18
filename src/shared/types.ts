@@ -46,12 +46,15 @@ export type PropPath = any[];
 export type UpdateInStoreProps = {
   target: Target;
   prop?: any;
+  notifyTarget?: boolean;
   value?: any;
-  updater: (target: Target, value: any) => void;
+  /** The updater must return the result of Reflect for the active trap */
+  updater: (target: Target, value: any) => any;
 };
 
+// This returns whatever the updater returns
 export type UpdateInStore = {
-  (props: UpdateInStoreProps): void;
+  (props: UpdateInStoreProps): any;
 };
 
 /**

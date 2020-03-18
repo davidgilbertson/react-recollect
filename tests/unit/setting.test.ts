@@ -98,11 +98,90 @@ it('should allow uncommon prop types', () => {
   store.interestingObject.level1[sym] = 'symbol key';
 
   expect(propPathChanges(handleChange)).toEqual([
-    'interestingObject',
-    'interestingObject.level1.0',
+    '',
+    'interestingObject.level1',
     'interestingObject.level1.Symbol(My symbol)',
   ]);
   expect(handleChange).toHaveBeenCalledTimes(3);
+});
+
+it('should allow prop types that are methods', () => {
+  // There is logic with special treatment for methods. We want to make sure
+  // this doesn't interfere with reading good old property names on an object.
+  store.methodNames = {
+    // Array mutator methods
+    copyWithin: { foo: 'copyWithin' },
+    fill: { foo: 'fill' },
+    pop: { foo: 'pop' },
+    push: { foo: 'push' },
+    reverse: { foo: 'reverse' },
+    shift: { foo: 'shift' },
+    sort: { foo: 'sort' },
+    splice: { foo: 'splice' },
+    unshift: { foo: 'unshift' },
+
+    // Array read methods
+    concat: { foo: 'concat' },
+    includes: { foo: 'includes' },
+    indexOf: { foo: 'indexOf' },
+    join: { foo: 'join' },
+    lastIndexOf: { foo: 'lastIndexOf' },
+    slice: { foo: 'slice' },
+    toSource: { foo: 'toSource' },
+    toString: { foo: 'toString' },
+    toLocaleString: { foo: 'toLocaleString' },
+
+    // Array props
+    length: { foo: 'length' },
+
+    // Map and set mutator methods
+    add: { foo: 'add' },
+    clear: { foo: 'clear' },
+    delete: { foo: 'delete' },
+    set: { foo: 'set' },
+
+    // Map and set read methods
+    entries: { foo: 'entries' },
+    forEach: { foo: 'forEach' },
+    get: { foo: 'get' },
+    has: { foo: 'has' },
+    keys: { foo: 'keys' },
+    values: { foo: 'values' },
+
+    // Map and set prop
+    size: { foo: 'size' },
+  };
+
+  expect(store.methodNames.copyWithin.foo).toBe('copyWithin');
+  expect(store.methodNames.fill.foo).toBe('fill');
+  expect(store.methodNames.pop.foo).toBe('pop');
+  expect(store.methodNames.push.foo).toBe('push');
+  expect(store.methodNames.reverse.foo).toBe('reverse');
+  expect(store.methodNames.shift.foo).toBe('shift');
+  expect(store.methodNames.sort.foo).toBe('sort');
+  expect(store.methodNames.splice.foo).toBe('splice');
+  expect(store.methodNames.unshift.foo).toBe('unshift');
+  expect(store.methodNames.concat.foo).toBe('concat');
+  expect(store.methodNames.includes.foo).toBe('includes');
+  expect(store.methodNames.indexOf.foo).toBe('indexOf');
+  expect(store.methodNames.join.foo).toBe('join');
+  expect(store.methodNames.lastIndexOf.foo).toBe('lastIndexOf');
+  expect(store.methodNames.slice.foo).toBe('slice');
+  expect(store.methodNames.toSource.foo).toBe('toSource');
+  expect(store.methodNames.toString.foo).toBe('toString');
+  expect(store.methodNames.toLocaleString.foo).toBe('toLocaleString');
+  expect(store.methodNames.length.foo).toBe('length');
+  expect(store.methodNames.set.foo).toBe('set');
+  expect(store.methodNames.add.foo).toBe('add');
+  expect(store.methodNames.delete.foo).toBe('delete');
+  expect(store.methodNames.clear.foo).toBe('clear');
+  expect(store.methodNames.entries.foo).toBe('entries');
+  expect(store.methodNames.forEach.foo).toBe('forEach');
+  expect(store.methodNames.get.foo).toBe('get');
+  expect(store.methodNames.has.foo).toBe('has');
+  expect(store.methodNames.keys.foo).toBe('keys');
+  expect(store.methodNames.values.foo).toBe('values');
+  expect(store.methodNames.size.foo).toBe('size');
 });
 
 it('should allow dates', () => {
@@ -177,10 +256,7 @@ it('should update an item in an array', () => {
   store.arrToUpdate[1] = 'cats';
 
   expect(store.arrToUpdate).toEqual([1, 'cats', 3]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrToUpdate',
-    'arrToUpdate.1',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['', 'arrToUpdate.1']);
 });
 
 it('should update an object in an array', () => {
@@ -192,10 +268,7 @@ it('should update an object in an array', () => {
   store.arrToDeepUpdate[1].name = 'Kerry';
 
   expect(store.arrToDeepUpdate[1].name).toEqual('Kerry');
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrToDeepUpdate',
-    'arrToDeepUpdate.1.name',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['', 'arrToDeepUpdate.1.name']);
 });
 
 it('should delete a string', () => {
@@ -211,10 +284,7 @@ it('should delete a string', () => {
   expect(store.deletionTest).toHaveProperty('animal');
   expect(store.deletionTest).not.toHaveProperty('name');
 
-  expect(propPathChanges(handleChange)).toEqual([
-    'deletionTest',
-    'deletionTest.name',
-  ]);
+  expect(propPathChanges(handleChange)).toEqual(['', 'deletionTest']);
 });
 
 it('should perform read operations without triggering changes', () => {
@@ -237,19 +307,6 @@ it('should perform read operations without triggering changes', () => {
 });
 
 /*  --  Mutating arrays  --  */
-it('should push()', () => {
-  store.emptyArray = [];
-  store.emptyArray.push(77);
-
-  expect(store.emptyArray[0]).toBe(77);
-  expect(propPathChanges(handleChange)).toEqual([
-    'emptyArray',
-    // push() calls set with the new item, then sets the length
-    'emptyArray.0',
-    'emptyArray.length',
-  ]);
-});
-
 it('should sort()', () => {
   store.arrayToSort = [3, 4, 2, 1];
   store.arrayToSort.sort();
@@ -257,13 +314,7 @@ it('should sort()', () => {
   expect(store.arrayToSort).toEqual([1, 2, 3, 4]);
   // We don't know the order or these (in practice, Node 10 is different to Node 12)
   expect(propPathChanges(handleChange)).toEqual(
-    expect.arrayContaining([
-      'arrayToSort',
-      'arrayToSort.0',
-      'arrayToSort.1',
-      'arrayToSort.2',
-      'arrayToSort.3',
-    ])
+    expect.arrayContaining(['arrayToSort'])
   );
 
   // V8 uses a different algorithm for < and > 10 items, so we test both
@@ -337,110 +388,6 @@ it('should update the paths in a sorted array', () => {
   expect(propPathChanges(handleChange)).toEqual(['taskList.0.name']);
 });
 
-it('should pop()', () => {
-  store.arrayToPop = [3, 4, 2, 1];
-  const popped = store.arrayToPop.pop();
-
-  expect(popped).toBe(1);
-  expect(store.arrayToPop).toEqual([3, 4, 2]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToPop',
-    'arrayToPop.3', // fired as deleteProperty()
-    'arrayToPop.length',
-  ]);
-});
-
-it('should reverse()', () => {
-  store.arrayToReverse = [3, 4, 2, 1];
-  const newArray = store.arrayToReverse.reverse();
-
-  expect(newArray).toEqual([1, 2, 4, 3]);
-  expect(store.arrayToReverse).toEqual([1, 2, 4, 3]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToReverse',
-    'arrayToReverse.0',
-    'arrayToReverse.3', // fires in weird order, but whatever
-    'arrayToReverse.1',
-    'arrayToReverse.2',
-  ]);
-});
-
-it('should fill()', () => {
-  store.arrayToFill = [1, 2, 3, 4];
-  const newArray = store.arrayToFill.fill('x', 0, 2);
-
-  expect(newArray).toEqual(['x', 'x', 3, 4]);
-  expect(store.arrayToFill).toEqual(['x', 'x', 3, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToFill',
-    'arrayToFill.0',
-    'arrayToFill.1',
-  ]);
-});
-
-// TODO (davidg): this doesn't fail gracefully. E.g. copyWithin(0, 2, 2) errors hard
-it('should copyWithin()', () => {
-  store.arrayToCopyWithin = [1, 2, 3, 4];
-  const newArray = store.arrayToCopyWithin.copyWithin(0, 2, 4);
-
-  expect(newArray).toEqual([3, 4, 3, 4]);
-  expect(store.arrayToCopyWithin).toEqual([3, 4, 3, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToCopyWithin',
-    'arrayToCopyWithin.0',
-    'arrayToCopyWithin.1',
-  ]);
-});
-
-it('should shift()', () => {
-  store.arrayToShift = [1, 2, 3, 4];
-  const removedItem = store.arrayToShift.shift();
-
-  expect(removedItem).toBe(1);
-  expect(store.arrayToShift).toEqual([2, 3, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToShift',
-    'arrayToShift.0',
-    'arrayToShift.1',
-    'arrayToShift.2',
-    'arrayToShift.3',
-    'arrayToShift.length',
-  ]);
-});
-
-it('should splice()', () => {
-  store.arrayToSplice = [1, 2, 3, 4];
-  const spliced = store.arrayToSplice.splice(1, 2);
-
-  expect(spliced).toEqual([2, 3]);
-  expect(store.arrayToSplice).toEqual([1, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToSplice',
-    'arrayToSplice.1',
-    'arrayToSplice.3',
-    'arrayToSplice.2',
-    'arrayToSplice.length',
-  ]);
-});
-
-it('should unshift()', () => {
-  store.arrayToUnshift = [1, 2, 3, 4];
-  const newLength = store.arrayToUnshift.unshift('a', 'b');
-
-  expect(newLength).toBe(6);
-  expect(store.arrayToUnshift).toEqual(['a', 'b', 1, 2, 3, 4]);
-  expect(propPathChanges(handleChange)).toEqual([
-    'arrayToUnshift',
-    'arrayToUnshift.5',
-    'arrayToUnshift.4',
-    'arrayToUnshift.3',
-    'arrayToUnshift.2',
-    'arrayToUnshift.0',
-    'arrayToUnshift.1',
-    'arrayToUnshift.length',
-  ]);
-});
-
 it('should not allow setting of a deleted thing', () => {
   store.test = {
     animal: 'cat',
@@ -477,7 +424,7 @@ it('calls listeners with the changed path', () => {
   secondItem.name = 'Sam';
 
   expect(propPathChanges(handleChange)).toEqual([
-    'deepObject',
+    '',
     'deepObject.objectProp.arr.2.name',
   ]);
 });
@@ -501,11 +448,7 @@ it('should handle deep Maps', () => {
   store.deepMap.get('taskList')[1].done = true;
 
   expect(propPathChanges(handleChange)).toEqual([
-    'deepMap',
-    // TODO (davidg): 'taskList' should not be in the path.
-    //  It's fine if it's a string, but what if it's an object? The
-    //  reference will be lost when the map is clone (and actually, even if
-    //  it isn't, it would be for the set).
+    '',
     'deepMap.taskList.1.done',
   ]);
 });
@@ -530,7 +473,7 @@ it('should handle Sets', () => {
   });
 
   expect(propPathChanges(handleChange)).toEqual([
-    'set',
+    '',
     // TODO (davidg): clearly this is not ideal
     'set.[object Object].done',
     'set.[object Object].done',

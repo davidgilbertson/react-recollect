@@ -63,9 +63,7 @@ it('should handle isolation', () => {
 
   expect(renderCountOne).toBe(2);
 
-  // TODO (davidg): I want two and three to NOT update in this case
-  //  Currently all of them listen on `store.areas`
-  //  But globalStore.areas = "brand new object" - should update all still
-  expect(renderCountTwo).toBe(2);
-  expect(renderCountThree).toBe(2);
+  // These two won't update
+  expect(renderCountTwo).toBe(1);
+  expect(renderCountThree).toBe(1);
 });

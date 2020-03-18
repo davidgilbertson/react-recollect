@@ -2,12 +2,13 @@ import {
   ArrWithSymbols,
   MapWithSymbols,
   ObjWithSymbols,
-  PropPath,
   SetWithSymbols,
   Target,
 } from './types';
+import { ArrayMembers, PATH } from './constants';
 
-export const isPlainObject = (item: any): item is ObjWithSymbols =>
+// 'object' meaning 'plain object'.
+export const isObject = (item: any): item is ObjWithSymbols =>
   !!item && typeof item === 'object' && item.constructor === Object;
 
 export const isArray = (item: any): item is ArrWithSymbols =>
@@ -17,19 +18,41 @@ export const isMap = (item: any): item is MapWithSymbols => item instanceof Map;
 
 export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
 
-export const isProxyable = (item: any): item is Target =>
-  isPlainObject(item) || isArray(item) || isMap(item) || isSet(item);
+// A target is one of the four types that Recollect will proxy
+export const isTarget = (item: any): item is Target =>
+  isObject(item) || isArray(item) || isMap(item) || isSet(item);
 
-export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
+// This is internal to JS or to Recollect
+export const isInternal = (prop: any): boolean =>
+  [PATH, 'constructor', 'toJSON'].includes(prop);
 
 export const isFunction = (item: any) => typeof item === 'function';
 
-export const cloneArray = <T extends any[]>(item: T): T => item.slice() as T;
+export const isArrayMutation = (target: Target, prop: any) =>
+  isArray(target) &&
+  [
+    ArrayMembers.CopyWithin,
+    ArrayMembers.Fill,
+    ArrayMembers.Pop,
+    ArrayMembers.Push,
+    ArrayMembers.Reverse,
+    ArrayMembers.Shift,
+    ArrayMembers.Sort,
+    ArrayMembers.Splice,
+    ArrayMembers.Unshift,
+  ].includes(prop);
 
-export const cloneMap = <T extends Map<any, any>>(item: T): T =>
-  new Map(item) as T;
+export const clone = <T extends Target>(target: T): T => {
+  if (isObject(target)) return { ...target };
+  // @ts-ignore
+  if (isArray(target)) return target.slice();
+  // @ts-ignore
+  if (isMap(target)) return new Map(target);
+  // @ts-ignore
+  if (isSet(target)) return new Set(target);
 
-export const cloneSet = <T extends Set<any>>(item: T): T => new Set(item) as T;
+  return target;
+};
 
 type GetValue = {
   (item: ObjWithSymbols, prop: PropertyKey): any;
@@ -51,10 +74,11 @@ export const getValue: GetValue = (target: Target, prop: any) => {
 };
 
 type SetValue = {
-  (item: ObjWithSymbols, prop: PropertyKey, value: any): any;
-  (item: ArrWithSymbols, prop: number, value: any): any;
-  (item: MapWithSymbols, prop: any, value: any): any;
-  (item: SetWithSymbols, prop: any, value: any): any;
+  (item: ObjWithSymbols, prop: PropertyKey, value: any): void;
+  (item: ArrWithSymbols, prop: number, value: any): void;
+  (item: MapWithSymbols, prop: any, value: any): void;
+  /** For consistency, we'll just pass value twice for sets */
+  (item: SetWithSymbols, prop: any, value: any): void;
 };
 
 export const setValue: SetValue = (
@@ -62,60 +86,36 @@ export const setValue: SetValue = (
   prop: any,
   value: any
 ) => {
-  if (isMap(mutableTarget)) {
-    mutableTarget.set(prop, value);
-  } else if (isSet(mutableTarget)) {
-    mutableTarget.add(prop);
-  } else if (isArray(mutableTarget)) {
+  if (isObject(mutableTarget)) {
     mutableTarget[prop] = value;
-  } else if (isPlainObject(mutableTarget)) {
+  } else if (isArray(mutableTarget)) {
     // @ts-ignore - is fine, prop can be a symbol
     mutableTarget[prop] = value;
+  } else if (isMap(mutableTarget)) {
+    // @ts-ignore
+    mutableTarget.set(prop, value);
+  } else if (isSet(mutableTarget)) {
+    // @ts-ignore
+    mutableTarget.add(value);
   } else {
     throw Error('Unexpected type');
   }
 };
 
-export const deepUpdate = <T extends Target>({
-  mutableTarget,
-  propPath,
-  afterClone,
-  updater,
-}: {
-  mutableTarget: T;
-  propPath: PropPath;
-  afterClone: <U extends Target>(original: U, clone: U) => U;
-  updater: (object: Target) => void; // Target, but not necessarily T
-}) => {
-  const cloneItem = <V extends Target>(original: V): V => {
-    let clone = original;
+export const getSize = (item: Target): number => {
+  if (isObject(item)) return Object.keys(item).length;
+  // @ts-ignore - TS thinks item is never
+  if (isArray(item)) return item.length;
+  // @ts-ignore - TS thinks item is never
+  if (isMap(item) || isSet(item)) return item.size;
 
-    if (isPlainObject(original)) clone = { ...original };
-    if (isArray(original)) clone = cloneArray(original);
-    if (isMap(original)) clone = cloneMap(original);
-    if (isSet(original)) clone = cloneSet(original);
-
-    // Let the caller do interesting things when cloning
-    return afterClone(original, clone);
-  };
-
-  // Walk down into the object, mutating each node
-  propPath.reduce((item, prop, i) => {
-    const nextValue = cloneItem(getValue(item, prop));
-    setValue(item, prop, nextValue);
-
-    if (i === propPath.length - 1) {
-      updater(nextValue);
-    }
-
-    return nextValue;
-  }, mutableTarget);
+  throw Error('Unexpected type');
 };
 
 /**
- * Replaces the contents of one object with the contents of another. The top
- * level object will remain the same, but all changed content will be replaced
- * with the new content.
+ * Shallow replaces the contents of one object with the contents of another.
+ * The top level object will remain the same, but all changed content will
+ * be replaced with the new content.
  */
 export const replaceObject = (
   mutableTarget: ObjWithSymbols,
@@ -142,4 +142,55 @@ export const replaceObject = (
       delete mutableTarget[prop];
     });
   }
+};
+
+/**
+ * Traverse a tree, calling a callback for each node with the item and the path.
+ * This can either mutate each value, or return a new value to create a clone.
+ * @example const clone = utils.updateDeep(original, utils.clone);
+ * Only traverses the targets supported by Recollect.
+ */
+export const updateDeep = <T extends Target>(
+  mutableTarget: T,
+  updater: <U extends Target>(item: U, path: any[]) => U | void
+): T => {
+  const path: any[] = [];
+
+  const processLevel = (target: any) => {
+    const updated = updater(target, path.slice());
+
+    // If the updater returns something, use it. Else mutate the original.
+    const next = typeof updated !== 'undefined' ? updated : target;
+
+    const handleEntry = (prop: any, value: any) => {
+      path.push(prop);
+      const processed = processLevel(value);
+      path.pop();
+
+      setValue(next, prop, processed);
+    };
+
+    if (isObject(next)) {
+      Object.entries(next).forEach(([prop, value]) => {
+        handleEntry(prop, value);
+      });
+    } else if (isArray(next) || isMap(next)) {
+      next.forEach((value: any, prop: any) => {
+        handleEntry(prop, value);
+      });
+    } else if (isSet(next)) {
+      // A set is special - you can't reassign what's in a particular
+      // 'position' like the other three, so we do some fancy footwork...
+      const setContents = Array.from(next);
+      next.clear();
+
+      setContents.forEach((value: any) => {
+        handleEntry(value, value);
+      });
+    }
+
+    return next;
+  };
+
+  return processLevel(mutableTarget);
 };

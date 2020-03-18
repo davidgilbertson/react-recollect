@@ -130,6 +130,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [How does it work?](#how-does-it-work)
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
     - [Map and Set limitations](#map-and-set-limitations)
+  - [When will my components be re-rendered?](#when-will-my-components-be-re-rendered)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
@@ -807,6 +808,19 @@ the _value_ of a map entry, and that works fine.
 Similarly, updating an object in a set may not trigger an update to components
 using that object (adding/removing items from a set works fine).
 
+## When will my components be re-rendered?
+
+Short version: when they need to be, don't worry about it.
+
+Longer version: if a _property_ is changed (e.g.
+`store.page.title = 'Page two'`), any component that read that property when it
+last rendered will be updated. If an object, array, map or set is changed (e.g.
+`store.tasks.pop()`), then any component that read that _target_ will be
+updated.
+
+Check out [tests/integration/updating](tests/integration/updating.test.tsx) for
+the full suite of scenarios.
+
 ## Can I use this with class-based components and functional components?
 
 Yep and yep.
@@ -817,8 +831,21 @@ Yep.
 
 ## Will component state still work?
 
-Yep. Recollect has no effect on state and the updates triggered as a result of
-calling `this.setState` or changes via `useState`.
+Yes, but be careful. When you wrap a component in `collect`, you are telling
+Recollect to do two things: record which props the component reads from the
+store, and re-render the component when they change.
+
+But when a component re-renders because you changed the _state_, Recollect isn't
+aware of this. 99% of the time this isn't an issue, but if you happen to read a
+property of the store only after some state change has triggered a render,
+you're going to have a problem.
+
+You can work around this simply by ensuring those props are read when the
+component renders. E.g. with `[store.prop1, store.prop2].includes('');` in your
+render cycle.
+
+The tests in [tests/anti/hiddenProperties](tests/anti/hiddenProperties.test.tsx)
+demonstrate the problem and this workaround.
 
 ## Do lifecycle methods still fire?
 
