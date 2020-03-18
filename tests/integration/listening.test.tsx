@@ -105,7 +105,7 @@ it('should register a listener on the store object itself', () => {
   getByText('The store has stuff in it');
 });
 
-it('should register a listener on the store object itself', () => {
+it('should register a listener on the store object with values()', () => {
   const {
     getByText,
   } = testUtils.collectAndRender(({ store }: WithStoreProp) => (
@@ -125,6 +125,30 @@ it('should register a listener on the store object itself', () => {
   getByText('Does not have test');
 
   globalStore.anything = 'test';
+
+  getByText('Has test');
+});
+
+it('should register a listener on the store object with is', () => {
+  const {
+    getByText,
+  } = testUtils.collectAndRender(({ store }: WithStoreProp) => (
+    <div>
+      {'anything' in store ? (
+        <div>Has test</div>
+      ) : (
+        <div>Does not have test</div>
+      )}
+    </div>
+  ));
+
+  getByText('Does not have test');
+
+  globalStore.nothing = 'Not a thing';
+
+  getByText('Does not have test');
+
+  globalStore.anything = 'Literally anything';
 
   getByText('Has test');
 });

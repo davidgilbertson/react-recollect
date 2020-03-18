@@ -22,15 +22,14 @@ export const isSet = (item: any): item is SetWithSymbols => item instanceof Set;
 export const isTarget = (item: any): item is Target =>
   isObject(item) || isArray(item) || isMap(item) || isSet(item);
 
-export const isSymbol = (item: any): item is symbol => typeof item === 'symbol';
-
 // This is internal to JS or to Recollect
-export const isInternal = (item: any): boolean =>
-  [PATH, 'constructor'].includes(item);
+export const isInternal = (prop: any): boolean =>
+  [PATH, 'constructor', 'toJSON'].includes(prop);
 
 export const isFunction = (item: any) => typeof item === 'function';
 
-const isArrayMutatorMethod = (prop: any) =>
+export const isArrayMutation = (target: Target, prop: any) =>
+  isArray(target) &&
   [
     ArrayMembers.CopyWithin,
     ArrayMembers.Fill,
@@ -42,9 +41,6 @@ const isArrayMutatorMethod = (prop: any) =>
     ArrayMembers.Splice,
     ArrayMembers.Unshift,
   ].includes(prop);
-
-export const isArrayMutation = (target: Target, prop: any) =>
-  isArray(target) && isArrayMutatorMethod(prop);
 
 export const clone = <T extends Target>(target: T): T => {
   if (isObject(target)) return { ...target };
@@ -154,10 +150,10 @@ export const replaceObject = (
  * @example const clone = utils.updateDeep(original, utils.clone);
  * Only traverses the targets supported by Recollect.
  */
-export const updateDeep = (
-  mutableTarget: Target,
-  updater: (item: any, path: any[]) => Target | void
-): Target => {
+export const updateDeep = <T extends Target>(
+  mutableTarget: T,
+  updater: <U extends Target>(item: U, path: any[]) => U | void
+): T => {
   const path: any[] = [];
 
   const processLevel = (target: any) => {

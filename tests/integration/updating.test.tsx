@@ -34,7 +34,7 @@ describe('should follow the update rules', () => {
   };
   jest.resetAllMocks();
 
-  it('for objects', () => {
+  test('for objects', () => {
     // Adding a new prop, notify on the target
     globalStore.data.myObj.foo = 'bar';
     expect(testUtils.propPathChanges(handleChange)).toEqual(['data.myObj']);
@@ -48,7 +48,6 @@ describe('should follow the update rules', () => {
     // A no-op, don't notify
     globalStore.data.myObj.foo = 'baz';
     expect(testUtils.propPathChanges(handleChange)).toEqual([]);
-    jest.resetAllMocks();
 
     // Removing a prop, notify on the target
     delete globalStore.data.myObj.foo;
@@ -80,7 +79,6 @@ describe('should follow the update rules', () => {
     // A no-op, don't notify
     globalStore.data.myArr.length = 0;
     expect(testUtils.propPathChanges(handleChange)).toEqual([]);
-    jest.resetAllMocks();
   });
 
   test('for maps', () => {
@@ -102,7 +100,6 @@ describe('should follow the update rules', () => {
     // No op, don't notify
     globalStore.data.myMap.clear();
     expect(testUtils.propPathChanges(handleChange)).toEqual([]);
-    jest.resetAllMocks();
   });
 
   test('for sets', () => {
@@ -119,7 +116,6 @@ describe('should follow the update rules', () => {
     // No-op, don't notify
     globalStore.data.mySet.clear();
     expect(testUtils.propPathChanges(handleChange)).toEqual([]);
-    jest.resetAllMocks();
   });
 });
 

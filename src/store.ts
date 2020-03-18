@@ -29,7 +29,6 @@ export const updateStore: UpdateInStore = ({
 }) => {
   state.proxyIsMuted = true;
   let result: any;
-  const initialSize = utils.getSize(target);
 
   // This function doesn't know anything about the prop being set.
   // It just finds the target (the parent of the prop) and
@@ -44,6 +43,7 @@ export const updateStore: UpdateInStore = ({
   // If we change the length/size of an array/map/set, we will want to
   // trigger a render of the parent path.
   let targetChangedSize = false;
+  const initialSize = utils.getSize(target);
 
   let newValue = value;
 
@@ -95,7 +95,7 @@ export const updateStore: UpdateInStore = ({
   state.proxyIsMuted = false;
 
   // If the 'size' of a target changes, it's reasonable to assume that
-  // target is going to need to re-render, so we target it.
+  // users of the target are going to need to re-render, else use the prop
   const notifyPath = notifyTarget || targetChangedSize ? targetPath : propPath;
 
   notifyByPath(notifyPath);

@@ -46,12 +46,7 @@ export const getHandlerForObject = <T extends Target>(
 
         // Bail early for some things. Unlike objects/arrays, we will
         // continue on even if !state.currentComponent
-        if (
-          state.proxyIsMuted ||
-          utils.isSymbol(prop) ||
-          prop === 'constructor' ||
-          prop === 'toJSON'
-        ) {
+        if (state.proxyIsMuted || utils.isInternal(prop)) {
           return result;
         }
 
@@ -62,8 +57,7 @@ export const getHandlerForObject = <T extends Target>(
         if (prop === MapOrSetMembers.Set) {
           const handler: ProxyHandler<() => any> = {
             apply(func, applyTarget, [key, value]) {
-              const existingValue = applyTarget.get(key);
-              if (existingValue === value) return true; // No change, no need to carry on
+              if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
               pubSub.dispatchUpdateInNextStore({
                 target: applyTarget,

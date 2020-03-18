@@ -9,23 +9,16 @@ export const PATH = Symbol('PATH');
 
 export const ORIGINAL = Symbol('ORIGINAL');
 
+/** Some of the map and set methods */
 export const enum MapOrSetMembers {
-  // Read methods
-  Entries = 'entries',
-  ForEach = 'forEach',
   Get = 'get',
-  Has = 'has',
-  Keys = 'keys',
-  Values = 'values',
-  // Mutating methods
   Add = 'add',
   Clear = 'clear',
   Delete = 'delete',
   Set = 'set',
-  // Properties
-  Size = 'size',
 }
 
+/** Some of the array methods, and length */
 export const enum ArrayMembers {
   // Mutating methods
   CopyWithin = 'copyWithin',

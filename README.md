@@ -836,8 +836,9 @@ Recollect to do two things: record which props the component reads from the
 store, and re-render the component when they change.
 
 But when a component re-renders because you changed the _state_, Recollect isn't
-aware of this. So any data that you read _after_ the last time Recollect
-rendered your component won't be associated with that component.
+aware of this. 99% of the time this isn't an issue, but if you happen to read a
+property of the store only after some state change has triggered a render,
+you're going to have a problem.
 
 You can work around this simply by ensuring those props are read when the
 component renders. E.g. with `[store.prop1, store.prop2].includes('');` in your

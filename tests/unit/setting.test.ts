@@ -108,7 +108,6 @@ it('should allow uncommon prop types', () => {
 it('should allow prop types that are methods', () => {
   // There is logic with special treatment for methods. We want to make sure
   // this doesn't interfere with reading good old property names on an object.
-
   store.methodNames = {
     // Array mutator methods
     copyWithin: { foo: 'copyWithin' },

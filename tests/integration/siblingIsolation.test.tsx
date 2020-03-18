@@ -63,7 +63,7 @@ it('should handle isolation', () => {
 
   expect(renderCountOne).toBe(2);
 
-  // These two shouldn't update
+  // These two won't update
   expect(renderCountTwo).toBe(1);
   expect(renderCountThree).toBe(1);
 });
