@@ -6,7 +6,7 @@ import {
   SetWithSymbols,
   Target,
 } from './types';
-import { ArrayMembers, MapOrSetMembers, PATH } from './constants';
+import { ArrayMembers, PATH } from './constants';
 
 // 'object' meaning 'plain object'.
 export const isObject = (item: any): item is ObjWithSymbols =>
