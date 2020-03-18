@@ -45,33 +45,51 @@ export const updateStore: UpdateInStore = ({
   // trigger a render of the parent path.
   let targetChangedSize = false;
 
-  // Make sure the new value is deeply wrapped in proxies
-  const newValue = proxyManager.createDeep(value, propPath);
+  let newValue = value;
+
+  // Make sure the new value is deeply wrapped in proxies, if it's a target
+  if (utils.isTarget(newValue)) {
+    newValue = utils.updateDeep(value, (item, thisPropPath) => {
+      if (!utils.isTarget(item)) return item;
+
+      const next = utils.clone(item);
+      paths.addProp(next, [...propPath, ...thisPropPath]);
+
+      return proxyManager.createShallow(next);
+    });
+  }
 
   if (!targetPath.length) {
     // If the target is the store root, it's mutated in place.
     result = updater(state.store, newValue);
     targetChangedSize = utils.getSize(state.store) !== initialSize;
   } else {
-    utils.deepUpdate({
-      mutableTarget: state.store,
-      propPath: targetPath,
-      afterClone: (original, clone) => {
-        if (paths.get(original)) {
-          paths.addProp(clone, paths.get(original));
-        }
+    targetPath.reduce((item, thisProp, i) => {
+      const thisValue = utils.getValue(item, thisProp);
 
-        return proxyManager.createShallow(clone);
-      },
-      updater: (updateTarget) => {
-        result = updater(updateTarget, newValue);
-        targetChangedSize = utils.getSize(updateTarget) !== initialSize;
+      // Shallow clone this level
+      let clone = utils.clone(thisValue);
+      paths.addProp(clone, paths.get(thisValue));
 
+      // Wrap the clone in a proxy
+      clone = proxyManager.createShallow(clone);
+
+      // Mutate this level (swap out the original for the clone)
+      utils.setValue(item, thisProp, clone);
+
+      // If we're at the end of the path, then 'clone' is our target
+      if (i === targetPath.length - 1) {
+        result = updater(clone, newValue);
+        targetChangedSize = utils.getSize(clone) !== initialSize;
+
+        // We keep a reference between the original target and the clone
         // `target` may or may not be wrapped in a proxy (Maps and Sets are)
         // So we check/get the unproxied version
-        state.nextVersionMap.set(target[ORIGINAL] || target, updateTarget);
-      },
-    });
+        state.nextVersionMap.set(target[ORIGINAL] || target, clone);
+      }
+
+      return clone;
+    }, state.store);
   }
 
   state.proxyIsMuted = false;
