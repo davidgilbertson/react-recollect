@@ -50,3 +50,17 @@ declare module '../src' {
     [key: string]: any;
   }
 }
+
+// TODO: Delete me when this is merged:
+//  https://github.com/DefinitelyTyped/DefinitelyTyped/pull/43102
+declare module '@testing-library/dom' {
+  export function waitFor(
+    callback: () => void,
+    options?: {
+      container?: HTMLElement;
+      timeout?: number;
+      interval?: number;
+      mutationObserverOptions?: MutationObserverInit;
+    }
+  ): Promise<void>;
+}

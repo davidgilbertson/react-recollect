@@ -1,4 +1,4 @@
-import { wait } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { store } from '../../src';
 
 it('should keep a reference', () => {
@@ -44,7 +44,8 @@ it('should keep a reference async', async () => {
   const arr = store.testArray;
   expect(arr[0].name).toBe('David');
 
-  await wait(); // Testing that the nextVersionMap isn't cleared
+  // Testing that the nextVersionMap isn't cleared
+  await waitFor(() => {});
 
   // Get a reference to the item
   const david = store.testArray[0];

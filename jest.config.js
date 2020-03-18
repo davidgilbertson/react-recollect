@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'ts-jest/presets/js-with-ts',
-  setupFilesAfterEnv: ['jest-dom/extend-expect'],
+  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect'],
   clearMocks: true,
   modulePaths: ['<rootDir>/'],
 };

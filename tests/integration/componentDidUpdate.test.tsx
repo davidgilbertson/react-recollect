@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component, useEffect } from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
 import * as testUtils from '../testUtils';
 
@@ -165,7 +165,7 @@ it('should re-render on a hidden prop read with hooks', async () => {
 
   globalStore.loaded = true;
 
-  await wait();
+  await waitFor(() => {});
 
   expect(sideEffectMock).toHaveBeenCalledTimes(1);
   expect(sideEffectMock).toHaveBeenCalledWith('I loaded!');

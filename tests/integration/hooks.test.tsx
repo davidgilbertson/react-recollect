@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { wait } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { store as globalStore, WithStoreProp } from '../../src';
 import * as testUtils from '../testUtils';
 
@@ -86,7 +86,7 @@ it('should work with useEffect hook', async () => {
   getByText('Increment store').click();
   getByText('Store count: 1');
 
-  await wait(); // useEffect is async
+  await waitFor(() => {}); // useEffect is async
 
   expect(onCountChangeMock).toHaveBeenCalledTimes(2);
   expect(onMountMock).toHaveBeenCalledTimes(1);
