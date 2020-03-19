@@ -61,6 +61,7 @@
     "eslint-plugin-react-hooks": "^2.4.0",
     "jest": "^25.1.0",
     "prettier": "^1.19.1",
+    "prop-types": "^15.7.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "source-map-loader": "^0.2.4",

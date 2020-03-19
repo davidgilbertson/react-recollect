@@ -5,6 +5,7 @@ import * as proxyManager from './proxyManager';
 import state from './shared/state';
 import { debug } from './shared/debug';
 import { CollectorComponent, Store, WithStoreProp } from './shared/types';
+import { whileMuted } from './shared/utils';
 
 // As we render down into a tree of collected components, we will start/stop
 // recording
@@ -43,21 +44,16 @@ type ComponentPropsWithoutStore<C extends React.ComponentType> = RemoveStore<
  * This shallow clones the store to pass as state to the collected
  * component.
  */
-const getStoreClone = () => {
-  state.proxyIsMuted = true;
+const getStoreClone = () =>
+  whileMuted(() => {
+    // We'll shallow clone the store so React knows it's new
+    const shallowClone = { ...state.store };
 
-  // We'll shallow clone the store so React knows it's new
-  const shallowClone = { ...state.store };
+    // ... but redirect all reads to the real store
+    state.nextVersionMap.set(shallowClone, state.store);
 
-  // ... but redirect all reads to the real store
-  state.nextVersionMap.set(shallowClone, state.store);
-
-  const storeClone = proxyManager.createShallow(shallowClone);
-
-  state.proxyIsMuted = false;
-
-  return storeClone;
-};
+    return proxyManager.createShallow(shallowClone);
+  });
 
 const collect = <C extends React.ComponentType<any>>(
   ComponentToWrap: C
@@ -74,6 +70,25 @@ const collect = <C extends React.ComponentType<any>>(
   type ComponentState = {
     store: Store;
   };
+
+  // This ensures that checking prop types doesn't record 'gets' for the
+  // component. It's a no-op in prod so not a performance concern.
+  if ('propTypes' in ComponentToWrap) {
+    const handler: ProxyHandler<any> = {
+      get(target, prop, receiver) {
+        const checkerFunc = Reflect.get(target, prop, receiver);
+
+        return new Proxy(checkerFunc, {
+          apply(...args) {
+            return whileMuted(() => Reflect.apply(...args));
+          },
+        });
+      },
+    };
+
+    // eslint-disable-next-line no-param-reassign
+    ComponentToWrap.propTypes = new Proxy(ComponentToWrap.propTypes, handler);
+  }
 
   class WrappedComponent extends React.PureComponent<Props, ComponentState>
     implements CollectorComponent {
