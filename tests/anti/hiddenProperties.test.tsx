@@ -40,6 +40,7 @@ class MyComponent extends React.PureComponent<Props, State> {
  * read from the store. But Recollect can't attribute those reads to the
  * component so it isn't subscribed.
  * So, when the store is updated, the component is not.
+ * (The workaround is useProps, tested elsewhere.)
  */
 it('WILL NOT update a component if the props are not used during render', () => {
   const { queryByText, getByText } = testUtils.collectAndRender(MyComponent);
@@ -92,46 +93,4 @@ it('WILL NOT update a component if the props are not used during render', () => 
 
   // In a perfect world, the component would have been updated
   expect(queryByText('A new message!')).not.toBeInTheDocument();
-});
-
-/**
- * Workaround for this issue, as advertised in the readme
- */
-it('should update a component with useProps', () => {
-  // All this does is ensure that these values are read when the component
-  // renders, so Recollect subscribes this component to changes.
-  const useProps = (propList: any[]) => propList.includes('');
-
-  const { queryByText, getByText } = testUtils.collectAndRender(
-    ({ store }: Props) => {
-      const [showHiddenMessage, setShowHiddenMessage] = useState(false);
-
-      useProps([store.hiddenMessage]);
-
-      return (
-        <div>
-          {showHiddenMessage && <p>{store.hiddenMessage}</p>}
-
-          <button
-            onClick={() => {
-              setShowHiddenMessage(true);
-            }}
-          >
-            Show hidden message
-          </button>
-        </div>
-      );
-    }
-  );
-
-  expect(queryByText('Hidden message')).not.toBeInTheDocument();
-
-  globalStore.hiddenMessage = 'Hidden message';
-  getByText('Show hidden message').click();
-
-  expect(queryByText('Hidden message')).toBeInTheDocument();
-
-  globalStore.hiddenMessage = 'A new message!';
-
-  expect(queryByText('A new message!')).toBeInTheDocument();
 });

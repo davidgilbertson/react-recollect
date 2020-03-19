@@ -207,3 +207,13 @@ export const whileMuted = <T>(cb: () => T): T => {
   state.proxyIsMuted = false;
   return result;
 };
+
+/**
+ * This is a convenience method that triggers a read on each item in the array.
+ * When used during the render cycle of a collected component, it has the
+ * side-effect of subscribing that component to each item in the array.
+ */
+export const useProps = (props: any[]): void => {
+  // useProps must never return, so it can be used in the body of a component
+  props.includes(0);
+};

@@ -107,7 +107,6 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -116,6 +115,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
     - [On the server](#on-the-server)
     - [In the browser](#in-the-browser)
   - [`batch(callback)`](#batchcallback)
+  - [`useProps(propArray)`](#usepropsproparray)
   - [`window.__RR__`](#window__rr__)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
@@ -323,6 +323,52 @@ const fetchData = async () => {
 Note that React already does a good job of batching multiple updates into a
 single render cycle. So only clutter up your code with `batch` if it results in
 an actual performance improvement.
+
+## `useProps(propArray)`
+
+In most cases, you can rely on Recollect to know what data your component
+requires to render. However, Recollect can't know that your component will
+require a property in the _future_. If you reference a property:
+
+- in `componentDidUpdate` (and nowhere else), or
+- in UI that is only revealed after a change in state (perhaps a modal or
+  drop-down)
+
+... then Recollect won't know about it and your component won't be subscribed to
+changes in that property.
+
+You can tell Recollect _“I want to know if any of these properties change”_ by
+passing an array of store objects to the `useProps` function, like so:
+
+```js
+import { collect, useProps } from 'react-recollect';
+
+const MyComponent = ({ store }) => {
+  const [showHiddenMessage, setShowHiddenMessage] = useState(false);
+
+  // "This component might read `store.hiddenMessage` in the future"
+  useProps([store.hiddenMessage]);
+
+  return (
+    <div>
+      {showHiddenMessage && <p>{store.hiddenMessage}</p>}
+
+      <button onClick={() => setShowHiddenMessage(true)}>
+        Show hidden message
+      </button>
+    </div>
+  );
+};
+
+export default collect(MyComponent);
+```
+
+Although `useProps` starts with the word 'use', it doesn't require React's Hooks
+mechanism, so it works just fine in versions before React 16.8. (For the
+curious, the implementation is literally just `propArray.includes(0)`.)
+
+Check out [these tests](./tests/integration/useProps.test.tsx) for more usage
+examples.
 
 ## `window.__RR__`
 
@@ -831,21 +877,12 @@ Yep.
 
 ## Will component state still work?
 
-Yes, but be careful. When you wrap a component in `collect`, you are telling
-Recollect to do two things: record which props the component reads from the
-store, and re-render the component when they change.
+Yes, but be careful. If a change in state reveals some new UI, and a property
+from the store is only read in that UI (not elsewhere in the component) then
+Recollect won't be aware of it, and won't update your component if it changes.
 
-But when a component re-renders because you changed the _state_, Recollect isn't
-aware of this. 99% of the time this isn't an issue, but if you happen to read a
-property of the store only after some state change has triggered a render,
-you're going to have a problem.
-
-You can work around this simply by ensuring those props are read when the
-component renders. E.g. with `[store.prop1, store.prop2].includes('');` in your
-render cycle.
-
-The tests in [tests/anti/hiddenProperties](tests/anti/hiddenProperties.test.tsx)
-demonstrate the problem and this workaround.
+Use the [`useProps`](#usepropsproparray) function to make sure your component is
+subscribed to changes in this property.
 
 ## Do lifecycle methods still fire?
 
@@ -858,13 +895,8 @@ If you have a store prop that you _only_ refer to in `componentDidUpdate` (e.g.
 `store.loaded`), then your component won't be subscribed to changes in that
 prop. So when `store.loaded` changes, your component might not be updated.
 
-Issue: https://github.com/davidgilbertson/react-recollect/issues/85
-
-There are two workarounds:
-
-1. Use React's `useEffect` hook (React 16.8+). See
-   [these tests](./tests/integration/componentDidUpdate.test.tsx)
-2. Pass in `loaded` as a prop from the parent component.
+Use the [`useProps`](#usepropsproparray) function to make sure your component is
+subscribed to changes in this property.
 
 ## Can I use this with `shouldComponentUpdate()`?
 
