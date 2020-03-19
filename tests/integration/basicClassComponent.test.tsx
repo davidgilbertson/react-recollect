@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { render } from '@testing-library/react';
 import { collect, store, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 // eslint-disable-next-line react/prefer-stateless-function
 class RawClassComponent extends Component<WithStoreProp> {
@@ -27,7 +27,7 @@ store.title = 'The initial title';
 store.clickCount = 3;
 
 it('should render and update the title', () => {
-  const { getByText } = render(<ClassComponent />);
+  const { getByText } = testUtils.renderStrict(<ClassComponent />);
 
   expect(getByText('The initial title'));
 
@@ -38,7 +38,7 @@ it('should render and update the title', () => {
 });
 
 it('should render and update the click count', () => {
-  const { getByText } = render(<ClassComponent />);
+  const { getByText } = testUtils.renderStrict(<ClassComponent />);
 
   expect(getByText('Button was pressed 3 times'));
 

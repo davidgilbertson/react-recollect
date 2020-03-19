@@ -53,10 +53,11 @@
       "error",
       {
         "allow": [
-          "_name",
+          "__RR__",
           "_isMounted",
           "_isMounting",
-          "__RR__"
+          "_isRendering",
+          "_name"
         ]
       }
     ],

@@ -1,6 +1,6 @@
 import React from 'react';
-import { render } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 const TestComponent = collect(({ store }: WithStoreProp) => (
   <div>
@@ -52,7 +52,7 @@ const TestComponent = collect(({ store }: WithStoreProp) => (
 ));
 
 it('should allow the user to set the store twice in one callback without a re-render', () => {
-  const { getByText } = render(<TestComponent />);
+  const { getByText } = testUtils.renderStrict(<TestComponent />);
   getByText('You have no tasks');
 
   // This click will do store.tasks = [], which is added to the store
@@ -76,7 +76,7 @@ it('should increment string', () => {
     status: 'Happy',
   };
 
-  const { getByText } = render(<TestComponent />);
+  const { getByText } = testUtils.renderStrict(<TestComponent />);
 
   getByText('Pump the jams').click();
 

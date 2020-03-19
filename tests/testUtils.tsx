@@ -5,10 +5,20 @@ import { collect } from '../src';
 import state from '../src/shared/state';
 import { PROP_PATH_SEP } from '../src/shared/constants';
 
+export const renderStrict = (children: React.ReactNode) => {
+  return render(<React.StrictMode>{children}</React.StrictMode>);
+};
+
 export const collectAndRender = (Comp: React.ComponentType<any>) => {
   const CollectedComp = collect(Comp);
 
   return render(<CollectedComp />);
+};
+
+export const collectAndRenderStrict = (Comp: React.ComponentType<any>) => {
+  const CollectedComp = collect(Comp);
+
+  return renderStrict(<CollectedComp />);
 };
 
 export const propPathChanges = (handleChangeMock: jest.Mock) =>

@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
-import { render } from '@testing-library/react';
 import { collect, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 interface Props extends WithStoreProp {
   defaultValue: string;
@@ -44,7 +44,9 @@ class ComponentWithRef extends Component {
   }
 }
 
-const { getByText, getByLabelText } = render(<ComponentWithRef />);
+const { getByText, getByLabelText } = testUtils.renderStrict(
+  <ComponentWithRef />
+);
 
 it('should empty the input when the button is clicked', () => {
   const getInputByLabelText = (text: string) =>

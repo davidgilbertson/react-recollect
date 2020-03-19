@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { render } from '@testing-library/react';
 import { collect, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 type Props = WithStoreProp & {
   defaultValue: string;
@@ -34,7 +34,9 @@ class ComponentWithRef extends Component {
   }
 }
 
-const { getByText, getByLabelText } = render(<ComponentWithRef />);
+const { getByText, getByLabelText } = testUtils.renderStrict(
+  <ComponentWithRef />
+);
 
 const getInputByLabelText = (text: string) =>
   getByLabelText(text) as HTMLInputElement;
