@@ -30,7 +30,7 @@
     "nodeTest": "node ./tests/integration/nodeJs.js",
     "test": "npm run nodeTest && jest --watchAll",
     "test:ci": "npm run nodeTest && jest --ci",
-    "prepare": "npm run checkall",
+    "prepublishOnly": "npm run checkall",
     "preversion": "npm run checkall"
   },
   "dependencies": {
