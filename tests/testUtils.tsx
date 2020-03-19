@@ -22,7 +22,7 @@ export const getAllListeners = () => {
   );
 };
 
-export const expectToLogError = (func: () => void) => {
+export const expectToLogError = (func: () => void, message?: string) => {
   // Even though the error is caught, it still gets printed to the console
   // so we mock that out to avoid the wall of red text.
   jest.spyOn(console, 'error');
@@ -33,7 +33,12 @@ export const expectToLogError = (func: () => void) => {
 
   expect(mockedConsoleError).toHaveBeenCalled();
 
+  if (message) expect(mockedConsoleError).toHaveBeenCalledWith(message);
+
+  const consoleError = mockedConsoleError.mock.calls[0][0];
   mockedConsoleError.mockRestore();
+
+  return consoleError;
 };
 
 export type TaskType = {

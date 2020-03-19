@@ -26,86 +26,85 @@ export const updateStore: UpdateInStore = ({
   value,
   notifyTarget = false,
   updater,
-}) => {
-  state.proxyIsMuted = true;
-  let result: any;
+}) =>
+  utils.whileMuted(() => {
+    let result: any;
 
-  // This function doesn't know anything about the prop being set.
-  // It just finds the target (the parent of the prop) and
-  // calls updater() with it.
-  const targetPath = paths.get(target);
+    // This function doesn't know anything about the prop being set.
+    // It just finds the target (the parent of the prop) and
+    // calls updater() with it.
+    const targetPath = paths.get(target);
 
-  // Note that if this update is a method (e.g. arr.push()) then prop can be
-  // undefined, meaning the prop path won't be extended, and will just be
-  // the path of the target (the array) which is correct.
-  const propPath = paths.extend(target, prop);
+    // Note that if this update is a method (e.g. arr.push()) then prop can be
+    // undefined, meaning the prop path won't be extended, and will just be
+    // the path of the target (the array) which is correct.
+    const propPath = paths.extend(target, prop);
 
-  // If we change the length/size of an array/map/set, we will want to
-  // trigger a render of the parent path.
-  let targetChangedSize = false;
-  const initialSize = utils.getSize(target);
+    // If we change the length/size of an array/map/set, we will want to
+    // trigger a render of the parent path.
+    let targetChangedSize = false;
+    const initialSize = utils.getSize(target);
 
-  let newValue = value;
+    let newValue = value;
 
-  // Make sure the new value is deeply wrapped in proxies, if it's a target
-  if (utils.isTarget(newValue)) {
-    newValue = utils.updateDeep(value, (item, thisPropPath) => {
-      if (!utils.isTarget(item)) return item;
+    // Make sure the new value is deeply wrapped in proxies, if it's a target
+    if (utils.isTarget(newValue)) {
+      newValue = utils.updateDeep(value, (item, thisPropPath) => {
+        if (!utils.isTarget(item)) return item;
 
-      const next = utils.clone(item);
-      paths.addProp(next, [...propPath, ...thisPropPath]);
+        const next = utils.clone(item);
+        paths.addProp(next, [...propPath, ...thisPropPath]);
 
-      return proxyManager.createShallow(next);
-    });
-  }
+        return proxyManager.createShallow(next);
+      });
+    }
 
-  if (!targetPath.length) {
-    // If the target is the store root, it's mutated in place.
-    result = updater(state.store, newValue);
-    targetChangedSize = utils.getSize(state.store) !== initialSize;
-  } else {
-    targetPath.reduce((item, thisProp, i) => {
-      const thisValue = utils.getValue(item, thisProp);
+    if (!targetPath.length) {
+      // If the target is the store root, it's mutated in place.
+      result = updater(state.store, newValue);
+      targetChangedSize = utils.getSize(state.store) !== initialSize;
+    } else {
+      targetPath.reduce((item, thisProp, i) => {
+        const thisValue = utils.getValue(item, thisProp);
 
-      // Shallow clone this level
-      let clone = utils.clone(thisValue);
-      paths.addProp(clone, paths.get(thisValue));
+        // Shallow clone this level
+        let clone = utils.clone(thisValue);
+        paths.addProp(clone, paths.get(thisValue));
 
-      // Wrap the clone in a proxy
-      clone = proxyManager.createShallow(clone);
+        // Wrap the clone in a proxy
+        clone = proxyManager.createShallow(clone);
 
-      // Mutate this level (swap out the original for the clone)
-      utils.setValue(item, thisProp, clone);
+        // Mutate this level (swap out the original for the clone)
+        utils.setValue(item, thisProp, clone);
 
-      // If we're at the end of the path, then 'clone' is our target
-      if (i === targetPath.length - 1) {
-        result = updater(clone, newValue);
-        targetChangedSize = utils.getSize(clone) !== initialSize;
+        // If we're at the end of the path, then 'clone' is our target
+        if (i === targetPath.length - 1) {
+          result = updater(clone, newValue);
+          targetChangedSize = utils.getSize(clone) !== initialSize;
 
-        // We keep a reference between the original target and the clone
-        // `target` may or may not be wrapped in a proxy (Maps and Sets are)
-        // So we check/get the unproxied version
-        state.nextVersionMap.set(target[ORIGINAL] || target, clone);
-      }
+          // We keep a reference between the original target and the clone
+          // `target` may or may not be wrapped in a proxy (Maps and Sets are)
+          // So we check/get the unproxied version
+          state.nextVersionMap.set(target[ORIGINAL] || target, clone);
+        }
 
-      return clone;
-    }, state.store);
-  }
+        return clone;
+      }, state.store);
+    }
 
-  state.proxyIsMuted = false;
+    // If the 'size' of a target changes, it's reasonable to assume that
+    // users of the target are going to need to re-render, else use the prop
+    const notifyPath =
+      notifyTarget || targetChangedSize ? targetPath : propPath;
 
-  // If the 'size' of a target changes, it's reasonable to assume that
-  // users of the target are going to need to re-render, else use the prop
-  const notifyPath = notifyTarget || targetChangedSize ? targetPath : propPath;
+    notifyByPath(notifyPath);
 
-  notifyByPath(notifyPath);
+    if (process.env.NODE_ENV === 'development') {
+      if (!result) throw Error('no updater was passed, or it did not return');
+    }
 
-  if (process.env.NODE_ENV === 'development') {
-    if (!result) throw Error('no updater was passed, or it did not return');
-  }
-
-  return result;
-};
+    return result;
+  });
 
 pubSub.onUpdateInNextStore(updateStore);
 
