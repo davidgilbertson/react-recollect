@@ -59,7 +59,7 @@ export const getHandlerForObject = <T extends Target>(
             apply(func, applyTarget, [key, value]) {
               if (applyTarget.get(key) === value) return true; // No change, no need to carry on
 
-              pubSub.dispatchUpdateInNextStore({
+              return pubSub.dispatchUpdateInNextStore({
                 target: applyTarget,
                 prop: key,
                 value,
@@ -68,14 +68,12 @@ export const getHandlerForObject = <T extends Target>(
 
                   // We call the map.set() now, but on the item in the
                   // store, and with the new args
-                  Reflect.apply(finalTarget[prop], finalTarget, [
+                  return Reflect.apply(finalTarget[prop], finalTarget, [
                     key,
                     newProxiedValue,
                   ]);
                 },
               });
-
-              return true;
             },
           };
 
@@ -316,7 +314,7 @@ export const getHandlerForObject = <T extends Target>(
  * Wrap an item in a proxy
  */
 export const createShallow = <T extends any>(target: T): T => {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     if (!target) throw Error('There is no target');
   }
 
