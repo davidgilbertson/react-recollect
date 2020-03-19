@@ -4,6 +4,7 @@ import state from './shared/state';
 export { default as collect } from './collect';
 export { afterChange } from './shared/pubSub';
 export { initStore, batch } from './store';
+export { useProps } from './shared/utils';
 export const { store } = state;
 
 export { AfterChangeEvent } from './shared/types';
