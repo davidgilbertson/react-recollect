@@ -6,6 +6,7 @@ import {
   Target,
 } from './types';
 import { ArrayMembers, PATH } from './constants';
+import state from './state';
 
 // 'object' meaning 'plain object'.
 export const isObject = (item: any): item is ObjWithSymbols =>
@@ -193,4 +194,16 @@ export const updateDeep = <T extends Target>(
   };
 
   return processLevel(mutableTarget);
+};
+
+/**
+ * Does some work while the proxy is muted. Returns the result of the
+ * callback as a convenience.
+ * DO NOT expose this to users as it encourages non-deterministic behaviour.
+ */
+export const whileMuted = <T>(cb: () => T): T => {
+  state.proxyIsMuted = true;
+  const result = cb();
+  state.proxyIsMuted = false;
+  return result;
 };
