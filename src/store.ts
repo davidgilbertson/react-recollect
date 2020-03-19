@@ -99,10 +99,6 @@ export const updateStore: UpdateInStore = ({
 
     notifyByPath(notifyPath);
 
-    if (process.env.NODE_ENV === 'development') {
-      if (!result) throw Error('no updater was passed, or it did not return');
-    }
-
     return result;
   });
 
