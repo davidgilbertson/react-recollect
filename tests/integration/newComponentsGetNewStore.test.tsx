@@ -1,6 +1,6 @@
 import React from 'react';
-import { render } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 globalStore.hiddenMessage = '';
 
@@ -21,7 +21,7 @@ const TestParentComponent = collect(({ store }: WithStoreProp) => (
   </div>
 ));
 
-const { getByText } = render(<TestParentComponent />);
+const { getByText } = testUtils.renderStrict(<TestParentComponent />);
 
 it('should give the new version of the store to a newly mounting component', () => {
   getByText('Details are hidden');

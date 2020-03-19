@@ -1,8 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
-import { render } from '@testing-library/react';
-import { expectToLogError } from '../testUtils';
 import { collect, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 const TestComponentBad = collect(
   class extends Component<WithStoreProp> {
@@ -43,13 +42,13 @@ const TestComponentGood = collect(
 );
 
 it('should fail if setting the state during mounting', () => {
-  expectToLogError(() => {
-    render(<TestComponentBad />);
+  testUtils.expectToLogError(() => {
+    testUtils.renderStrict(<TestComponentBad />);
   });
 });
 
 it('should set loading state after mounting', async () => {
-  const { findByText } = render(<TestComponentGood />);
+  const { findByText } = testUtils.renderStrict(<TestComponentGood />);
 
   await findByText('Loading...');
 

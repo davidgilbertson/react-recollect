@@ -1,12 +1,12 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { waitFor } from '@testing-library/react';
+import { waitFor, act } from '@testing-library/react';
 import { store as globalStore, WithStoreProp } from '../../src';
 import * as testUtils from '../testUtils';
 
 it('should work with useState hook', () => {
   globalStore.counter = 0;
 
-  const { getByText } = testUtils.collectAndRender(
+  const { getByText } = testUtils.collectAndRenderStrict(
     ({ store }: WithStoreProp) => {
       const [counter, setCounter] = useState(0);
 
@@ -53,7 +53,7 @@ it('should work with useEffect hook', async () => {
   const onMountMock = jest.fn();
   const onCountChangeMock = jest.fn();
 
-  const { getByText } = testUtils.collectAndRender(
+  const { getByText } = testUtils.collectAndRenderStrict(
     ({ store }: WithStoreProp) => {
       useEffect(() => {
         onMountMock();
@@ -83,7 +83,9 @@ it('should work with useEffect hook', async () => {
   expect(onCountChangeMock).toHaveBeenCalledTimes(1);
 
   getByText('Store count: 0');
-  getByText('Increment store').click();
+  act(() => {
+    getByText('Increment store').click();
+  });
   getByText('Store count: 1');
 
   await waitFor(() => {}); // useEffect is async
@@ -119,7 +121,7 @@ it('changing store in useLayoutEffect should error', async () => {
   globalStore.loaded = false;
 
   testUtils.expectToLogError(() => {
-    testUtils.collectAndRender(({ store }: WithStoreProp) => {
+    testUtils.collectAndRenderStrict(({ store }: WithStoreProp) => {
       useLayoutEffect(() => {
         // Oh no, useLayoutEffect is synchronous, so will fire during render
         store.loaded = true;

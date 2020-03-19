@@ -1,11 +1,13 @@
 import React from 'react';
 import { store, WithStoreProp } from '../../src';
-import { collectAndRender } from '../testUtils';
+import * as testUtils from '../testUtils';
 
 it('should render the title', () => {
   store.title = 'The initial title';
 
-  const { getByText } = collectAndRender((props: WithStoreProp) => (
+  const {
+    getByText,
+  } = testUtils.collectAndRenderStrict((props: WithStoreProp) => (
     <h1>{props.store.title}</h1>
   ));
 

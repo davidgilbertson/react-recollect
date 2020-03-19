@@ -104,6 +104,10 @@ const collect = <C extends React.ComponentType<any>>(
 
     private _isMounting = true;
 
+    // <React.StrictMode> will trigger multiple renders,
+    // we must disregard these
+    private _isRendering = false;
+
     _name = componentName;
 
     static displayName = `Collected(${componentName})`;
@@ -114,11 +118,13 @@ const collect = <C extends React.ComponentType<any>>(
 
       // Stop recording. For first render()
       stopRecordingGetsForComponent();
+      this._isRendering = false;
     }
 
     componentDidUpdate() {
       // Stop recording. For not-first render()
       stopRecordingGetsForComponent();
+      this._isRendering = false;
     }
 
     componentWillUnmount() {
@@ -137,7 +143,10 @@ const collect = <C extends React.ComponentType<any>>(
     }
 
     render() {
-      startRecordingGetsForComponent(this);
+      if (!this._isRendering) {
+        startRecordingGetsForComponent(this);
+        this._isRendering = true;
+      }
 
       const props = {
         ...this.props,

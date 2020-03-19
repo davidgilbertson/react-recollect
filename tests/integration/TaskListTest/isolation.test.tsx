@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import * as testUtils from '../../testUtils';
 import App from './App';
 import { store } from '../../../src';
 
@@ -29,7 +29,7 @@ const props = {
 };
 
 it('should handle isolation', () => {
-  const { getByText } = render(<App {...props} />);
+  const { getByText } = testUtils.renderStrict(<App {...props} />);
 
   // should render the title
   getByText('The task list site');

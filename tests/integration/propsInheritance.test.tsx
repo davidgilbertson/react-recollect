@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { render } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
+import * as testUtils from '../testUtils';
 
 type Props = {
   visibility: string;
@@ -38,7 +38,7 @@ const ClassComponent = collect(RawClassComponent);
 it('should update a child component not wrapped in collect()', () => {
   globalStore.clickCount = 0;
 
-  const { getByText } = render(<ClassComponent />);
+  const { getByText } = testUtils.renderStrict(<ClassComponent />);
 
   expect(getByText('This component should be hidden'));
 

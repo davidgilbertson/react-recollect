@@ -25,7 +25,7 @@ it('should not listen to props read from prop types', () => {
     }).isRequired,
   };
 
-  const { getByText } = testUtils.collectAndRender(MyComponent);
+  const { getByText } = testUtils.collectAndRenderStrict(MyComponent);
 
   expect(testUtils.getAllListeners()).toEqual([
     'prop1',
@@ -56,7 +56,7 @@ it('should warn for failed prop types', () => {
   };
 
   const consoleError = testUtils.expectToLogError(() => {
-    testUtils.collectAndRender(MyComponent);
+    testUtils.collectAndRenderStrict(MyComponent);
   });
 
   expect(consoleError).toMatch(

@@ -157,7 +157,7 @@ it('should work with changing state', () => {
     hiddenMessage: string;
   };
 
-  const { queryByText, getByText } = testUtils.collectAndRender(
+  const { queryByText, getByText } = testUtils.collectAndRenderStrict(
     ({ store }: Props) => {
       const [showHiddenMessage, setShowHiddenMessage] = useState(false);
 

@@ -42,7 +42,7 @@ it('should register the correct listeners', () => {
     },
   });
 
-  testUtils.collectAndRender(({ store }: WithStoreProp) => {
+  testUtils.collectAndRenderStrict(({ store }: WithStoreProp) => {
     return (
       <div>
         <h1>Object</h1>
@@ -86,7 +86,7 @@ it('should register the correct listeners', () => {
 it('should register a listener on the store object itself', () => {
   const {
     getByText,
-  } = testUtils.collectAndRender(({ store }: WithStoreProp) => (
+  } = testUtils.collectAndRenderStrict(({ store }: WithStoreProp) => (
     <div>
       {Object.keys(store).length ? (
         <div>The store has stuff in it</div>
@@ -108,7 +108,7 @@ it('should register a listener on the store object itself', () => {
 it('should register a listener on the store object with values()', () => {
   const {
     getByText,
-  } = testUtils.collectAndRender(({ store }: WithStoreProp) => (
+  } = testUtils.collectAndRenderStrict(({ store }: WithStoreProp) => (
     <div>
       {Object.values(store).includes('test') ? (
         <div>Has test</div>
@@ -132,7 +132,7 @@ it('should register a listener on the store object with values()', () => {
 it('should register a listener on the store object with is', () => {
   const {
     getByText,
-  } = testUtils.collectAndRender(({ store }: WithStoreProp) => (
+  } = testUtils.collectAndRenderStrict(({ store }: WithStoreProp) => (
     <div>
       {'anything' in store ? (
         <div>Has test</div>

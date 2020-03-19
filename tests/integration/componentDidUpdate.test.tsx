@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component, useEffect } from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { collect, store as globalStore, WithStoreProp } from '../../src';
 import * as testUtils from '../testUtils';
 
@@ -100,7 +100,7 @@ const reportUserChange = jest.fn();
 it('should handle a change in a value', () => {
   globalStore.userId = 1;
 
-  const { getByText } = render(
+  const { getByText } = testUtils.renderStrict(
     <ParentComponent reportUserChange={reportUserChange} />
   );
 
@@ -125,7 +125,7 @@ it('should re-render on a hidden prop read (FAILS)', () => {
   const sideEffectMock = jest.fn();
   globalStore.loaded = false;
 
-  testUtils.collectAndRender(
+  testUtils.collectAndRenderStrict(
     class extends Component<WithStoreProp> {
       componentDidUpdate(prevProps: Readonly<WithStoreProp>) {
         if (!prevProps.store.loaded && this.props.store.loaded) {
