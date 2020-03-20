@@ -39,7 +39,7 @@ const TestComponent = collect(({ store }: WithStoreProp) => (
         <button
           onClick={() => {
             store.page.status += '!';
-            store.page.status += '!';
+            store.page = { status: `${store.page.status}!` };
             store.page.status += '!';
           }}
         >
