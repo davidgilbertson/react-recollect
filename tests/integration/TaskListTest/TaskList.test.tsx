@@ -18,13 +18,23 @@ it('TaskList', async () => {
   await findByText('Task one');
 
   // it should mark a task as done in a child component
-  const checkbox = getByLabelText('Task one') as HTMLInputElement;
+  const taskOneCheckbox = getByLabelText('Task one') as HTMLInputElement;
 
-  expect(checkbox.checked).toBe(false);
+  expect(taskOneCheckbox.checked).toBe(false);
 
   getByLabelText('Task one').click();
 
-  expect(checkbox.checked).toBe(true);
+  expect(taskOneCheckbox.checked).toBe(true);
+
+  // the component should still be listening to other tasks. See bug:
+  // https://github.com/davidgilbertson/react-recollect/issues/100
+  const taskTwoCheckbox = getByLabelText('Task two') as HTMLInputElement;
+
+  expect(taskTwoCheckbox.checked).toBe(false);
+
+  getByLabelText('Task two').click();
+
+  expect(taskTwoCheckbox.checked).toBe(true);
 
   // it should delete a task from a child component
   getByText('Delete Task one').click();
