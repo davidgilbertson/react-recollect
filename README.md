@@ -25,7 +25,7 @@ Recollect aims to solve two problems with the traditional React/Redux approach:
    that property is re-rendered.
 
 The result is simpler code and a faster app. Take it for a spin in this
-[Code Sandbox](https://codesandbox.io/s/lxy1mz200l).
+[CodeSandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ---
 
