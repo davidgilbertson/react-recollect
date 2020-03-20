@@ -4,10 +4,10 @@ import {
   initStore,
   store as globalStore,
   WithStoreProp,
-} from '../../src';
+} from '../..';
 import * as testUtils from '../testUtils';
 
-declare module '../../src' {
+declare module '../..' {
   interface Store {
     myArray?: Array<{
       text?: string;

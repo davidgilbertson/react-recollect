@@ -4,7 +4,7 @@ import {
   store as globalStore,
   useProps,
   WithStoreProp,
-} from '../../src';
+} from '../..';
 import * as testUtils from '../testUtils';
 
 beforeEach(() => {

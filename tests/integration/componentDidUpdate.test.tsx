@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component, useEffect } from 'react';
 import { waitFor } from '@testing-library/react';
-import { collect, store as globalStore, WithStoreProp } from '../../src';
+import { collect, store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 interface Props extends WithStoreProp {

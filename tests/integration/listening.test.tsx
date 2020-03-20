@@ -1,5 +1,5 @@
 import React from 'react';
-import { initStore, store as globalStore, WithStoreProp } from '../../src';
+import { initStore, store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 beforeEach(() => {

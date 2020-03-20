@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import React, { Component } from 'react';
-import { collect, WithStoreProp } from '../../src';
+import { collect, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 const TestComponentBad = collect(

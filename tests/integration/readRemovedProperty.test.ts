@@ -1,5 +1,5 @@
 import { waitFor } from '@testing-library/react';
-import { store } from '../../src';
+import { store } from '../..';
 
 it('should keep a reference', () => {
   store.testArray = [{ name: 'David' }];

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { collect, store, WithStoreProp } from '../../src';
+import { collect, store, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 // eslint-disable-next-line react/prefer-stateless-function

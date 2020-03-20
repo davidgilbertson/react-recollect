@@ -1,8 +1,7 @@
 import React from 'react';
 import { mocked } from 'ts-jest/utils';
 import { render } from '@testing-library/react';
-import { collect } from '../src';
-import state from '../src/shared/state';
+import { collect, internals } from '..';
 import { PROP_PATH_SEP } from '../src/shared/constants';
 
 export const renderStrict = (children: React.ReactNode) => {
@@ -27,7 +26,7 @@ export const propPathChanges = (handleChangeMock: jest.Mock) =>
 export const getAllListeners = () => {
   const matches = new RegExp(PROP_PATH_SEP, 'g');
 
-  return Array.from(state.listeners).map(([path]) =>
+  return Array.from(internals.listeners).map(([path]) =>
     path.replace(matches, '.')
   );
 };
@@ -57,7 +56,7 @@ export type TaskType = {
   done?: boolean;
 };
 
-declare module '../src' {
+declare module '..' {
   // Add a few things used in the tests
   interface Store {
     tasks?: TaskType[];

@@ -6,7 +6,7 @@
 import React from 'react';
 import * as testUtils from '../../testUtils';
 import App from './App';
-import { store } from '../../../src';
+import { store } from '../../..';
 
 store.site = {
   title: 'The task list site',

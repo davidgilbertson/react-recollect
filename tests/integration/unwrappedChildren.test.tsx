@@ -8,7 +8,7 @@ import {
   collect,
   store as globalStore,
   WithStoreProp,
-} from '../../src';
+} from '../..';
 import { TaskType } from '../testUtils';
 
 globalStore.tasks = [

@@ -28,6 +28,9 @@ export type AfterChangeEvent = {
   renderedComponents: CollectorComponent[];
 };
 
+/**
+ * The internal state of Recollect. For internal/debugging use only.
+ */
 export type State = {
   currentComponent: CollectorComponent | null;
   isBatchUpdating: boolean;

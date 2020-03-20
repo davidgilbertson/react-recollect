@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { initStore } from '../../src';
+import { initStore } from '../..';
 import * as testUtils from '../testUtils';
 
 it('should not listen to props read from prop types', () => {

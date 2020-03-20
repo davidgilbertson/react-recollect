@@ -1,5 +1,5 @@
 import React from 'react';
-import { store, WithStoreProp } from '../../src';
+import { store, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 it('should render the title', () => {

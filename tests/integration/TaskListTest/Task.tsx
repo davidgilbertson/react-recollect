@@ -1,5 +1,5 @@
 import React from 'react';
-import { store } from '../../../src';
+import { store } from '../../..';
 import { TaskType } from '../../testUtils';
 
 type Props = {

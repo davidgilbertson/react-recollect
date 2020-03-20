@@ -3,7 +3,7 @@
  * behaves differently to a plain JavaScript object.
  */
 
-import { store } from '../../src';
+import { store } from '../..';
 
 it('will create a new object', () => {
   store.data = {

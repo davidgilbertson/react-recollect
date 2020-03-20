@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { collect, store as globalStore, WithStoreProp } from '../../src';
+import { collect, store as globalStore, WithStoreProp } from '../..';
 
 let renderCountOne = 0;
 let renderCountTwo = 0;

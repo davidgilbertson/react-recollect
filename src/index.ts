@@ -7,6 +7,9 @@ export { initStore, batch } from './store';
 export { useProps } from './shared/utils';
 export const { store } = state;
 
+// `internals` is not part of the Recollect API. It is used by tests.
+export const internals = state;
+
 export { AfterChangeEvent } from './shared/types';
 export { WithStoreProp } from './shared/types';
 export { Store } from './shared/types';

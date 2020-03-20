@@ -6,7 +6,7 @@ import {
   initStore,
   store as globalStore,
   WithStoreProp,
-} from '../../src';
+} from '../..';
 import { propPathChanges } from '../testUtils';
 
 let renderCount: number;

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { collect, store as globalStore, WithStoreProp } from '../../src';
+import { collect, store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 type Props = {

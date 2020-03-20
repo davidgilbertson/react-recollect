@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { waitFor, act } from '@testing-library/react';
-import { store as globalStore, WithStoreProp } from '../../src';
+import { store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 it('should work with useState hook', () => {

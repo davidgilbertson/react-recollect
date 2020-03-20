@@ -1,7 +1,7 @@
-import { store, afterChange, initStore } from '../../src';
+import { store, afterChange, initStore } from '../..';
 import { propPathChanges, TaskType } from '../testUtils';
 
-declare module '../../src' {
+declare module '../..' {
   interface Store {
     // Add a few things used in this file
     taskList?: TaskType[];

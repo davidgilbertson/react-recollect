@@ -1,5 +1,5 @@
 import React from 'react';
-import { collect, WithStoreProp } from '../../src';
+import { collect, WithStoreProp } from '../..';
 
 describe('should copy static methods to the collected component', () => {
   it('for a class component', () => {

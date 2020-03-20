@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { store as globalStore, WithStoreProp } from '../../src';
+import { store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 type Props = WithStoreProp & {

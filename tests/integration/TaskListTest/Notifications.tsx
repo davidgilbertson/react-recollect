@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { collect, WithStoreProp } from '../../../src';
+import { collect, WithStoreProp } from '../../..';
 
 type Props = WithStoreProp & {
   onNotificationsUpdate: () => {};

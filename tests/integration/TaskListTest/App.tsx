@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import TaskList from './TaskList';
 import Notifications from './Notifications';
-import { collect, WithStoreProp } from '../../../src';
+import { collect, WithStoreProp } from '../../..';
 
 interface Props extends WithStoreProp {
   onAppUpdate: () => {};

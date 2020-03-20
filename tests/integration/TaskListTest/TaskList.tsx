@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Task from './Task';
 import loadTasks from './loadTasks';
-import { collect, WithStoreProp } from '../../../src';
+import { collect, WithStoreProp } from '../../..';
 
 interface Props extends WithStoreProp {
   onTaskListUpdate?: () => {};

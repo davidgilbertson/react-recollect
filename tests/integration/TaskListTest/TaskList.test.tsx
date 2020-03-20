@@ -1,6 +1,6 @@
 import React from 'react';
 import TaskList from './TaskList';
-import { store } from '../../../src';
+import { store } from '../../..';
 import * as testUtils from '../../testUtils';
 
 it('TaskList', async () => {
