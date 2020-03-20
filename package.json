@@ -26,7 +26,7 @@
     "readme:toc": "doctoc README.md",
     "build:watch": "webpack --watch --mode=\"development\"",
     "checkall": "npm run build && npm run lint && npm run test:ci",
-    "lint": "eslint src tests --fix --cache --ext js,ts,tsx",
+    "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
     "test": "npm run nodeTest && jest --watchAll",
     "test:ci": "npm run nodeTest && jest --ci",

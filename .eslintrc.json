@@ -23,7 +23,7 @@
     "import/prefer-default-export": "off",
     "jsx-a11y/label-has-associated-control": "off",
     "no-console": [
-      "error",
+      "warn",
       {
         "allow": [
           "info",
