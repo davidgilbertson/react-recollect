@@ -107,6 +107,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -131,6 +132,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
     - [Map and Set limitations](#map-and-set-limitations)
   - [When will my components be re-rendered?](#when-will-my-components-be-re-rendered)
+  - [How many components should I wrap in `collect`?](#how-many-components-should-i-wrap-in-collect)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
