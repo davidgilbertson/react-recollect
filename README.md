@@ -107,6 +107,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -131,6 +132,7 @@ Go have a play, and when you're ready for more readme, come back to read on ...
   - [What sort of stuff can go in the store?](#what-sort-of-stuff-can-go-in-the-store)
     - [Map and Set limitations](#map-and-set-limitations)
   - [When will my components be re-rendered?](#when-will-my-components-be-re-rendered)
+  - [How many components should I wrap in `collect`?](#how-many-components-should-i-wrap-in-collect)
   - [Can I use this with class-based components and functional components?](#can-i-use-this-with-class-based-components-and-functional-components)
   - [Hooks?](#hooks)
   - [Will component state still work?](#will-component-state-still-work)
@@ -861,11 +863,39 @@ Short version: when they need to be, don't worry about it.
 Longer version: if a _property_ is changed (e.g.
 `store.page.title = 'Page two'`), any component that read that property when it
 last rendered will be updated. If an object, array, map or set is changed (e.g.
-`store.tasks.pop()`), then any component that read that _target_ will be
+`store.tasks.pop()`) any component that read that object/array/map/set will be
 updated.
 
 Check out [tests/integration/updating](tests/integration/updating.test.tsx) for
 the full suite of scenarios.
+
+## How many components should I wrap in `collect`?
+
+You can wrap every component in `collect` if you feel like it. As a general
+rule, the more you wrap in `collect`, the fewer unnecessary renders you'll get,
+and the less you'll have to pass props down through your component tree.
+
+There is one rule you must follow though: do not pass part of the store _into_ a
+collected component as props. Don't worry if you're not sure what that means,
+you'll get a development-time error if you try.
+[This issue explains why](https://github.com/davidgilbertson/react-recollect/issues/102).
+
+When dealing with components that are rendered as array items (e.g. `<Product>`s
+in a `<ProductList>`), you'll probably get the best performance with the
+following setup:
+
+- Wrap the parent component in `collect`.
+- Don't wrap the child component in `collect`
+- Pass the required data to the child components as props.
+- Mark the child component as pure with `memo()` or `PureComponent`.
+
+With this arrangement, when an item in the array changes (e.g. a product is
+starred), Recollect will immutably update only that item in the store, and
+trigger the parent component to update. React will skip the update on all the
+children that didn't change, so only the one child will re-render.
+
+For a working example, see the
+[Recollect demo on CodeSandbox](https://codesandbox.io/s/lxy1mz200l).
 
 ## Can I use this with class-based components and functional components?
 

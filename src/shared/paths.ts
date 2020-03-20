@@ -1,4 +1,5 @@
 import { PATH, PROP_PATH_SEP } from './constants';
+import * as utils from './utils';
 import { PropPath, Target } from './types';
 
 // Joins an array that potentially contains symbols, which need an explicit
@@ -43,7 +44,7 @@ export const addProp = (target: Target, propPath: PropPath) => {
 
 export const get = (target: Target) => target[PATH] || [];
 
-export const has = (target: Target) => PATH in target;
+export const has = (target: any) => utils.isObject(target) && PATH in target;
 
 export const set = (mutableTarget: Target, propPath: PropPath) => {
   mutableTarget[PATH] = propPath;

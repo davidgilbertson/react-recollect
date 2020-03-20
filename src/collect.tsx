@@ -2,6 +2,7 @@ import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { removeListenersForComponent } from './updating';
 import * as proxyManager from './proxyManager';
+import * as paths from './shared/paths';
 import state from './shared/state';
 import { debug } from './shared/debug';
 import { CollectorComponent, Store, WithStoreProp } from './shared/types';
@@ -113,6 +114,26 @@ const collect = <C extends React.ComponentType<any>>(
     componentDidMount() {
       this._isMounted = true;
       this._isMounting = false;
+
+      // A user shouldn't pass data from the store into a collected component.
+      // See the issue linked in the error for details.
+      if (this.props) {
+        const recollectStoreProps: string[] = [];
+
+        // Note this is only a shallow check.
+        Object.entries(this.props).forEach(([propName, propValue]) => {
+          // If this prop has a 'path', we know it's from the Recollect store
+          // This is not good!
+          if (paths.has(propValue)) recollectStoreProps.push(propName);
+        });
+
+        // We'll just report the first match to keep the message simple
+        if (recollectStoreProps.length) {
+          console.error(
+            `You are passing part of the Recollect store from one collected component to another, which can cause unpredictable behaviour.\n Either remove the collect() wrapper from <${this._name}/>, or remove the "${recollectStoreProps[0]}" prop.\n More info: https://git.io/JvMOj`
+          );
+        }
+      }
 
       // Stop recording. For first render()
       stopRecordingGetsForComponent();
