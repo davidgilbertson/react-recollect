@@ -14,8 +14,6 @@ const componentStack: CollectorComponent[] = [];
 const startRecordingGetsForComponent = (component: CollectorComponent) => {
   if (!state.isInBrowser) return;
 
-  removeListenersForComponent(component);
-
   debug(() => {
     console.groupCollapsed(`RENDER: <${component._name}>`);
   });

@@ -6,7 +6,7 @@ type Props = {
   task: TaskType;
 };
 
-const Task = ({ task }: Props) => (
+const Task = React.memo(({ task }: Props) => (
   <div>
     <label>
       <input
@@ -32,6 +32,6 @@ const Task = ({ task }: Props) => (
       Delete {task.name}
     </button>
   </div>
-);
+));
 
 export default Task;
