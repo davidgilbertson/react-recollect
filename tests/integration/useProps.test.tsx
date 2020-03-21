@@ -18,20 +18,45 @@ it('should listen to props', () => {
   testUtils.collectAndRender(({ store }: any) => {
     useProps([store.prop1]);
 
-    return (
-      <div>
-        <p>{store.prop2}</p>
-      </div>
-    );
+    return <p>{store.prop2}</p>;
   });
 
   expect(testUtils.getAllListeners()).toEqual(['prop1', 'prop2']);
+});
+
+it('should listen to object children', () => {
+  globalStore.arr = [{ name: 'Task one' }, { name: 'Task two' }];
+  globalStore.obj = {
+    one: 'one!',
+    two: 'two!',
+  };
+
+  testUtils.collectAndRender(({ store }: any) => {
+    useProps([store.prop1, ...store.arr]);
+
+    // A terrible idea, but works
+    useProps(Object.values(store.obj));
+
+    return <p>{store.prop2}</p>;
+  });
+
+  expect(testUtils.getAllListeners()).toEqual([
+    'prop1',
+    'arr',
+    'arr.0',
+    'arr.1',
+    'obj',
+    'obj.one',
+    'obj.two',
+    'prop2',
+  ]);
 });
 
 it('should work inline', () => {
   const { container } = testUtils.collectAndRender(({ store }: any) => (
     <div>
       {useProps([store.prop1])}
+
       <p>{store.prop2}</p>
     </div>
   ));
@@ -64,6 +89,7 @@ it('should handle duplicate props', () => {
     return (
       <div>
         {!store.loaded && <p>Loading...</p>}
+
         <p>{store.prop2}</p>
       </div>
     );
@@ -85,11 +111,7 @@ it('should ignore non-store props', () => {
 
     useProps([store.prop1, listOfAnimals]);
 
-    return (
-      <div>
-        <p>{store.prop2}</p>
-      </div>
-    );
+    return <p>{store.prop2}</p>;
   });
 
   expect(testUtils.getAllListeners()).toEqual(['prop1', 'prop2']);
@@ -101,11 +123,7 @@ it('can be used multiple times', () => {
     useProps([store.prop3]);
     useProps([store.prop4]);
 
-    return (
-      <div>
-        <p>{store.prop2}</p>
-      </div>
-    );
+    return <p>{store.prop2}</p>;
   });
 
   expect(testUtils.getAllListeners()).toEqual([
@@ -135,11 +153,7 @@ it('can be read in lifecycle methods', () => {
         const { store } = this.props;
         useProps([store.prop1]);
 
-        return (
-          <div>
-            <p>{store.prop2}</p>
-          </div>
-        );
+        return <p>{store.prop2}</p>;
       }
     }
   );
