@@ -2,7 +2,6 @@
  * This test suite is a collection of the ways in which the Recollect store
  * behaves differently to a plain JavaScript object.
  */
-
 import { store } from '../..';
 
 it('will create a new object', () => {

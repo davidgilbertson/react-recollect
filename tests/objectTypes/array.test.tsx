@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
-import { render } from '@testing-library/react';
-import { collect, store as globalStore, WithStoreProp } from '../..';
+import React from 'react';
+import { initStore, store as globalStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
 
 let renderCount: number;
@@ -9,7 +8,9 @@ let taskId: number;
 const log = jest.fn();
 
 beforeEach(() => {
-  globalStore.tasks = [];
+  initStore({
+    tasks: [],
+  });
   renderCount = 0;
   taskNumber = 1;
   taskId = -1;
@@ -20,65 +21,60 @@ type Props = {
   task: testUtils.TaskType;
 };
 
-const Task = (props: Props) => <div>{props.task.name}</div>;
-
-// eslint-disable-next-line react/prefer-stateless-function
-class RawTaskList extends Component<WithStoreProp> {
-  render() {
-    renderCount++;
-    const { store } = this.props;
-
-    return (
-      <div>
-        <button
-          onClick={() => {
-            if (store.tasks) {
-              store.tasks.push({
-                id: taskId--, // we go backwards with IDs so that .sort() triggers a change
-                name: `Task number ${taskNumber++}`,
-              });
-
-              log(store.tasks.length);
-            }
-          }}
-        >
-          Add task
-        </button>
-
-        <button
-          onClick={() => {
-            if (store.tasks) store.tasks.pop();
-          }}
-        >
-          Remove last task
-        </button>
-
-        <button
-          onClick={() => {
-            delete store.tasks;
-          }}
-        >
-          Remove all tasks
-        </button>
-
-        {!!store.tasks && !!store.tasks.length && (
-          <>
-            <h1>Task list</h1>
-
-            {store.tasks.map((task) => (
-              <Task task={task} key={task.id} />
-            ))}
-          </>
-        )}
-      </div>
-    );
-  }
-}
-
-const TaskList = collect(RawTaskList);
-
 it('should operate on arrays', () => {
-  const { getByText, queryByText } = render(<TaskList />);
+  const Task = (props: Props) => <div>{props.task.name}</div>;
+
+  const { getByText, queryByText } = testUtils.collectAndRender(
+    ({ store }: WithStoreProp) => {
+      renderCount++;
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              if (store.tasks) {
+                store.tasks.push({
+                  id: taskId--, // we go backwards with IDs so that .sort() triggers a change
+                  name: `Task number ${taskNumber++}`,
+                });
+
+                log(store.tasks.length);
+              }
+            }}
+          >
+            Add task
+          </button>
+
+          <button
+            onClick={() => {
+              if (store.tasks) store.tasks.pop();
+            }}
+          >
+            Remove last task
+          </button>
+
+          <button
+            onClick={() => {
+              delete store.tasks;
+            }}
+          >
+            Remove all tasks
+          </button>
+
+          {!!store.tasks && !!store.tasks.length && (
+            <>
+              <h1>Task list</h1>
+
+              {store.tasks.map((task) => (
+                <Task task={task} key={task.id} />
+              ))}
+            </>
+          )}
+        </div>
+      );
+    }
+  );
+
   expect(renderCount).toBe(1);
 
   expect(queryByText('Task list')).toBeNull();

@@ -368,8 +368,7 @@ Although `useProps` starts with the word 'use', it doesn't require React's Hooks
 mechanism, so it works just fine in versions before React 16.8. (For the
 curious, the implementation is literally just `propArray.includes(0)`.)
 
-Check out [these tests](./tests/integration/useProps.test.tsx) for more usage
-examples.
+Check out [these tests](tests/unit/useProps.test.tsx) for more usage examples.
 
 ## `window.__RR__`
 
@@ -985,7 +984,7 @@ object that you can read from and write to anywhere.
 
 Yes, refs just work, as long as you don't use the reserved name 'ref' (React
 strips this out). You can use something like `inputRef` instead. For an example,
-see [this test](./tests/integration/forwardRefFc.test.tsx)
+see [this test](tests/react/forwardRefFc.test.tsx)
 
 ## Can I have multiple stores?
 

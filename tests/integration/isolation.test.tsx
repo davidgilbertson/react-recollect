@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import * as testUtils from '../../testUtils';
-import App from './App';
-import { store } from '../../..';
+import * as testUtils from '../testUtils';
+import App from './TaskListTest/App';
+import { store } from '../..';
 
 store.site = {
   title: 'The task list site',
