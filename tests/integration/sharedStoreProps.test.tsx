@@ -48,3 +48,31 @@ it('should error when sharing between collected components', () => {
     'Either remove the collect() wrapper from <ChildComponent/>, or remove the "task" prop'
   );
 });
+
+it('can bypass sharing warning by shallow cloning', () => {
+  initStore({
+    tasks: [
+      {
+        id: 1,
+        name: 'Task one',
+      },
+    ],
+  });
+
+  const ChildComponent = ({ task }: any) => <div>{task.name}</div>;
+  const ChildComponentCollected = collect(ChildComponent);
+
+  const ParentComponent = collect(({ store }: WithStoreProp) => (
+    <div>
+      {!!store.tasks &&
+        store.tasks.map((task) => (
+          // Shallow cloning task here 'detaches' it from the store
+          <ChildComponentCollected key={task.id} task={{ ...task }} />
+        ))}
+    </div>
+  ));
+
+  const { getByText } = testUtils.renderStrict(<ParentComponent />);
+
+  getByText('Task one');
+});
