@@ -8,6 +8,8 @@ export const renderStrict = (children: React.ReactNode) => {
   return render(<React.StrictMode>{children}</React.StrictMode>);
 };
 
+// Use collectAndRenderStrict instead of this if you don't need to count
+// the number of renders
 export const collectAndRender = (Comp: React.ComponentType<any>) => {
   const CollectedComp = collect(Comp);
 
