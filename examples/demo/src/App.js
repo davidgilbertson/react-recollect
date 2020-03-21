@@ -1,12 +1,12 @@
 import React from 'react';
 import './App.css';
+import TodoMvcPage from './todomvc/components/TodoMvcPage';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>React Recollect demo site</h1>
-      </header>
+      <header className="App-header">React Recollect demo site</header>
+      <TodoMvcPage className="App__page-wrapper" />
     </div>
   );
 }
