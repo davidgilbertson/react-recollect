@@ -45,7 +45,7 @@ started.
 The store is where your data goes; you can treat it just like you'd treat any
 JavaScript object. You can import, read from, and write to the store in any
 file. Here's an abundance of examples to break you out of that immutability
-mindset...
+mindset. None of these mutate the store contents:
 
 ```js
 import { store } from 'react-recollect';
@@ -65,14 +65,11 @@ delete store.site; // Seems extreme, but works a treat
 store = 'foo'; // Nope! (can't reassign a constant)
 ```
 
-(Internally, none of that mutated the store contents.)
-
 The `collect` function wraps a React component, allowing Recollect to take care
 of it. This will provide the store as a prop, and update the component when it
 needs updating.
 
 ```jsx harmony
-import React from 'react';
 import { collect } from 'react-recollect';
 
 const TaskList = ({ store }) => (
@@ -155,9 +152,6 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 
 # API
 
-In addition to [`connect`](#collectreactcomponent) and [`store`](#store) above,
-Recollect has three more functions.
-
 ## `store`
 
 The `store` object that Recollect exposes is designed to behave like a plain old
@@ -167,21 +161,32 @@ parts of itself that it needs to clone to apply your changes, without mutating
 anything.
 
 When the store is then passed to a component, React can do its clever shallow
-comparisons to know that something has changed and update efficiently.
+comparisons to know whether something has changed and update efficiently.
 
 ## `collect(ReactComponent)`
 
 When you wrap a component in `collect`, Recollect will:
 
-- Provide the store object as a prop
+- Provide the store object as a prop.
 - Collect information about the data the component needs to render (which
-  properties in the store it read from while rendering).
-- When any of that data changes, Recollect will instruct React to re-render the
-  component.
+  properties in the store it read while rendering).
+- Re-render the component when that data changes.
 
-Internally, Recollect maintains a list of 'listeners'. The above component would
-be listed as listening to the `'store.tasks'` prop, and be re-rendered with any
-change to that array.
+Internally, Recollect 'subscribes' components to property 'paths'. For example,
+this component would be subscribed to the `store.page.title` path and
+re-rendered when that property changes.
+
+```jsx harmony
+import { collect } from 'react-recollect';
+
+const Header = ({ store }) => (
+  <header>
+    <h1>{store.page.title}</h1>
+  </header>
+);
+
+export default collect(Header);
+```
 
 ## `afterChange(callback)`
 
@@ -210,11 +215,12 @@ afterChange((e) => {
 The `initStore` function will _replace_ the contents of the store with the
 object you pass in.
 
-`data` is optional — if you don't pass anything, the store will be emptied.
+`data` is optional — if you don't pass anything, the store will be emptied
+(useful in tests).
 
 If you're only using Recollect in the browser, you don't _need_ to use this, but
-it's handy to set the default state of your store. Remember that you can also
-use `Object.assign(store, { foo: 'bar' })` if you want to shallow-merge new data
+it's handy to set the default state of your store. You can also use
+`Object.assign(store, { foo: 'bar' })` if you want to shallow-merge new data
 into the store.
 
 When you render on the server though, you _do_ need to initialize the store,
