@@ -155,8 +155,8 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 
 # API
 
-In addition to [`connect`](#the-collect-function) and
-[`store`](#the-store-object) above, Recollect has three more functions.
+In addition to [`connect`](#collectreactcomponent) and [`store`](#store) above,
+Recollect has three more functions.
 
 ## `store`
 
