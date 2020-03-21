@@ -9,6 +9,7 @@ const TodoMvcPage = (props) => (
   <div className={classNames(props.className, 'todoapp-body')}>
     <div className="todoapp">
       <Header />
+
       <MainSection />
     </div>
   </div>

@@ -2,17 +2,17 @@ import React from 'react';
 import { collect } from 'react-recollect';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import StorePropType from '../propTypes/StorePropType';
+import StorePropType from '../../propTypes/StorePropType';
 import { VISIBILITY_FILTERS } from '../constants';
 
 const Link = ({ filter, children, store }) => (
   <a
     className={classnames({
-      selected: store.visibilityFilter === filter,
+      selected: store.todoMvc.visibilityFilter === filter,
     })}
     style={{ cursor: 'pointer' }}
     onClick={() => {
-      store.visibilityFilter = filter;
+      store.todoMvc.visibilityFilter = filter;
     }}
   >
     {children}

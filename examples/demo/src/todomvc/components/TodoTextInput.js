@@ -7,11 +7,12 @@ const TodoTextInput = React.memo((props) => {
 
   const handleSubmit = (e) => {
     const text = e.target.value.trim();
+
+    // 13: Enter
     if (e.which === 13) {
       props.onSave(text);
-      if (props.newTodo) {
-        setInputText('');
-      }
+
+      if (props.newTodo) setInputText('');
     }
   };
 
@@ -20,9 +21,7 @@ const TodoTextInput = React.memo((props) => {
   };
 
   const handleBlur = (e) => {
-    if (!props.newTodo) {
-      props.onSave(e.target.value);
-    }
+    if (!props.newTodo) props.onSave(e.target.value);
   };
 
   return (
@@ -31,7 +30,6 @@ const TodoTextInput = React.memo((props) => {
         edit: props.editing,
         'new-todo': props.newTodo,
       })}
-      type="text"
       placeholder={props.placeholder}
       autoFocus
       value={inputText}
