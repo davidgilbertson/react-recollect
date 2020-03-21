@@ -1,6 +1,6 @@
 import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { removeListenersForComponent } from './updating';
+import * as updateManager from './updateManager';
 import * as proxyManager from './proxyManager';
 import * as paths from './shared/paths';
 import state from './shared/state';
@@ -147,7 +147,7 @@ const collect = <C extends React.ComponentType<any>>(
     }
 
     componentWillUnmount() {
-      removeListenersForComponent(this);
+      updateManager.removeListenersForComponent(this);
       this._isMounted = false;
     }
 

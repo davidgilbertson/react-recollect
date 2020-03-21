@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { collect, batch, store as globalStore, WithStoreProp } from '../..';
 
 globalStore.count = 1;
@@ -63,8 +63,6 @@ it('should batch synchronous updates to the store', async () => {
     globalStore.count++;
     globalStore.count++;
   });
-
-  await waitFor(() => getByText('Comp1 count: 10'));
 
   expect(parentCompRenderCount).toBe(1);
 
