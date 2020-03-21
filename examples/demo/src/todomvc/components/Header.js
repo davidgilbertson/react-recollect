@@ -10,7 +10,7 @@ const Header = ({ store }) => (
     <TodoTextInput
       newTodo
       onSave={(text) => {
-        if (text.length !== 0) {
+        if (text.length) {
           store.todoMvc.todos.push({
             id: Math.random()
               .toString()
