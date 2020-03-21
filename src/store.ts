@@ -1,9 +1,9 @@
 import * as proxyManager from './proxyManager';
 import * as pubSub from './shared/pubSub';
-import { notifyByPath } from './updating';
-import state from './shared/state';
+import * as updateManager from './updateManager';
 import * as utils from './shared/utils';
 import * as paths from './shared/paths';
+import state from './shared/state';
 import { Store, UpdateInStore } from './shared/types';
 import { ORIGINAL } from './shared/constants';
 
@@ -97,7 +97,7 @@ export const updateStore: UpdateInStore = ({
     const notifyPath =
       notifyTarget || targetChangedSize ? targetPath : propPath;
 
-    notifyByPath(notifyPath);
+    updateManager.notifyByPath(notifyPath);
 
     return result;
   });
@@ -120,4 +120,5 @@ export const batch = (cb: () => void) => {
   state.isBatchUpdating = true;
   cb();
   state.isBatchUpdating = false;
+  updateManager.flushUpdates();
 };

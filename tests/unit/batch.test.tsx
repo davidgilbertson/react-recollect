@@ -64,8 +64,6 @@ it('should batch synchronous updates to the store', async () => {
     globalStore.count++;
   });
 
-  await waitFor(() => getByText('Comp1 count: 10'));
-
   expect(parentCompRenderCount).toBe(1);
 
   // Of note: the render count is only 5 ...

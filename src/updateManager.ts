@@ -6,18 +6,14 @@ import { CollectorComponent, PropPath } from './shared/types';
 type Queue = {
   components: Map<CollectorComponent, Set<string>>;
   changedPaths: Set<string>;
-  timeoutPending: boolean;
 };
 
 const queue: Queue = {
   components: new Map(),
   changedPaths: new Set(),
-  timeoutPending: false,
 };
 
-const flushUpdates = () => {
-  queue.timeoutPending = false;
-
+export const flushUpdates = () => {
   queue.components.forEach((propsUpdated, component) => {
     logUpdate(component, Array.from(propsUpdated));
 
@@ -63,16 +59,9 @@ export const notifyByPath = (propPath: PropPath) => {
     }
   });
 
-  if (state.isBatchUpdating) {
-    if (!queue.timeoutPending) {
-      queue.timeoutPending = true;
-      // TODO (davidg): ignoring because of this bug: https://github.com/typescript-eslint/typescript-eslint/pull/1652
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      setTimeout(flushUpdates);
-    }
-  } else {
-    flushUpdates();
-  }
+  // If we're not batch updating, flush the changes now, otherwise this
+  // will be called when the batch is complete
+  if (!state.isBatchUpdating) flushUpdates();
 };
 
 export const removeListenersForComponent = (
