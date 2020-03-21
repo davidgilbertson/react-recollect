@@ -71,7 +71,7 @@ The `collect` function wraps a React component, allowing Recollect to take care
 of it. This will provide the store as a prop, and update the component when it
 needs updating.
 
-```jsx
+```jsx harmony
 import React from 'react';
 import { collect } from 'react-recollect';
 
@@ -106,7 +106,6 @@ Go have a play, and when you're ready for more readme, come back to read on ...
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [API](#api)
   - [`store`](#store)
@@ -227,7 +226,7 @@ to be fresh for each request.
 Here's a minimal implementation of server-side rendering with Express and
 Recollect.
 
-```jsx
+```jsx harmony
 // Create an express app instance
 const app = express();
 
@@ -279,7 +278,7 @@ time. And by 'at the same time', I mean _synchronously_.
 In the entry point to your app, right before you call `ReactDOM.hydrate()`, call
 `initStore()` with the data that you sent from the server:
 
-```jsx
+```jsx harmony
 import { initStore } from 'react-recollect';
 
 // other stuff
@@ -511,7 +510,7 @@ export const getIncompleteTasksSortedByDueDate = (store) => {
 You would then use this function by importing it and referencing it in your
 component:
 
-```jsx
+```jsx harmony
 import { getIncompleteTasksSortedByDueDate } from '../store/selectors/taskSelectors';
 
 const TaskList = ({ store }) => {
@@ -553,7 +552,7 @@ export const getIncompleteTasksSortedByDueDate = (store) =>
 And here's a more complex component with local state and a dropdown to show
 either all tasks or just those that aren't done:
 
-```jsx
+```jsx harmony
 class TaskList extends PureComponent {
   state = {
     filter: 'all',
@@ -612,7 +611,7 @@ export const markAllTasksAsDone = () => {
 You would reference this from a component by importing it then calling it in
 response to some user action:
 
-```jsx
+```jsx harmony
 import { markAllTasksAsDone } from '../store/updaters/taskUpdaters';
 
 const Footer = () => (
@@ -835,7 +834,7 @@ you can think of.
 If there's a data type you want to store and mutate that isn't supported, log an
 issue and we'll chat.
 
-Other things that aren't supported:
+Other things that aren't supported (or haven't been tested):
 
 - Functions (e.g. getters, setters, or other methods)
 - Class instances (if this would be useful to you, log an issue and we'll chat)
@@ -846,6 +845,25 @@ Other things that aren't supported:
 - `Proxy` objects (if this would be useful to you, log an issue and we'll chat)
 - Linking (e.g. one item in the store that is a reference to another item in the
   store)
+
+You can even store components in the store if you feel the need. This hasn't
+been performance tested, so proceed with caution.
+
+```jsx harmony
+const Page = collect(({ store }) => {
+  const { Header, Footer, Button } = store.components;
+
+  return (
+    <React.Fragment>
+      <Header title="Page one" />
+
+      <Button onClick={doSomething} />
+
+      <Footer />
+    </React.Fragment>
+  );
+});
+```
 
 ### Map and Set limitations
 
