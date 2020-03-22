@@ -3,7 +3,7 @@ import { collect } from 'react-recollect';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { VISIBILITY_FILTERS } from '../constants';
-import StorePropType from '../../propTypes/StorePropType';
+import StorePropType from '../../../propTypes/StorePropType';
 
 const Link = ({ filter, children, store }) => (
   <a

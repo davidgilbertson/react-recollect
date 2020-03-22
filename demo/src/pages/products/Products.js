@@ -10,7 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Product from './Product';
 import styles from './Products.module.css';
-import StorePropType from '../propTypes/StorePropType';
+import StorePropType from '../../propTypes/StorePropType';
 import { PRODUCT_FILTER } from '../todomvc/constants';
 
 const getVisibleProducts = ({ products, filter, searchQuery }) => {

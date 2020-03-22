@@ -2,12 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { initStore, afterChange } from 'react-recollect';
 import App from './App';
-import { PRODUCT_FILTER, TABS, VISIBILITY_FILTERS } from './todomvc/constants';
+import {
+  PRODUCT_FILTER,
+  TABS,
+  VISIBILITY_FILTERS,
+} from './pages/todomvc/constants';
 import './index.css';
-import loadProducts from './products/loadProducts';
+import loadProducts from './pages/products/loadProducts';
+import Theme from './shared/Theme';
 
 initStore({
-  currentTab: localStorage.currentTab || TABS.PRODUCTS,
+  currentPage: localStorage.currentPage || TABS.PRODUCTS,
   loading: false,
   productPage: {
     filter: PRODUCT_FILTER.ALL,
@@ -23,10 +28,15 @@ initStore({
 loadProducts();
 
 afterChange((e) => {
-  // When the currentTab changes, update localStorage
-  if (e.changedProps.includes('currentTab')) {
-    localStorage.currentTab = e.store.currentTab;
+  // When the currentPage changes, update localStorage
+  if (e.changedProps.includes('currentPage')) {
+    localStorage.currentPage = e.store.currentPage;
   }
 });
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(
+  <Theme>
+    <App />
+  </Theme>,
+  document.getElementById('root')
+);

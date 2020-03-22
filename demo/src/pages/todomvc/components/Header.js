@@ -1,7 +1,7 @@
 import React from 'react';
 import { collect } from 'react-recollect';
 import TodoTextInput from './TodoTextInput';
-import StorePropType from '../../propTypes/StorePropType';
+import StorePropType from '../../../propTypes/StorePropType';
 
 const Header = ({ store }) => (
   <header className="header">

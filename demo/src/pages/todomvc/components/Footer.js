@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { collect } from 'react-recollect';
 import Link from './Link';
 import { VISIBILITY_FILTERS } from '../constants';
-import StorePropType from '../../propTypes/StorePropType';
+import StorePropType from '../../../propTypes/StorePropType';
 
 const Footer = (props) => {
   const { activeCount, completedCount, onClearCompleted } = props;

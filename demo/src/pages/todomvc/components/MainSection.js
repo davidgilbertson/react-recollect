@@ -2,7 +2,7 @@ import React from 'react';
 import { collect } from 'react-recollect';
 import Footer from './Footer';
 import TodoList from './TodoList';
-import StorePropType from '../../propTypes/StorePropType';
+import StorePropType from '../../../propTypes/StorePropType';
 
 const MainSection = ({ store }) => {
   const completedCount = store.todoMvc.todos.filter((todo) => todo.completed)
