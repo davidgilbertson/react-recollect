@@ -1,3 +1,9 @@
+:root {
+  --gold--500: #ff9800;
+  --gray--100: #f5f5f5;
+  --gray--300: #e0e0e0;
+}
+
 html {
   box-sizing: border-box;
 }
@@ -21,4 +27,5 @@ body {
   sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
 }

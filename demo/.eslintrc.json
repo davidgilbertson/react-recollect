@@ -1,6 +1,7 @@
 {
   "root": true,
   "extends": [
+    "react-app",
     "airbnb",
     "plugin:prettier/recommended",
     "prettier/react"
@@ -10,6 +11,7 @@
     "jest": true
   },
   "rules": {
+    "no-plusplus": "off",
     "import/prefer-default-export": "off",
     "jsx-a11y/anchor-is-valid": "off",
     "jsx-a11y/click-events-have-key-events": "off",

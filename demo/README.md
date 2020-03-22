@@ -38,6 +38,9 @@ npm start
 
 And you're in business.
 
+If your editor complains about ESLint rules, it might be struggling with nested projects,
+if so, open `react-recollect/demo` as its own project. That's better for searching/etc. anyway.
+
 ## Open in CodeSandbox
 
 https://codesandbox.io/s/github/davidgilbertson/react-recollect/tree/master/demo

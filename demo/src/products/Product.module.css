@@ -1,0 +1,52 @@
+.panel {
+  margin-top: 24px;
+  height: 300px;
+  display: flex;
+}
+
+.image {
+  width: 300px;
+  flex: none;
+  height: 300px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.description {
+  overflow: hidden;
+}
+
+.details {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 16px;
+  justify-content: space-between;
+}
+
+.starButton {
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+}
+
+.starButton:focus {
+  outline: none;
+}
+
+.starOn:hover,
+.starOn {
+  fill: var(--gold--500);
+}
+
+.starOff {
+  fill: var(--gray--300);
+}

@@ -12,9 +12,7 @@ const Header = ({ store }) => (
       onSave={(text) => {
         if (text.length) {
           store.todoMvc.todos.push({
-            id: Math.random()
-              .toString()
-              .slice(2),
+            id: Math.random().toString().slice(2),
             text,
             completed: false,
           });

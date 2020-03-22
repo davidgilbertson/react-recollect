@@ -1,0 +1,27 @@
+.loading {
+  text-align: center;
+  padding-top: 20vh;
+}
+
+.wrapper {
+  width: 90%;
+  max-width: 1000px;
+  margin: 48px auto;
+}
+
+.refinement {
+  padding: 0 16px;
+}
+
+.filter {
+  width: 100%;
+}
+
+.resultCount {
+  height: 32px;
+  padding-top: 24px;
+}
+
+.productList {
+  margin-top: 64px;
+}
