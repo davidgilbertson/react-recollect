@@ -6,17 +6,16 @@ import { VISIBILITY_FILTERS } from '../constants';
 import StorePropType from '../../../propTypes/StorePropType';
 
 const Link = ({ filter, children, store }) => (
-  <a
-    className={classnames({
+  <button
+    className={classnames('link', {
       selected: store.todoMvc.visibilityFilter === filter,
     })}
-    style={{ cursor: 'pointer' }}
     onClick={() => {
       store.todoMvc.visibilityFilter = filter;
     }}
   >
     {children}
-  </a>
+  </button>
 );
 
 Link.propTypes = {

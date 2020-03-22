@@ -307,20 +307,20 @@
   display: inline;
 }
 
-.filters li a {
+.filters li .link {
   color: inherit;
-  margin: 3px;
   padding: 3px 7px;
   text-decoration: none;
   border: 1px solid transparent;
   border-radius: 3px;
+  cursor: pointer;
 }
 
-.filters li a:hover {
+.filters li .link:hover {
   border-color: rgba(175, 47, 47, 0.1);
 }
 
-.filters li a.selected {
+.filters li .link.selected {
   border-color: rgba(175, 47, 47, 0.2);
 }
 
