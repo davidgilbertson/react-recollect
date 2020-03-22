@@ -29,7 +29,7 @@ it('should should have the correct type', () => {
   expect(typeof store.null).toBe('object');
   expect(typeof store.number).toBe('number');
   expect(typeof store.object).toBe('object');
-  expect(typeof store.regEx).toBe('object');
+  expect(typeof store.regExp).toBe('object');
   expect(typeof store.set).toBe('object');
   expect(typeof store.string).toBe('string');
 
