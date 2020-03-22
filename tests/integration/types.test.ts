@@ -5,10 +5,7 @@ beforeEach(() => {
 });
 
 const getType = (item: any) =>
-  Object.prototype.toString
-    .call(item)
-    .replace('[object ', '')
-    .replace(']', '');
+  Object.prototype.toString.call(item).replace('[object ', '').replace(']', '');
 
 it('should should have the correct type', () => {
   store.array = [];
