@@ -12,20 +12,21 @@ Recollect is a state management library for React, an alternative to Redux.
 
 Recollect aims to solve two problems with the traditional React/Redux approach:
 
-1. Immutability is complicated and prone to bugs.
-2. Components can be re-rendered as a result of a store change, even if they
-   don't use the data that changed.
+1. Immutability logic is verbose, complicated, and prone to bugs.
+2. Developers must write code to define which parts of the store a component
+   plans to use. Even then, components can be re-rendered when they don't use
+   the data that has just changed.
 
 ## How?
 
 1. The Recollect store is immutable, but the implementation is hidden. So, you
-   can interact with the store as though it was a plain JavaScript object.
-2. Recollect records all access to the store during the render cycle of each
-   component. When a property in your store changes, any component that uses
-   that property is re-rendered.
+   can interact with the store as though it were a plain JavaScript object.
+2. Recollect records access to the store during the render cycle of a component.
+   When a property in your store changes, only components that use that property
+   are re-rendered.
 
 The result is simpler code and a faster app. Take it for a spin in this
-[CodeSandbox](https://codesandbox.io/s/lxy1mz200l).
+[CodeSandbox](https://codesandbox.io/s/github/davidgilbertson/react-recollect/tree/master/demo).
 
 ---
 
@@ -44,8 +45,9 @@ started.
 
 The store is where your data goes; you can treat it just like you'd treat any
 JavaScript object. You can import, read from, and write to the store in any
-file. Here's an abundance of examples to break you out of that immutability
-mindset. None of these mutate the store contents:
+file.
+
+Here's some code doing normal things with the normal-looking `store`:
 
 ```js
 import { store } from 'react-recollect';
@@ -56,18 +58,27 @@ store.tasks.push('four'); // Good
 
 store.site = { title: 'Page one' }; // Acceptable
 
-store.site.title += '!'; // Exciting!
-
 Object.assign(store.site, { title: 'Page two' }); // Neato
+
+store.site.title += '!'; // Exciting!
 
 delete store.site; // Seems extreme, but works a treat
 
 store = 'foo'; // Nope! (can't reassign a constant)
 ```
 
-The `collect` function wraps a React component, allowing Recollect to take care
-of it. This will provide the store as a prop, and update the component when it
-needs updating.
+> Play with this code in a
+> [CodeSandbox](https://codesandbox.io/s/normal-store-doing-normal-things-5wz77)
+
+These operations behave just like you'd expect them to, except none of them
+_mutate_ the store contents. In fact, it's impossible to mutate the data in a
+Recollect store.
+
+Next up: the `collect` function. This wraps a React component, allowing
+Recollect to take care of it. This will provide the store as a prop, and update
+the component when it needs updating.
+
+Here's `collect` and `store` working together:
 
 ```jsx harmony
 import { collect } from 'react-recollect';
@@ -94,10 +105,13 @@ const TaskList = ({ store }) => (
 export default collect(TaskList);
 ```
 
-Congratulations my friend, you just finished learning Recollect. I am very proud
+Congratulations my friend, you've finished learning Recollect. I am very proud
 of you.
 
-Go have a play, and when you're ready for more readme, come back to read on ...
+Go have a play, and when you're ready for more readme, come back to read on.
+
+If you've got a question, make sure to read the [FAQ](#faq) to see if your Q is
+FA. Otherwise, open a GitHub issue.
 
 ---
 
