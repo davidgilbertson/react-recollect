@@ -5,6 +5,7 @@
   "scripts": {
     "build": "react-scripts build",
     "lint": "eslint src --fix --cache --max-warnings=0",
+    "serve": "ws --compress --port=3000 --directory=./build",
     "start": "react-scripts start",
     "cypress": "cypress open"
   },
@@ -46,6 +47,7 @@
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "2.20.1",
     "eslint-plugin-prettier": "3.1.2",
+    "local-web-server": "^4.0.0",
     "prettier": "2.0.1",
     "prop-types": "15.7.2"
   }

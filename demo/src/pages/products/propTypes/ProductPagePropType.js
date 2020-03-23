@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import ProductPropType from './ProductPropType';
 import { PRODUCT_FILTER } from '../../todomvc/constants';
+import ProductPropType from './ProductPropType';
 
 const ProductPagePropType = PropTypes.shape({
   filter: PropTypes.oneOf(Object.values(PRODUCT_FILTER)).isRequired,

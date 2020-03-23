@@ -26,6 +26,7 @@
     "react/button-has-type": "off",
     "react/destructuring-assignment": "off",
     "react/jsx-filename-extension": "off",
+    "react/require-default-props": "off",
     "react/state-in-constructor": ["error", "never"]
   }
 }

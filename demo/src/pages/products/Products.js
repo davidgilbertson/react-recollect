@@ -1,17 +1,17 @@
+import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Grid from '@material-ui/core/Grid';
+import MenuItem from '@material-ui/core/MenuItem';
+import Paper from '@material-ui/core/Paper';
+import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import { collect } from 'react-recollect';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Product from './Product';
-import styles from './Products.module.css';
 import StorePropType from '../../propTypes/StorePropType';
 import { PRODUCT_FILTER } from '../todomvc/constants';
+import Product from './Product';
+import styles from './Products.module.css';
 
 const getVisibleProducts = ({ products, filter, searchQuery }) => {
   const filteredProducts =
