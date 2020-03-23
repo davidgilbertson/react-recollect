@@ -4,7 +4,8 @@
     "react-app",
     "airbnb",
     "plugin:prettier/recommended",
-    "prettier/react"
+    "prettier/react",
+    "plugin:cypress/recommended"
   ],
   "env": {
     "browser": true,

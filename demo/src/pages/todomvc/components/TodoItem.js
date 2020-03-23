@@ -17,6 +17,8 @@ const TodoItem = React.memo(({ todo }) => {
     setEditing(false);
   };
 
+  const inputId = `todo-complete-${todo.id}`;
+
   return (
     <li
       className={classnames({
@@ -33,6 +35,7 @@ const TodoItem = React.memo(({ todo }) => {
       ) : (
         <div className="view">
           <input
+            id={inputId}
             className="toggle"
             type="checkbox"
             checked={todo.completed}
@@ -42,6 +45,7 @@ const TodoItem = React.memo(({ todo }) => {
           />
 
           <label
+            htmlFor={inputId}
             onDoubleClick={() => {
               setEditing(true);
             }}
@@ -49,7 +53,11 @@ const TodoItem = React.memo(({ todo }) => {
             {todo.text}
           </label>
 
-          <button className="destroy" onClick={() => deleteTodo(todo.id)} />
+          <button
+            className="destroy"
+            onClick={() => deleteTodo(todo.id)}
+            title={`Delete '${todo.text}'`}
+          />
         </div>
       )}
     </li>

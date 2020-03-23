@@ -20,6 +20,7 @@ const MainSection = ({ store }) => {
             readOnly
           />
           <label
+            data-testid="toggle-all"
             onClick={() => {
               // If not everything is complete, mark everything complete; else
               // mark everything incomplete
