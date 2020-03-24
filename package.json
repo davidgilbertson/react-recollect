@@ -23,6 +23,8 @@
   ],
   "scripts": {
     "build": "webpack",
+    "build:webpack": "webpack",
+    "build:rollup": "rollup -c",
     "readme:toc": "doctoc README.md",
     "build:watch": "webpack --watch --mode=\"development\"",
     "checkall": "npm run build && npm run lint && npm run test:ci",
@@ -37,6 +39,8 @@
     "hoist-non-react-statics": "^3.3.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.2",
+    "@rollup/plugin-node-resolve": "^7.1.1",
     "@testing-library/jest-dom": "^5.1.1",
     "@testing-library/react": "^10.0.1",
     "@types/hoist-non-react-statics": "^3.3.1",
@@ -64,9 +68,15 @@
     "prop-types": "^15.7.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
+    "rollup": "^2.1.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-terser": "^5.3.0",
+    "rollup-plugin-typescript2": "^0.26.0",
     "source-map-loader": "^0.2.4",
+    "terser-webpack-plugin": "latest",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.2",
+    "tslib": "^1.11.1",
     "typescript": "^3.8.3",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"

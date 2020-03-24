@@ -1,4 +1,6 @@
 const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
+
 const { peerDependencies } = require('./package.json');
 
 module.exports = {
@@ -30,6 +32,21 @@ module.exports = {
         test: /\.(ts|tsx)$/,
         use: 'source-map-loader',
       },
+    ],
+  },
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          output: {
+            comments: false,
+          },
+          compress: {
+            unsafe: true,
+          },
+        },
+      }),
     ],
   },
   resolve: {
