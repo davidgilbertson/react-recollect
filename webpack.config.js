@@ -1,19 +1,59 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const SizePlugin = require('size-plugin');
 
 const { peerDependencies } = require('./package.json');
 
-module.exports = {
-  mode: 'production',
+// The below creates two outputs, dist/index.js and dist/index.min.js
+// These are selected between in react-recollect/index.js - the entry point for the package
+const configVariants = [
+  // Development
+  {
+    mode: 'development',
+    output: {
+      filename: 'index.js',
+    },
+    optimization: {
+      minimize: false,
+    },
+  },
+  // Production
+  {
+    mode: 'production',
+    output: {
+      filename: 'index.min.js',
+    },
+    optimization: {
+      minimize: true,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            output: {
+              comments: false,
+            },
+            compress: {
+              unsafe: true,
+            },
+          },
+        }),
+      ],
+    },
+    plugins: [new SizePlugin()],
+  },
+];
+
+module.exports = configVariants.map((config) => ({
+  mode: config.mode,
   devtool: 'source-map',
   entry: path.resolve(__dirname, 'src/index.ts'),
   output: {
-    filename: 'index.js',
+    filename: config.output.filename,
     path: path.resolve(__dirname, 'dist'),
     library: 'ReactRecollect',
     libraryTarget: 'umd',
     globalObject: 'this',
   },
+  stats: 'minimal',
   module: {
     rules: [
       {
@@ -34,23 +74,10 @@ module.exports = {
       },
     ],
   },
-  optimization: {
-    minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          output: {
-            comments: false,
-          },
-          compress: {
-            unsafe: true,
-          },
-        },
-      }),
-    ],
-  },
+  optimization: config.optimization,
   resolve: {
     extensions: ['.js', '.json', '.ts', '.tsx'],
   },
+  plugins: config.plugins,
   externals: Object.keys(peerDependencies),
-};
+}));
