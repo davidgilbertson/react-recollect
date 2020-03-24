@@ -129,11 +129,13 @@ const collect = <C extends React.ComponentType<any>>(
           if (paths.has(propValue)) recollectStoreProps.push(propName);
         });
 
-        // We'll just report the first match to keep the message simple
-        if (recollectStoreProps.length) {
-          console.error(
-            `You are passing part of the Recollect store from one collected component to another, which can cause unpredictable behaviour.\n Either remove the collect() wrapper from <${this._name}/>, or remove the "${recollectStoreProps[0]}" prop.\n More info: https://git.io/JvMOj`
-          );
+        if (process.env.NODE_ENV !== 'production') {
+          // We'll just report the first match to keep the message simple
+          if (recollectStoreProps.length) {
+            console.error(
+              `You are passing part of the Recollect store from one collected component to another, which can cause unpredictable behaviour.\n Either remove the collect() wrapper from <${this._name}/>, or remove the "${recollectStoreProps[0]}" prop.\n More info: https://git.io/JvMOj`
+            );
+          }
         }
       }
 
