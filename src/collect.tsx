@@ -72,21 +72,23 @@ const collect = <C extends React.ComponentType<any>>(
 
   // This ensures that checking prop types doesn't record 'gets' for the
   // component. It's a no-op in prod so not a performance concern.
-  if ('propTypes' in ComponentToWrap) {
-    const handler: ProxyHandler<any> = {
-      get(target, prop, receiver) {
-        const checkerFunc = Reflect.get(target, prop, receiver);
+  if (process.env.NODE_ENV !== 'production') {
+    if ('propTypes' in ComponentToWrap) {
+      const handler: ProxyHandler<any> = {
+        get(target, prop, receiver) {
+          const checkerFunc = Reflect.get(target, prop, receiver);
 
-        return new Proxy(checkerFunc, {
-          apply(...args) {
-            return whileMuted(() => Reflect.apply(...args));
-          },
-        });
-      },
-    };
+          return new Proxy(checkerFunc, {
+            apply(...args) {
+              return whileMuted(() => Reflect.apply(...args));
+            },
+          });
+        },
+      };
 
-    // eslint-disable-next-line no-param-reassign
-    ComponentToWrap.propTypes = new Proxy(ComponentToWrap.propTypes, handler);
+      // eslint-disable-next-line no-param-reassign
+      ComponentToWrap.propTypes = new Proxy(ComponentToWrap.propTypes, handler);
+    }
   }
 
   class WrappedComponent extends React.PureComponent<Props, ComponentState>
@@ -127,11 +129,13 @@ const collect = <C extends React.ComponentType<any>>(
           if (paths.has(propValue)) recollectStoreProps.push(propName);
         });
 
-        // We'll just report the first match to keep the message simple
-        if (recollectStoreProps.length) {
-          console.error(
-            `You are passing part of the Recollect store from one collected component to another, which can cause unpredictable behaviour.\n Either remove the collect() wrapper from <${this._name}/>, or remove the "${recollectStoreProps[0]}" prop.\n More info: https://git.io/JvMOj`
-          );
+        if (process.env.NODE_ENV !== 'production') {
+          // We'll just report the first match to keep the message simple
+          if (recollectStoreProps.length) {
+            console.error(
+              `You are passing part of the Recollect store from one collected component to another, which can cause unpredictable behaviour.\n Either remove the collect() wrapper from <${this._name}/>, or remove the "${recollectStoreProps[0]}" prop.\n More info: https://git.io/JvMOj`
+            );
+          }
         }
       }
 

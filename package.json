@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "5.1.4",
+  "version": "5.1.6",
   "description": "Simple state management for react",
   "keywords": [
     "flux",
@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "author": "David Gilbertson",
-  "main": "dist/index.js",
+  "main": "index.js",
   "types": "dist/src/index.d.ts",
   "files": [
     "dist"
@@ -24,7 +24,7 @@
   "scripts": {
     "build": "webpack",
     "readme:toc": "doctoc README.md",
-    "build:watch": "webpack --watch --mode=\"development\"",
+    "build:watch": "webpack --watch",
     "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
@@ -64,7 +64,9 @@
     "prop-types": "^15.7.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
+    "size-plugin": "^2.0.1",
     "source-map-loader": "^0.2.4",
+    "terser-webpack-plugin": "^2.3.5",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
