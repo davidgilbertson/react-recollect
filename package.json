@@ -34,7 +34,9 @@
     "preversion": "npm run checkall"
   },
   "dependencies": {
-    "hoist-non-react-statics": "^3.3.2"
+    "@types/prop-types": "^15.7.3",
+    "hoist-non-react-statics": "^3.3.2",
+    "prop-types": "^15.7.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.1.1",
@@ -61,7 +63,6 @@
     "eslint-plugin-react-hooks": "^2.4.0",
     "jest": "^25.1.0",
     "prettier": "^2.0.1",
-    "prop-types": "^15.7.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "size-plugin": "^2.0.1",

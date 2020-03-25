@@ -406,10 +406,6 @@ For this reason, `react-recollect` exports a proxied version of `prop-types`.
 It's exactly the same as the normal `prop-types` library, except that Recollect
 will pause its recording while your props are being checked.
 
-It is recommended that you uninstall `prop-types` from your project and replace
-its usages with this version, so that no one can accidentally use the 'wrong'
-`prop-types` if they haven't got this far in the readme.
-
 ```jsx harmony
 import { PropTypes } from 'react-recollect';
 
@@ -421,6 +417,13 @@ MyComponent.propTypes = {
 
 export default MyComponent;
 ```
+
+We recommended that you uninstall `prop-types` from your project and replace its
+usages with the Recollect version. That way no one can accidentally use the
+'wrong' `prop-types` (if they didn't get this far in the readme).
+
+If you use `@types/prop-types` you can uninstall that too, the types are built
+into `react-recollect`.
 
 ## `window.__RR__`
 
