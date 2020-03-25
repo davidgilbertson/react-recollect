@@ -231,7 +231,10 @@ export const getHandlerForObject = <T extends Target>(
     },
 
     has(target, prop) {
-      if (state.proxyIsMuted) return Reflect.has(target, prop);
+      if (state.proxyIsMuted || utils.isInternal(prop)) {
+        return Reflect.has(target, prop);
+      }
+
       // Arrays use `has` too, but we capture a listener elsewhere for that.
       // Here we only want to capture access to objects
       if (state.currentComponent && !utils.isArray(target)) {

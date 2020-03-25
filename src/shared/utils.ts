@@ -25,7 +25,12 @@ export const isTarget = (item: any): item is Target =>
 
 // This is internal to JS or to Recollect
 export const isInternal = (prop: any): boolean =>
-  [PATH, 'constructor', 'toJSON'].includes(prop);
+  prop === PATH ||
+  prop === 'constructor' ||
+  prop === 'toJSON' ||
+  // Various type-checking libraries call these
+  prop === '@@toStringTag' ||
+  prop === Symbol.toStringTag;
 
 export const isFunction = (item: any) => typeof item === 'function';
 
