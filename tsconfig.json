@@ -7,7 +7,7 @@
     "incremental": false,
     "isolatedModules": false,
     "jsx": "react",
-    "module": "ES2015",
+    "module": "CommonJS",
     "outDir": "dist",
     "skipLibCheck": true,
     "sourceMap": true,
