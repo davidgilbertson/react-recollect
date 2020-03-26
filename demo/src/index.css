@@ -1,6 +1,7 @@
 :root {
   --gold--500: #ff9800;
   --gray--100: #f5f5f5;
+  --gray--050: #fafafa;
   --gray--300: #e0e0e0;
 }
 
@@ -28,4 +29,5 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
+  background: var(--gray--050);
 }

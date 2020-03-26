@@ -28,8 +28,8 @@
     "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
-    "test": "npm run nodeTest && jest --watchAll",
-    "test:ci": "npm run nodeTest && jest --ci",
+    "test": "npm run nodeTest && jest ./test --watchAll",
+    "test:ci": "npm run nodeTest && jest ./test --ci",
     "prepublishOnly": "npm run checkall",
     "preversion": "npm run checkall"
   },

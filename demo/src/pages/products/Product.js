@@ -1,9 +1,9 @@
-import React from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
-import ProductPropType from './propTypes/ProductPropType';
+import React from 'react';
 import styles from './Product.module.css';
+import ProductPropType from './propTypes/ProductPropType';
 
 const formatDate = (dateAsNum) => {
   const date = new Date(dateAsNum);
@@ -16,7 +16,7 @@ const formatDate = (dateAsNum) => {
 
 const formatPrice = (priceAsNum) => `$${priceAsNum.toFixed(2)}`;
 
-const Product = React.memo(({ product }) => {
+const Product = ({ product }) => {
   return (
     <Card className={styles.panel}>
       <CardContent className={styles.cardContent}>
@@ -61,10 +61,10 @@ const Product = React.memo(({ product }) => {
       </CardContent>
     </Card>
   );
-});
+};
 
 Product.propTypes = {
   product: ProductPropType.isRequired,
 };
 
-export default Product;
+export default React.memo(Product);

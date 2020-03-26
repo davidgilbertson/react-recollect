@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
 import classnames from 'classnames';
-import TodoTextInput from './TodoTextInput';
-import deleteTodo from '../updaters/deleteTodo';
+import React, { useState } from 'react';
 import TodoPropType from '../propTypes/TodoPropType';
+import deleteTodo from '../updaters/deleteTodo';
+import TodoTextInput from './TodoTextInput';
 
-const TodoItem = React.memo(({ todo }) => {
+const TodoItem = ({ todo }) => {
   const [editing, setEditing] = useState(false);
 
-  const handleSave = (id, text) => {
-    if (!text.length) {
+  const handleSave = (id, title) => {
+    if (!title.length) {
       deleteTodo(id);
     } else {
-      todo.text = text;
+      todo.title = title;
     }
 
     setEditing(false);
   };
+
+  const inputId = `todo-complete-${todo.id}`;
 
   return (
     <li
@@ -26,13 +28,14 @@ const TodoItem = React.memo(({ todo }) => {
     >
       {editing ? (
         <TodoTextInput
-          text={todo.text}
+          title={todo.title}
           editing
-          onSave={(text) => handleSave(todo.id, text)}
+          onSave={(title) => handleSave(todo.id, title)}
         />
       ) : (
         <div className="view">
           <input
+            id={inputId}
             className="toggle"
             type="checkbox"
             checked={todo.completed}
@@ -42,22 +45,27 @@ const TodoItem = React.memo(({ todo }) => {
           />
 
           <label
+            htmlFor={inputId}
             onDoubleClick={() => {
               setEditing(true);
             }}
           >
-            {todo.text}
+            {todo.title}
           </label>
 
-          <button className="destroy" onClick={() => deleteTodo(todo.id)} />
+          <button
+            className="destroy"
+            onClick={() => deleteTodo(todo.id)}
+            title={`Delete '${todo.title}'`}
+          />
         </div>
       )}
     </li>
   );
-});
+};
 
 TodoItem.propTypes = {
   todo: TodoPropType.isRequired,
 };
 
-export default TodoItem;
+export default React.memo(TodoItem);

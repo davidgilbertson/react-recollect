@@ -1,13 +1,14 @@
 import React from 'react';
 import { collect } from 'react-recollect';
+import StorePropType from '../../../propTypes/StorePropType';
 import Footer from './Footer';
 import TodoList from './TodoList';
-import StorePropType from '../../../propTypes/StorePropType';
 
 const MainSection = ({ store }) => {
-  const completedCount = store.todoMvc.todos.filter((todo) => todo.completed)
-    .length;
-  const todosCount = store.todoMvc.todos.length;
+  const completedCount = store.todoMvcPage.todos.filter(
+    (todo) => todo.completed
+  ).length;
+  const todosCount = store.todoMvcPage.todos.length;
 
   return (
     <section className="main">
@@ -20,12 +21,13 @@ const MainSection = ({ store }) => {
             readOnly
           />
           <label
+            data-testid="toggle-all"
             onClick={() => {
               // If not everything is complete, mark everything complete; else
               // mark everything incomplete
               const completedForAll = completedCount !== todosCount;
 
-              store.todoMvc.todos.forEach((todo) => {
+              store.todoMvcPage.todos.forEach((todo) => {
                 todo.completed = completedForAll;
               });
             }}
@@ -40,7 +42,7 @@ const MainSection = ({ store }) => {
           completedCount={completedCount}
           activeCount={todosCount - completedCount}
           onClearCompleted={() => {
-            store.todoMvc.todos = store.todoMvc.todos.filter(
+            store.todoMvcPage.todos = store.todoMvcPage.todos.filter(
               (todo) => todo.completed === false
             );
           }}
