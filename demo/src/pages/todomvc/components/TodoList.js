@@ -1,7 +1,7 @@
 import React from 'react';
 import { collect } from 'react-recollect';
-import TodoItem from './TodoItem';
 import getVisibleTodos from '../selectors/getVisibleTodos';
+import TodoItem from './TodoItem';
 
 const TodoList = () => (
   <ul className="todo-list">

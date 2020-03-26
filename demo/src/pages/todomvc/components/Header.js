@@ -1,7 +1,7 @@
 import React from 'react';
 import { collect } from 'react-recollect';
-import TodoTextInput from './TodoTextInput';
 import StorePropType from '../../../propTypes/StorePropType';
+import TodoTextInput from './TodoTextInput';
 
 const Header = ({ store }) => (
   <header className="header">
@@ -9,11 +9,11 @@ const Header = ({ store }) => (
 
     <TodoTextInput
       newTodo
-      onSave={(text) => {
-        if (text.length) {
-          store.todoMvc.todos.push({
-            id: Math.random().toString().slice(2),
-            text,
+      onSave={(title) => {
+        if (title.length) {
+          store.todoMvcPage.todos.push({
+            id: Math.random(),
+            title,
             completed: false,
           });
         }

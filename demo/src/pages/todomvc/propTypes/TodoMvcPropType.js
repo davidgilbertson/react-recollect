@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import TodoPropType from './TodoPropType';
 import { VISIBILITY_FILTERS } from '../constants';
+import TodoPropType from './TodoPropType';
 
 const TodoMvcPropType = PropTypes.shape({
   todos: PropTypes.arrayOf(TodoPropType).isRequired,

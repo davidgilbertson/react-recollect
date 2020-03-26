@@ -1,22 +1,39 @@
-import React from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
+import { collect } from 'react-recollect';
+import StorePropType from '../../../propTypes/StorePropType';
+import { LOAD_STATUSES } from '../constants';
+import loadTodoData from '../selectors/loadTodoData';
 import Header from './Header';
 import MainSection from './MainSection';
 import './TodoMvcPage.css';
 
-const TodoMvcPage = (props) => (
-  <div className={classNames(props.className, 'todoapp-body')}>
-    <div className="todoapp">
-      <Header />
+const TodoMvcPage = (props) => {
+  const { loadStatus } = props.store.todoMvcPage;
 
-      <MainSection />
+  useEffect(() => {
+    if (loadStatus === LOAD_STATUSES.NOT_STARTED) loadTodoData();
+  }, [loadStatus]);
+
+  return (
+    <div className={classNames(props.className, 'todoapp-body')}>
+      <div className="todoapp">
+        <Header />
+
+        {props.store.todoMvcPage.loadStatus === LOAD_STATUSES.LOADING ? (
+          <p className="loading">Loading...</p>
+        ) : (
+          <MainSection />
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 TodoMvcPage.propTypes = {
   className: PropTypes.string.isRequired,
+  store: StorePropType.isRequired,
 };
 
-export default TodoMvcPage;
+export default collect(TodoMvcPage);
