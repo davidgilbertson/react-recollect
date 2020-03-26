@@ -33,6 +33,7 @@ export const makeItem = (parentType, childrenType) => {
   } else if (childrenType === TYPES.SET) {
     item.children = new Set();
   }
+
   return item;
 };
 
@@ -42,12 +43,13 @@ export const stringifyPlus = (data) =>
     (key, value) => {
       if (value instanceof Map) {
         return {
-          Map: Array.from(value.entries()),
+          '<Map>': Array.from(value),
         };
       }
+
       if (value instanceof Set) {
         return {
-          Set: Array.from(value),
+          '<Set>': Array.from(value),
         };
       }
 
