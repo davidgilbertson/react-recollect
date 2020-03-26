@@ -3,7 +3,6 @@ import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import IconButton from '@material-ui/core/IconButton';
 import Switch from '@material-ui/core/Switch';
-import TextField from '@material-ui/core/TextField';
 import { Delete } from '@material-ui/icons';
 import TreeItem from '@material-ui/lab/TreeItem';
 import PropTypes from 'prop-types';
@@ -11,13 +10,11 @@ import React, { useRef } from 'react';
 import { TYPES } from '../todomvc/constants';
 import { makeItem } from './utils';
 
-const getType = (item) =>
-  Object.prototype.toString.call(item).replace('[object ', '').replace(']', '');
-
 const Item = (props) => {
   const renderCount = useRef(0);
   renderCount.current++;
-  const childrenType = getType(props.item.children);
+  const { childrenType, parentType } = props.item;
+  const nodeId = props.item.id.toString();
 
   const addChild = (newItem) => {
     if (childrenType === TYPES.OBJ) {
@@ -48,21 +45,45 @@ const Item = (props) => {
     throw Error('Unknown type');
   };
 
+  const isSetItem = parentType === TYPES.SET;
+
   return (
     <TreeItem
-      nodeId={props.item.id.toString()}
+      nodeId={nodeId}
       label={
         <Box display="flex" alignItems="center">
-          <strong>{props.item.name}</strong>
+          <Box flex={1} clone>
+            <div
+              style={{
+                fontWeight: 700,
+              }}
+              onClick={() => {
+                // Don't expand/collapse if there's nothing to expand/collapse
+                if (props.item.children) {
+                  if (props.expandedNodeIds.has(nodeId)) {
+                    props.expandedNodeIds.delete(nodeId);
+                  } else {
+                    props.expandedNodeIds.add(nodeId);
+                  }
+                }
+              }}
+            >
+              {props.item.name}
+            </div>
+          </Box>
 
           <Box component="span" pl={1} ml="auto">
-            <ButtonGroup size="small">
+            <ButtonGroup size="small" disabled={isSetItem}>
               {Object.entries(TYPES).map(([typeCode, typeString]) => (
                 <Button
                   key={typeCode}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addChild(makeItem(typeString));
+                  title={`Add ${typeString} child to node ${nodeId}`}
+                  onClick={() => {
+                    // If this wasn't expanded yet, expanded it now
+                    if (!props.expandedNodeIds.has(nodeId)) {
+                      props.expandedNodeIds.add(nodeId);
+                    }
+                    addChild(makeItem(childrenType, typeString));
                   }}
                 >
                   + {typeCode}
@@ -70,28 +91,50 @@ const Item = (props) => {
               ))}
             </ButtonGroup>
 
-            {childrenType !== TYPES.SET && (
-              <Switch
-                checked={props.item.switchedOn}
-                onChange={(e) => {
-                  props.item.switchedOn = e.target.checked;
-                }}
-              />
-            )}
-
-            <TextField
-              size="small"
-              value={props.item.notes}
+            <Switch
+              title={`Turn node ${nodeId} ${
+                props.item.switchedOn ? 'off' : 'on'
+              }`}
+              disabled={isSetItem}
+              checked={props.item.switchedOn}
               onChange={(e) => {
-                props.item.notes = e.target.value;
+                props.item.switchedOn = e.target.checked;
               }}
             />
 
-            {!!props.onDeleteChild && (
-              <IconButton onClick={props.onDeleteChild}>
-                <Delete fontSize="small" />
-              </IconButton>
-            )}
+            <input
+              value={props.item.notes}
+              disabled={isSetItem}
+              placeholder={
+                isSetItem
+                  ? `Can't modify items in a Set`
+                  : `Notes for node ${nodeId}`
+              }
+              style={{
+                border: `1px solid #ddd`,
+                padding: '4px 8px',
+              }}
+              onChange={(e) => {
+                props.item.notes = e.target.value;
+              }}
+              onClick={(e) => {
+                // material-ui is stealing focus after the input is clicked.
+                // This fix is extremely dodgy,
+                // but for a test site it's good enough
+                e.persist();
+                setTimeout(() => {
+                  e.target.focus();
+                });
+              }}
+            />
+
+            <IconButton
+              disabled={!props.onDeleteChild}
+              onClick={props.onDeleteChild}
+              title={`Delete node ${nodeId}`}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
           </Box>
         </Box>
       }
@@ -101,6 +144,7 @@ const Item = (props) => {
           <Item
             key={child.id}
             item={child}
+            expandedNodeIds={props.expandedNodeIds}
             onDeleteChild={() => {
               if (childrenType === TYPES.OBJ) {
                 delete props.item.children[child.id];
@@ -111,7 +155,7 @@ const Item = (props) => {
               } else if (childrenType === TYPES.MAP) {
                 props.item.children.delete(child.id);
               } else if (childrenType === TYPES.SET) {
-                props.item.children.delete(child.id);
+                props.item.children.delete(child);
               }
             }}
           />
@@ -124,11 +168,14 @@ Item.propTypes = {
   item: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
+    childrenType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
+    parentType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
     children: PropTypes.any.isRequired,
     switchedOn: PropTypes.bool.isRequired,
     notes: PropTypes.string.isRequired,
   }).isRequired,
   onDeleteChild: PropTypes.func,
+  expandedNodeIds: PropTypes.instanceOf(Set).isRequired,
 };
 
 export default Item;

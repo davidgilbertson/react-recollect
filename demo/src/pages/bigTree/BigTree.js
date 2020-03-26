@@ -8,8 +8,11 @@ import React from 'react';
 import { collect } from 'react-recollect';
 import StorePropType from '../../propTypes/StorePropType';
 import Item from './Item';
+import { stringifyPlus } from './utils';
 
 const BigTree = (props) => {
+  const { expandedNodeIds, tree } = props.store.bigTreePage;
+
   return (
     <Container>
       <Box p={4} clone>
@@ -22,13 +25,13 @@ const BigTree = (props) => {
       <TreeView
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
+        expanded={Array.from(expandedNodeIds)}
       >
-        <Item
-          item={props.store.bigTreePage.tree}
-          NON_EXISTENT_PROP_TOP_NOT_REQUIRED={{}}
-          NON_EXISTENT_PROP_TOP_REQUIRED={1234}
-        />
+        <Item item={tree} expandedNodeIds={expandedNodeIds} />
       </TreeView>
+
+      <hr />
+      <pre>{stringifyPlus(tree)}</pre>
     </Container>
   );
 };
