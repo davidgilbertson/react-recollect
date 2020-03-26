@@ -6,55 +6,31 @@ import Switch from '@material-ui/core/Switch';
 import { Delete } from '@material-ui/icons';
 import TreeItem from '@material-ui/lab/TreeItem';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useRef } from 'react';
 import { TYPES } from '../todomvc/constants';
+import { getChildrenAsArray } from './selectors';
+import { deleteChild } from './updaters';
 import { makeItem } from './utils';
 
 const Item = (props) => {
-  const { childrenType, parentType } = props.item;
-  const nodeId = props.item.id.toString();
-  const isSetItem = parentType === TYPES.SET;
+  const { item, parent } = props;
+
+  // Items will re-render when the item updates or the parent item updates.
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
+
+  const nodeId = item.id.toString();
+  const isSetItem = item.parentType === TYPES.SET;
 
   const addChild = (newItem) => {
-    if (childrenType === TYPES.OBJ) {
-      props.item.children[newItem.id] = newItem;
-    } else if (childrenType === TYPES.ARR) {
-      props.item.children.push(newItem);
-    } else if (childrenType === TYPES.MAP) {
-      props.item.children.set(newItem.id, newItem);
-    } else if (childrenType === TYPES.SET) {
-      props.item.children.add(newItem);
-    }
-  };
-
-  const getChildrenAsArray = () => {
-    if (childrenType === TYPES.OBJ) {
-      return Array.from(Object.values(props.item.children));
-    }
-    if (childrenType === TYPES.ARR) {
-      return props.item.children;
-    }
-    if (childrenType === TYPES.MAP) {
-      return Array.from(props.item.children.values());
-    }
-    if (childrenType === TYPES.SET) {
-      return Array.from(props.item.children);
-    }
-
-    throw Error('Unknown type');
-  };
-
-  const deleteChild = (child) => {
-    if (childrenType === TYPES.OBJ) {
-      delete props.item.children[child.id];
-    } else if (childrenType === TYPES.ARR) {
-      props.item.children = props.item.children.filter(
-        (childItem) => childItem.id !== child.id
-      );
-    } else if (childrenType === TYPES.MAP) {
-      props.item.children.delete(child.id);
-    } else if (childrenType === TYPES.SET) {
-      props.item.children.delete(child);
+    if (item.childrenType === TYPES.OBJ) {
+      item.children[newItem.id] = newItem;
+    } else if (item.childrenType === TYPES.ARR) {
+      item.children.push(newItem);
+    } else if (item.childrenType === TYPES.MAP) {
+      item.children.set(newItem.id, newItem);
+    } else if (item.childrenType === TYPES.SET) {
+      item.children.add(newItem);
     }
   };
 
@@ -70,7 +46,7 @@ const Item = (props) => {
               }}
               onClick={() => {
                 // Don't expand/collapse if there's nothing to expand/collapse
-                if (props.item.children) {
+                if (item.children) {
                   if (props.expandedNodeIds.has(nodeId)) {
                     props.expandedNodeIds.delete(nodeId);
                   } else {
@@ -79,7 +55,7 @@ const Item = (props) => {
                 }
               }}
             >
-              {props.item.name}
+              {props.item.name} [{renderCountRef.current}]
             </div>
           </Box>
 
@@ -94,7 +70,7 @@ const Item = (props) => {
                     if (!props.expandedNodeIds.has(nodeId)) {
                       props.expandedNodeIds.add(nodeId);
                     }
-                    addChild(makeItem(childrenType, typeString));
+                    addChild(makeItem(item.childrenType, typeString));
                   }}
                 >
                   + {typeCode}
@@ -141,7 +117,7 @@ const Item = (props) => {
 
             <IconButton
               disabled={!props.onDeleteChild}
-              onClick={props.onDeleteChild}
+              onClick={() => props.onDeleteChild(parent, item)}
               title={`Delete node ${nodeId}`}
             >
               <Delete fontSize="small" />
@@ -150,31 +126,37 @@ const Item = (props) => {
         </Box>
       }
     >
-      {props.item.children &&
-        getChildrenAsArray(props.item.children).map((child) => (
-          <Item
+      {item.children &&
+        getChildrenAsArray(item).map((child) => (
+          <ItemMemo
             key={child.id}
             item={child}
+            parent={item}
             expandedNodeIds={props.expandedNodeIds}
-            onDeleteChild={() => deleteChild(child)}
+            onDeleteChild={deleteChild}
           />
         ))}
     </TreeItem>
   );
 };
 
+const ItemPropType = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  name: PropTypes.string.isRequired,
+  childrenType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
+  parentType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
+  children: PropTypes.any.isRequired,
+  switchedOn: PropTypes.bool.isRequired,
+  notes: PropTypes.string.isRequired,
+});
+
 Item.propTypes = {
-  item: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    childrenType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
-    parentType: PropTypes.oneOf(Object.values(TYPES)).isRequired,
-    children: PropTypes.any.isRequired,
-    switchedOn: PropTypes.bool.isRequired,
-    notes: PropTypes.string.isRequired,
-  }).isRequired,
+  item: ItemPropType.isRequired,
+  parent: ItemPropType,
   onDeleteChild: PropTypes.func,
   expandedNodeIds: PropTypes.instanceOf(Set).isRequired,
 };
+
+const ItemMemo = React.memo(Item);
 
 export default Item;
