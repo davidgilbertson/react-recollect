@@ -171,7 +171,7 @@ it('should re-render on a hidden prop read with hooks', async () => {
   expect(sideEffectMock).toHaveBeenCalledWith('I loaded!');
 });
 
-it('should read the old store in componentDidUpdate with "has"', () => {
+it('should read the old store in componentDidUpdate', () => {
   initStore({
     aMap: new Map(),
     aSet: new Set(),
