@@ -264,17 +264,19 @@ export const getHandlerForObject = <T extends Target>(
     set(target, prop, value) {
       if (state.proxyIsMuted) return Reflect.set(target, prop, value);
 
-      if (state.currentComponent) {
-        console.error(
-          [
-            `You are attempting to modify the store during a render cycle. `,
-            `(You're setting "${prop.toString()}" to "${value}" somewhere)\n`,
-            `This could result in subtle bugs. `,
-            `If you're changing the store in componentDidMount, wrap your `,
-            `code in a setTimeout() to allow the render cycle to complete `,
-            `before changing the store.`,
-          ].join('')
-        );
+      if (process.env.NODE_ENV !== 'production') {
+        if (state.currentComponent) {
+          console.error(
+            [
+              `You are attempting to modify the store during a render cycle. `,
+              `(You're setting "${prop.toString()}" to "${value}" somewhere)\n`,
+              `This could result in subtle bugs. `,
+              `If you're changing the store in componentDidMount, wrap your `,
+              `code in a setTimeout() to allow the render cycle to complete `,
+              `before changing the store.`,
+            ].join('')
+          );
+        }
       }
 
       // If there's no change, we return
