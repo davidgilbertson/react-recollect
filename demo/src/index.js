@@ -28,7 +28,7 @@ initStore({
     visibilityFilter: VISIBILITY_FILTERS.SHOW_ALL,
   },
   bigTreePage: {
-    tree: makeItem(TYPES.OBJ, TYPES.OBJ),
+    tree: makeItem(TYPES.OBJ, TYPES.ARR),
     expandedNodeIds: new Set(),
   },
 });

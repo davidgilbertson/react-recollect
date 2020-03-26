@@ -6,15 +6,14 @@ import Switch from '@material-ui/core/Switch';
 import { Delete } from '@material-ui/icons';
 import TreeItem from '@material-ui/lab/TreeItem';
 import PropTypes from 'prop-types';
-import React, { useRef } from 'react';
+import React from 'react';
 import { TYPES } from '../todomvc/constants';
 import { makeItem } from './utils';
 
 const Item = (props) => {
-  const renderCount = useRef(0);
-  renderCount.current++;
   const { childrenType, parentType } = props.item;
   const nodeId = props.item.id.toString();
+  const isSetItem = parentType === TYPES.SET;
 
   const addChild = (newItem) => {
     if (childrenType === TYPES.OBJ) {
@@ -45,7 +44,19 @@ const Item = (props) => {
     throw Error('Unknown type');
   };
 
-  const isSetItem = parentType === TYPES.SET;
+  const deleteChild = (child) => {
+    if (childrenType === TYPES.OBJ) {
+      delete props.item.children[child.id];
+    } else if (childrenType === TYPES.ARR) {
+      props.item.children = props.item.children.filter(
+        (childItem) => childItem.id !== child.id
+      );
+    } else if (childrenType === TYPES.MAP) {
+      props.item.children.delete(child.id);
+    } else if (childrenType === TYPES.SET) {
+      props.item.children.delete(child);
+    }
+  };
 
   return (
     <TreeItem
@@ -112,7 +123,7 @@ const Item = (props) => {
               }
               style={{
                 border: `1px solid #ddd`,
-                padding: '4px 8px',
+                padding: 8,
               }}
               onChange={(e) => {
                 props.item.notes = e.target.value;
@@ -145,19 +156,7 @@ const Item = (props) => {
             key={child.id}
             item={child}
             expandedNodeIds={props.expandedNodeIds}
-            onDeleteChild={() => {
-              if (childrenType === TYPES.OBJ) {
-                delete props.item.children[child.id];
-              } else if (childrenType === TYPES.ARR) {
-                props.item.children = props.item.children.filter(
-                  (childItem) => childItem.id !== child.id
-                );
-              } else if (childrenType === TYPES.MAP) {
-                props.item.children.delete(child.id);
-              } else if (childrenType === TYPES.SET) {
-                props.item.children.delete(child);
-              }
-            }}
+            onDeleteChild={() => deleteChild(child)}
           />
         ))}
     </TreeItem>
