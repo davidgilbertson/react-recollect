@@ -232,7 +232,7 @@ export const getHandlerForObject = <T extends Target>(
     has(target, prop) {
       const result = Reflect.has(target, prop);
 
-      if (state.proxyIsMuted) return result;
+      if (state.proxyIsMuted || utils.isInternal(prop)) return result;
 
       if (state.currentComponent) {
         // Arrays use `has` too, but we capture a listener elsewhere for that.

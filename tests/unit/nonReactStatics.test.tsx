@@ -24,11 +24,11 @@ describe('should copy static methods to the collected component', () => {
   });
 
   it('for a function component', () => {
-    const ClassWithStaticRaw = () => <h1>Hi</h1>;
+    const FuncWithStaticRaw = () => <h1>Hi</h1>;
 
-    ClassWithStaticRaw.returnDogs = () => 'dogs';
+    FuncWithStaticRaw.returnDogs = () => 'dogs';
 
-    const ClassWithStatic = collect(ClassWithStaticRaw);
+    const ClassWithStatic = collect(FuncWithStaticRaw);
 
     expect(ClassWithStatic.returnDogs()).toBe('dogs');
   });

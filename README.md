@@ -127,6 +127,7 @@ FA. Otherwise, open a GitHub issue.
     - [In the browser](#in-the-browser)
   - [`batch(callback)`](#batchcallback)
   - [`useProps(propArray)`](#usepropsproparray)
+  - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
@@ -390,23 +391,61 @@ curious, the implementation is literally just `propArray.includes(0)`.)
 
 Check out [these tests](tests/unit/useProps.test.tsx) for more usage examples.
 
+## `PropTypes`
+
+As you've learnt by now, Recollect works by 'recording' which properties your
+component reads from the store while it renders. This poses a problem if you use
+the `prop-types` library, because it is going to read _every property_ that you
+define in your prop types.
+
+This could result in your component being subscribed to changes in a property it
+doesn't use, potentially concealing a problem that would only become apparent in
+production (where prop types aren't checked).
+
+For this reason, `react-recollect` exports a proxied version of `prop-types`.
+It's exactly the same as the normal `prop-types` library, except that Recollect
+will pause its recording while your props are being checked.
+
+```jsx harmony
+import { PropTypes } from 'react-recollect';
+
+const MyComponent = (props) => <h1>{props.title}</h1>;
+
+MyComponent.propTypes = {
+  title: PropTypes.string.isRequired,
+};
+
+export default MyComponent;
+```
+
+We recommended that you uninstall `prop-types` from your project and replace its
+usages with the Recollect version. That way no one can accidentally use the
+'wrong' `prop-types` (if they didn't get this far in the readme).
+
+If you use `@types/prop-types` you can uninstall that too, the types are built
+into `react-recollect`.
+
 ## `window.__RR__`
 
-`window.__RR__` is there to assist in troubleshooting/development (they're the
-same thing, right?). It has these properties:
+Use `window.__RR__` to inspect or edit your store in the console.
+
+`__RR__` does not form part of the official API and should not be used in
+production. It might change between versions without warning and without
+respecting semver.
+
+It has these properties:
 
 - `debugOn()` will turn on debugging. This shows you what's updating in the
   store and which components are being updated as a result, and what data those
   components are reading. Note that this can have a negative impact on
   performance if you're reading thousands of properties in a render cycle.
 - `debugOff()` will surprise you
-- `internals` exposes some useful things, but should NOT be considered part of
-  the Recollect API. Do not rely on this in production code.
+- `internals` exposes some interesting things.
 
 Via the `internals` object, you can get a reference to the store, which can be
 handy for troubleshooting. For example, typing
-`__RR__.internals.store.loading = true` in the console would update the store,
-re-render the appropriate components.
+`__RR__.internals.store.loading = true` in the console would update the store
+and re-render the appropriate components.
 
 If you just log the store to the console, you will see a strange object littered
 with with `[[Handler]]` and `[[Target]]` props. These are the proxies. All you
