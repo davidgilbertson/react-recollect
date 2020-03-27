@@ -17,8 +17,8 @@ const BigTree = (props) => {
     <Container>
       <Box p={4} clone>
         <Typography variant="body1" component="p">
-          This page is primarily for internal testing and won‘t make a lot of
-          sense to the casual observer.
+          This page is for internal testing and won‘t make a lot of sense to the
+          casual observer.
         </Typography>
       </Box>
 
@@ -31,7 +31,14 @@ const BigTree = (props) => {
       </TreeView>
 
       <hr />
-      <pre>{stringifyPlus(tree)}</pre>
+      <pre
+        style={{
+          maxHeight: 400,
+          overflow: 'scroll',
+        }}
+      >
+        {stringifyPlus(tree)}
+      </pre>
     </Container>
   );
 };
