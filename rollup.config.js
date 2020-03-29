@@ -53,73 +53,73 @@ const tsConfigExtended = {
   },
 };
 
-// We loop over the 3 formats and 2 environments
-const configCombos = Object.values(FORMATS)
-  .map((format) => Object.values(ENVIRONMENTS).map((env) => ({ env, format })))
-  .flat();
-
 export default (flags) => {
-  const configs = configCombos.map(({ format, env }) => {
-    // Only one of the configs needs to run checks and output TS declarations
-    // We'll pick one that doesn't run in watch mode for performance
-    const tsConfig =
-      format === FORMATS.UMD && env === ENVIRONMENTS.PRD
-        ? merge(tsConfigBase, tsConfigExtended)
-        : tsConfigBase;
+  const configs = [];
 
-    // Shared options for all configs
-    const config = {
-      cache: true,
-      input: 'src/index.ts',
-      output: {
-        format,
-      },
-      plugins: [
-        commonjs(),
-        nodeResolve(),
-        typescript(tsConfig), // must be after nodeResolve
-        replace({ 'process.env.NODE_ENV': `'${env}'` }), // must be after typescript
-        // terser will be added after this for minified bundles
-      ],
-    };
+  // We loop over the 3 formats and 2 environments
+  Object.values(FORMATS).forEach((format) => {
+    Object.values(ENVIRONMENTS).forEach((env) => {
+      // Only one of the configs needs to run checks and output TS declarations
+      // We'll pick one that doesn't run in watch mode for performance
+      const tsConfig =
+        format === FORMATS.UMD && env === ENVIRONMENTS.PRD
+          ? merge(tsConfigBase, tsConfigExtended)
+          : tsConfigBase;
 
-    // We don't concatenate for ESM
-    if (format === FORMATS.ESM) {
-      config.preserveModules = true;
-      config.output.dir = `dist/${format}/${env}`;
-    } else {
-      config.output.file = `dist/${format}/index.${env}.js`;
-    }
-
-    // UMD files only externalise peers
-    // Other formats externalise everything
-    if (format === FORMATS.UMD) {
-      config.external = EXTERNALS.PEERS;
-      config.output.sourcemap = true;
-      config.output.name = 'ReactRecollect';
-      config.output.globals = GLOBALS;
-    } else {
-      config.external = EXTERNALS.ALL;
-    }
-
-    // We only minify for UMD production
-    if (format === FORMATS.UMD && env === ENVIRONMENTS.PRD) {
-      config.plugins.push(terser());
-      config.plugins.push(bundleSize());
-    }
-
-    // We only build some configs in watch mode
-    // Further down we filter based on config.watch
-    if (
-      env === ENVIRONMENTS.DEV &&
-      (format === FORMATS.CJS || format === FORMATS.ESM)
-    ) {
-      config.watch = {
-        include: 'src/**/*',
+      // Shared options for all configs
+      const config = {
+        cache: true,
+        input: 'src/index.ts',
+        output: {
+          format,
+        },
+        plugins: [
+          commonjs(),
+          nodeResolve(),
+          typescript(tsConfig), // must be after nodeResolve
+          replace({ 'process.env.NODE_ENV': `'${env}'` }), // must be after typescript
+          // terser will be added after this for minified bundles
+        ],
       };
-    }
 
-    return config;
+      // We don't concatenate for ESM
+      if (format === FORMATS.ESM) {
+        config.preserveModules = true;
+        config.output.dir = `dist/${format}/${env}`;
+      } else {
+        config.output.file = `dist/${format}/index.${env}.js`;
+      }
+
+      // UMD files only externalise peers
+      // Other formats externalise everything
+      if (format === FORMATS.UMD) {
+        config.external = EXTERNALS.PEERS;
+        config.output.sourcemap = true;
+        config.output.name = 'ReactRecollect';
+        config.output.globals = GLOBALS;
+      } else {
+        config.external = EXTERNALS.ALL;
+      }
+
+      // We only minify for UMD production
+      if (format === FORMATS.UMD && env === ENVIRONMENTS.PRD) {
+        config.plugins.push(terser());
+        config.plugins.push(bundleSize());
+      }
+
+      // We only build some configs in watch mode
+      // Further down we filter based on config.watch
+      if (
+        env === ENVIRONMENTS.DEV &&
+        (format === FORMATS.CJS || format === FORMATS.ESM)
+      ) {
+        config.watch = {
+          include: 'src/**/*',
+        };
+      }
+
+      configs.push(config);
+    });
   });
 
   return flags.watch ? configs.filter((config) => config.watch) : configs;
