@@ -1,4 +1,3 @@
-![Size](https://img.shields.io/bundlephobia/minzip/react-recollect?label=Size)
 ![version](https://img.shields.io/github/package-json/v/davidgilbertson/react-recollect?label=Version)
 ![Tests](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
 
@@ -1081,18 +1080,17 @@ Check out the `no-param-reassign` rule in this repo's
 
 ## Tell me about your tests
 
-In the [tests](./tests) directory you'll find:
-
-- Unit tests that test the behaviour of the store directly
-- Integration tests that simulate a user interacting with React components that
-  use `store` and `collect` — these might be interesting to you if you want to
-  see examples of `store`/`collect` being used.
+- There's 100+ integration/unit tests in the [tests](./tests) directory.
+- There's a `/demo` directory with a Create React App site using Recollect. This
+  has a Cypress test suite.
+- There's `/demo/public/browser.html` for manual testing of the UMD build of
+  Recollect.
 
 ## How big is it?
 
-It's about 5 KB. If you were to replace `redux` and `react-redux` with this
-library, you'd save a bit over 1 KB. But if you've got a decent sized app, the
-real size reduction comes from getting rid of all your reducers.
+3—5 KB, depending on what else you've got installed. If you're coming from Redux
+land, you'll a save about 1 KB in library size, but the big savings come from
+getting rid of all your reducers.
 
 ## Is reading/writing via a proxy slow?
 
