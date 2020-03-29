@@ -18,6 +18,7 @@
   "author": "David Gilbertson",
   "main": "index.cjs.js",
   "module": "index.esm.js",
+  "unpkg": "dist/umd/index.production.js",
   "types": "dist/types/index.d.ts",
   "files": [
     "index.*",
