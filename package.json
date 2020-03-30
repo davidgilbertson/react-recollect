@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@types/prop-types": "^15.7.3",
-    "hoist-non-react-statics": "^3.3.2",
+    "hoist-non-react-statics": "^3.3.0",
     "prop-types": "^15.7.2"
   },
   "devDependencies": {
