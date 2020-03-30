@@ -60,7 +60,7 @@ export default (flags) => {
   Object.values(FORMATS).forEach((format) => {
     Object.values(ENVIRONMENTS).forEach((env) => {
       // Only one of the configs needs to run checks and output TS declarations
-      // We'll pick one that doesn't run in watch mode for performance
+      // For performance, we'll pick one that doesn't run in watch mode
       const tsConfig =
         format === FORMATS.UMD && env === ENVIRONMENTS.PRD
           ? merge(tsConfigBase, tsConfigExtended)
@@ -91,17 +91,16 @@ export default (flags) => {
       }
 
       // UMD files only externalise peers
-      // Other formats externalise everything
       if (format === FORMATS.UMD) {
         config.external = EXTERNALS.PEERS;
-        config.output.sourcemap = true;
         config.output.name = 'ReactRecollect';
         config.output.globals = GLOBALS;
       } else {
+        // Other formats externalise everything
         config.external = EXTERNALS.ALL;
       }
 
-      // We only minify for UMD production
+      // We minify for UMD production
       if (format === FORMATS.UMD && env === ENVIRONMENTS.PRD) {
         config.plugins.push(terser());
         config.plugins.push(bundleSize());
