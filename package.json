@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "5.2.0-0",
+  "version": "5.2.0-2",
   "description": "Simple state management for react",
   "keywords": [
     "flux",
@@ -16,29 +16,35 @@
   },
   "license": "MIT",
   "author": "David Gilbertson",
-  "main": "index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "index.cjs.js",
+  "module": "index.esm.js",
+  "unpkg": "dist/umd/index.production.js",
+  "types": "dist/types/index.d.ts",
   "files": [
+    "index.*",
     "dist"
   ],
   "scripts": {
-    "build": "webpack",
-    "readme:toc": "doctoc README.md",
-    "build:watch": "webpack --watch",
+    "build": "rollup -c",
+    "build:watch": "rollup -c --watch",
     "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
-    "test": "npm run nodeTest && jest ./test --watchAll",
-    "test:ci": "npm run nodeTest && jest ./test --ci",
     "prepublishOnly": "npm run checkall",
+    "readme:toc": "doctoc README.md",
+    "test": "npm run nodeTest && jest ./test --watch",
+    "test:ci": "npm run nodeTest && jest ./test --ci",
     "preversion": "npm run checkall"
   },
   "dependencies": {
     "@types/prop-types": "^15.7.3",
-    "hoist-non-react-statics": "^3.3.2",
+    "hoist-non-react-statics": "^3.3.0",
     "prop-types": "^15.7.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.2",
+    "@rollup/plugin-node-resolve": "^7.1.1",
+    "@rollup/plugin-replace": "^2.3.1",
     "@testing-library/jest-dom": "^5.1.1",
     "@testing-library/react": "^10.0.1",
     "@types/hoist-non-react-statics": "^3.3.1",
@@ -62,17 +68,20 @@
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^2.4.0",
     "jest": "^25.1.0",
+    "lodash": "^4.17.15",
     "prettier": "^2.0.1",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
+    "rollup": "^2.2.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-terser": "^5.3.0",
+    "rollup-plugin-typescript2": "^0.27.0",
     "size-plugin": "^2.0.1",
     "source-map-loader": "^0.2.4",
-    "terser-webpack-plugin": "^2.3.5",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.2",
-    "typescript": "^3.8.3",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11"
+    "tslib": "^1.11.1",
+    "typescript": "^3.8.3"
   },
   "peerDependencies": {
     "react": ">=15.3"

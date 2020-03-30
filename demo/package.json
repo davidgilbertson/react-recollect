@@ -6,6 +6,7 @@
     "build": "react-scripts build",
     "lint": "eslint src --fix --cache --max-warnings=0",
     "serve": "ws --compress --port=3000 --directory=./build",
+    "serve:root": "ws --compress --port=3000 --directory=../",
     "start": "react-scripts start",
     "test": "cypress open"
   },

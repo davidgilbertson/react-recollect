@@ -3,7 +3,7 @@
  * then Node.js environment
  */
 const assert = require('assert');
-const { store, afterChange } = require('../../dist');
+const { store, afterChange } = require('../..');
 
 // Very sophisticated test framework.
 const runTest = (name, func) => {

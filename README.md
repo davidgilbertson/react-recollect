@@ -1,4 +1,3 @@
-![Size](https://img.shields.io/bundlephobia/minzip/react-recollect?label=Size)
 ![version](https://img.shields.io/github/package-json/v/davidgilbertson/react-recollect?label=Version)
 ![Tests](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
 
@@ -129,6 +128,7 @@ FA. Otherwise, open a GitHub issue.
   - [`useProps(propArray)`](#usepropsproparray)
   - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
+- [Loading with a script tag](#loading-with-a-script-tag)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
@@ -453,6 +453,21 @@ need to know is that `[[Target]]` is the actual object you put in the store.
 
 You can play around with it in this [codesandbox](https://lxy1mz200l.csb.app),
 if you like.
+
+# Loading with a script tag
+
+You can load Recollect via a `<script>` tag, if you like.
+
+```html
+<script src="https://unpkg.com/react-recollect"></script>
+```
+
+You should reference an exact version in the URL so that it can be cached. To
+get the URL with the version, [click here](https://unpkg.com/react-recollect)
+and copy that URL.
+
+[/demo/public/browser.html](./demo/public/browser.html) is a working example
+with React and Babel.
 
 # Usage with TypeScript
 
@@ -1081,18 +1096,17 @@ Check out the `no-param-reassign` rule in this repo's
 
 ## Tell me about your tests
 
-In the [tests](./tests) directory you'll find:
-
-- Unit tests that test the behaviour of the store directly
-- Integration tests that simulate a user interacting with React components that
-  use `store` and `collect` — these might be interesting to you if you want to
-  see examples of `store`/`collect` being used.
+- There's 100+ integration/unit tests in the [tests](./tests) directory.
+- There's a `/demo` directory with a Create React App site using Recollect. This
+  has a Cypress test suite.
+- There's [/demo/public/browser.html](./demo/public/browser.html) for manual
+  testing of the UMD build of Recollect.
 
 ## How big is it?
 
-It's about 5 KB. If you were to replace `redux` and `react-redux` with this
-library, you'd save a bit over 1 KB. But if you've got a decent sized app, the
-real size reduction comes from getting rid of all your reducers.
+3—5 KB, depending on what else you've got installed. If you're coming from Redux
+land, you'll save about 1 KB in library size, but the big savings come from
+getting rid of all your reducers.
 
 ## Is reading/writing via a proxy slow?
 
