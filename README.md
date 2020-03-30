@@ -128,6 +128,7 @@ FA. Otherwise, open a GitHub issue.
   - [`useProps(propArray)`](#usepropsproparray)
   - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
+- [Loading with a script tag](#loading-with-a-script-tag)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
@@ -462,11 +463,11 @@ You can load Recollect via a `<script>` tag, if you like.
 ```
 
 You should reference an exact version in the URL so that it can be cached. To
-get the URL with the version, [click here](https://unpkg.com/react -recollect)
+get the URL with the version, [click here](https://unpkg.com/react-recollect)
 and copy that URL.
 
-[/demo/public/browser.html](./demo/public/browser.html) has a full example with
-React and Babel.
+[/demo/public/browser.html](./demo/public/browser.html) is a working example
+with React and Babel.
 
 # Usage with TypeScript
 
