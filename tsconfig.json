@@ -1,17 +1,12 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "declaration": true,
-    "declarationMap": true,
     "esModuleInterop": true,
-    "incremental": false,
-    "isolatedModules": false,
+    "incremental": true,
     "jsx": "react",
-    "module": "ES2015",
-    "outDir": "dist",
+    "module": "CommonJS",
     "skipLibCheck": true,
-    "sourceMap": true,
     "strict": true,
     "target": "ES2017"
-  }
+  },
+  "exclude": ["demo", "dist", "index.*.js"]
 }

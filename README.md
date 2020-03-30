@@ -1,4 +1,3 @@
-![Size](https://img.shields.io/bundlephobia/minzip/react-recollect?label=Size)
 ![version](https://img.shields.io/github/package-json/v/davidgilbertson/react-recollect?label=Version)
 ![Tests](https://github.com/davidgilbertson/react-recollect/workflows/Node.js%20CI/badge.svg)
 
@@ -118,6 +117,9 @@ FA. Otherwise, open a GitHub issue.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
+  - [NPM](#npm)
+  - [CDN](#cdn)
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -127,6 +129,7 @@ FA. Otherwise, open a GitHub issue.
     - [In the browser](#in-the-browser)
   - [`batch(callback)`](#batchcallback)
   - [`useProps(propArray)`](#usepropsproparray)
+  - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
@@ -163,6 +166,46 @@ FA. Otherwise, open a GitHub issue.
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# Installation
+
+## NPM
+
+Install with npm:
+
+```
+npm install react-recollect
+```
+
+Or Yarn:
+
+```
+yarn add react-recollect
+```
+
+You can then import it in the usual ways:
+
+```js
+import { collect, store } from 'react-recollect';
+
+// or
+const { collect, store } = require('react-recollect');
+```
+
+## CDN
+
+You can also load Recollect from the [unpkg CDN](https://unpkg.com).
+
+```html
+<script src="https://unpkg.com/react-recollect"></script>
+```
+
+This will create a global `ReactRecollect` object. See
+[demo/public/browser.html](./demo/public/browser.html) for a working example
+with React and Babel.
+
+It's a good idea to reference an exact version in the URL, so that it can be
+cached. [Click here](https://unpkg.com/react-recollect) to get the full URL.
 
 # API
 
@@ -390,30 +433,91 @@ curious, the implementation is literally just `propArray.includes(0)`.)
 
 Check out [these tests](tests/unit/useProps.test.tsx) for more usage examples.
 
+## `PropTypes`
+
+As you've learnt by now, Recollect works by 'recording' which properties your
+component reads from the store while it renders. This poses a problem if you use
+the `prop-types` library, because it is going to read _every property_ that you
+define in your prop types.
+
+This could result in your component being subscribed to changes in a property it
+doesn't use, potentially concealing a problem that would only become apparent in
+production (where prop types aren't checked).
+
+For this reason, `react-recollect` exports a proxied version of `prop-types`.
+It's exactly the same as the normal `prop-types` library, except that Recollect
+will pause its recording while your props are being checked.
+
+```jsx harmony
+import { PropTypes } from 'react-recollect';
+
+const MyComponent = (props) => <h1>{props.title}</h1>;
+
+MyComponent.propTypes = {
+  title: PropTypes.string.isRequired,
+};
+
+export default MyComponent;
+```
+
+We recommended that you uninstall `prop-types` from your project and replace its
+usages with the Recollect version. That way no one can accidentally use the
+'wrong' `prop-types` (if they didn't get this far in the readme).
+
+If you use `@types/prop-types` you can uninstall that too, the types are built
+into `react-recollect`.
+
 ## `window.__RR__`
 
-`window.__RR__` is there to assist in troubleshooting/development (they're the
-same thing, right?). It has these properties:
+Use `window.__RR__` to inspect or edit the Recollect store in your browser's
+console.
+
+`__RR__` does not form part of the official API and should not be used in
+production. It might change between versions without warning and without
+respecting semver.
+
+It has these properties, available in development or production:
 
 - `debugOn()` will turn on debugging. This shows you what's updating in the
   store and which components are being updated as a result, and what data those
   components are reading. Note that this can have a negative impact on
   performance if you're reading thousands of properties in a render cycle.
 - `debugOff()` will surprise you
-- `internals` exposes some useful things, but should NOT be considered part of
-  the Recollect API. Do not rely on this in production code.
+- `internals` exposes some interesting things.
 
 Via the `internals` object, you can get a reference to the store, which can be
 handy for troubleshooting. For example, typing
-`__RR__.internals.store.loading = true` in the console would update the store,
-re-render the appropriate components.
+`__RR__.internals.store.loading = true` in the console would update the store
+and re-render the appropriate components.
 
 If you just log the store to the console, you will see a strange object littered
 with with `[[Handler]]` and `[[Target]]` props. These are the proxies. All you
 need to know is that `[[Target]]` is the actual object you put in the store.
 
-You can play around with it in this [codesandbox](https://lxy1mz200l.csb.app),
-if you like.
+During development there are two more methods to help you inspect your app:
+
+- `getListenersByComponent()` will show you which store properties each
+  component is subscribed to.
+- `getComponentsByListener()` is the inverse: it will show you which components
+  are subscribed to which store properties.
+
+You can optionally pass a string or regular expression to filter the results.
+
+```js
+// Which components are subscribed to the user's status
+__RR__.getComponentsByListener('user.status');
+
+// What is <MyComponent> subscribed to?
+__RR__.getListenersByComponent('MyComponent');
+
+// What about the <Task> component where the prop `taskId` is 2?
+__RR__.getListenersByComponent('Task2', (props) => props.taskId);
+```
+
+Check out [the debug test suite](./tests/unit/debug.test.tsx) for more examples.
+
+You can play around with `__RR__` in
+[the Recollect demo site](https://0q4fo.csb.app).
 
 # Usage with TypeScript
 
@@ -1042,18 +1146,17 @@ Check out the `no-param-reassign` rule in this repo's
 
 ## Tell me about your tests
 
-In the [tests](./tests) directory you'll find:
-
-- Unit tests that test the behaviour of the store directly
-- Integration tests that simulate a user interacting with React components that
-  use `store` and `collect` — these might be interesting to you if you want to
-  see examples of `store`/`collect` being used.
+- There's 100+ integration/unit tests in the [tests](./tests) directory.
+- There's a `/demo` directory with a Create React App site using Recollect. This
+  has a Cypress test suite.
+- There's [/demo/public/browser.html](./demo/public/browser.html) for manual
+  testing of the UMD build of Recollect.
 
 ## How big is it?
 
-It's about 5 KB. If you were to replace `redux` and `react-redux` with this
-library, you'd save a bit over 1 KB. But if you've got a decent sized app, the
-real size reduction comes from getting rid of all your reducers.
+3—5 KB, depending on what else you've got installed. If you're coming from Redux
+land, you'll save about 1 KB in library size, but the big savings come from
+getting rid of all your reducers.
 
 ## Is reading/writing via a proxy slow?
 

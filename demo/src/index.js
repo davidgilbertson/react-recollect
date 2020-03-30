@@ -1,27 +1,35 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { initStore, afterChange } from 'react-recollect';
+import { afterChange, initStore } from 'react-recollect';
 import App from './App';
+import './index.css';
+import { makeItem } from './pages/bigTree/utils';
+import loadProducts from './pages/products/loadProducts';
 import {
+  LOAD_STATUSES,
+  PAGES,
   PRODUCT_FILTER,
-  TABS,
+  TYPES,
   VISIBILITY_FILTERS,
 } from './pages/todomvc/constants';
-import './index.css';
-import loadProducts from './pages/products/loadProducts';
 import Theme from './shared/Theme';
 
 initStore({
-  currentPage: localStorage.currentPage || TABS.PRODUCTS,
+  currentPage: localStorage.currentPage || PAGES.PRODUCTS,
   loading: false,
   productPage: {
     filter: PRODUCT_FILTER.ALL,
     products: [],
     searchQuery: '',
   },
-  todoMvc: {
+  todoMvcPage: {
+    loadStatus: LOAD_STATUSES.NOT_STARTED,
     todos: [],
     visibilityFilter: VISIBILITY_FILTERS.SHOW_ALL,
+  },
+  bigTreePage: {
+    tree: makeItem(TYPES.OBJ, TYPES.ARR),
+    expandedNodeIds: new Set(),
   },
 });
 

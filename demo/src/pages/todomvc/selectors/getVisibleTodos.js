@@ -2,7 +2,7 @@ import { store } from 'react-recollect';
 import { VISIBILITY_FILTERS } from '../constants';
 
 const getVisibleTodos = () => {
-  const { todos, visibilityFilter } = store.todoMvc;
+  const { todos, visibilityFilter } = store.todoMvcPage;
 
   if (visibilityFilter === VISIBILITY_FILTERS.SHOW_ALL) {
     return todos;

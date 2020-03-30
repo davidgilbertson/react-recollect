@@ -70,27 +70,6 @@ const collect = <C extends React.ComponentType<any>>(
     store: Store;
   };
 
-  // This ensures that checking prop types doesn't record 'gets' for the
-  // component. It's a no-op in prod so not a performance concern.
-  if (process.env.NODE_ENV !== 'production') {
-    if ('propTypes' in ComponentToWrap) {
-      const handler: ProxyHandler<any> = {
-        get(target, prop, receiver) {
-          const checkerFunc = Reflect.get(target, prop, receiver);
-
-          return new Proxy(checkerFunc, {
-            apply(...args) {
-              return whileMuted(() => Reflect.apply(...args));
-            },
-          });
-        },
-      };
-
-      // eslint-disable-next-line no-param-reassign
-      ComponentToWrap.propTypes = new Proxy(ComponentToWrap.propTypes, handler);
-    }
-  }
-
   class WrappedComponent extends React.PureComponent<Props, ComponentState>
     implements CollectorComponent {
     state = {

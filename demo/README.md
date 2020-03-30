@@ -38,8 +38,19 @@ npm start
 
 And you're in business.
 
-If your editor complains about ESLint rules, it might be struggling with nested projects,
-if so, open `react-recollect/demo` as its own project. That's better for searching/etc. anyway.
+If your editor complains about ESLint rules, it might be struggling with nested
+projects, if so, open `react-recollect/demo` as its own project. That's better
+for searching/etc. anyway.
+
+## Test the UMD build
+
+To test loading Recollect via a script tag, run:
+
+```
+npm run serve:root
+```
+
+And go to http://localhost:3000/demo/public/browser.html
 
 ## Open in CodeSandbox
 

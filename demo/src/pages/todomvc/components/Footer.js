@@ -1,9 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { collect } from 'react-recollect';
-import Link from './Link';
-import { VISIBILITY_FILTERS } from '../constants';
+import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
+import { VISIBILITY_FILTERS } from '../constants';
+import Link from './Link';
 
 const Footer = (props) => {
   const { activeCount, completedCount, onClearCompleted } = props;
@@ -19,7 +18,7 @@ const Footer = (props) => {
         {Object.values(VISIBILITY_FILTERS).map((filter) => (
           <li key={filter}>
             <Link
-              active={props.store.todoMvc.visibilityFilter === filter}
+              active={props.store.todoMvcPage.visibilityFilter === filter}
               filter={filter}
             >
               {filter}

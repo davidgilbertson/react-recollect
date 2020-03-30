@@ -1,5 +1,12 @@
 /* From http://todomvc.com, with some global selectors removed */
 
+.loading {
+  text-align: center;
+  font-size: 24px;
+  padding: 24px 0 48px;
+  color: #888;
+}
+
 .todoapp-body {
   height: 100%;
   font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;

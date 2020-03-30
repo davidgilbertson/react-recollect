@@ -1,17 +1,16 @@
-import React from 'react';
-import { collect } from 'react-recollect';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import { VISIBILITY_FILTERS } from '../constants';
+import React from 'react';
+import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
+import { VISIBILITY_FILTERS } from '../constants';
 
 const Link = ({ filter, children, store }) => (
   <button
     className={classnames('link', {
-      selected: store.todoMvc.visibilityFilter === filter,
+      selected: store.todoMvcPage.visibilityFilter === filter,
     })}
     onClick={() => {
-      store.todoMvc.visibilityFilter = filter;
+      store.todoMvcPage.visibilityFilter = filter;
     }}
   >
     {children}

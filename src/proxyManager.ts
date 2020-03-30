@@ -50,8 +50,10 @@ export const getHandlerForObject = <T extends Target>(
           return result;
         }
 
-        const nextVersion = state.nextVersionMap.get(target);
-        if (nextVersion) return Reflect.get(nextVersion, prop);
+        if (!state.currentComponent) {
+          const nextVersion = state.nextVersionMap.get(target);
+          if (nextVersion) return Reflect.get(nextVersion, prop);
+        }
 
         // Adding to a Map
         if (prop === MapOrSetMembers.Set) {
@@ -205,60 +207,64 @@ export const getHandlerForObject = <T extends Target>(
       // @ts-ignore - wrong, symbol can be used an an index type
       if (utils.isFunction(target[prop])) return result;
 
-      // When we're outside the render cycle, we route
-      // requests to the 'next version'
-      // Note, this will result in another get(), but on the equivalent
-      // target from the next store. muteProxy will be set so this line
-      // isn't triggered in an infinite loop
-      if (!state.currentComponent) {
+      if (state.currentComponent) {
+        // We record a get if a component is rendering, with the exception
+        // of reading array length. This would be redundant, since changes to
+        // length trigger a change on the array itself
+        if (!(utils.isArray(target) && prop === ArrayMembers.Length)) {
+          logGet(target, prop, result);
+
+          addListener(paths.extend(target, prop));
+        }
+      } else {
+        // When we're outside the render cycle, we route
+        // requests to the 'next version'
+        // Note, this will result in another get(), but on the equivalent
+        // target from the next store. muteProxy will be set so this line
+        // isn't triggered in an infinite loop
         const nextVersion = state.nextVersionMap.get(target);
         if (nextVersion) return Reflect.get(nextVersion, prop);
-      }
-
-      // We record a get if a component is rendering, with the exception
-      // of reading array length. This would be redundant, since changes to
-      // length trigger a change on the array itself
-      if (
-        state.currentComponent &&
-        !(utils.isArray(target) && prop === ArrayMembers.Length)
-      ) {
-        logGet(target, prop, result);
-
-        addListener(paths.extend(target, prop));
       }
 
       return result;
     },
 
     has(target, prop) {
-      if (state.proxyIsMuted) return Reflect.has(target, prop);
-      // Arrays use `has` too, but we capture a listener elsewhere for that.
-      // Here we only want to capture access to objects
-      if (state.currentComponent && !utils.isArray(target)) {
-        logGet(target, prop);
+      const result = Reflect.has(target, prop);
 
-        addListener(paths.extend(target, prop));
+      if (state.proxyIsMuted || utils.isInternal(prop)) return result;
+
+      if (state.currentComponent) {
+        // Arrays use `has` too, but we capture a listener elsewhere for that.
+        // Here we only want to capture access to objects
+        if (!utils.isArray(target)) {
+          logGet(target, prop);
+
+          addListener(paths.extend(target, prop));
+        }
+      } else {
+        const nextVersion = state.nextVersionMap.get(target);
+        if (nextVersion) return Reflect.has(nextVersion, prop);
       }
 
-      const nextVersion = state.nextVersionMap.get(target);
-      if (nextVersion) return Reflect.has(nextVersion, prop);
-
-      return Reflect.has(target, prop);
+      return result;
     },
 
     ownKeys(target) {
-      if (state.proxyIsMuted) return Reflect.ownKeys(target);
+      const result = Reflect.ownKeys(target);
 
-      const nextVersion = state.nextVersionMap.get(target);
-      if (nextVersion) return Reflect.ownKeys(nextVersion);
+      if (state.proxyIsMuted) return result;
 
       if (state.currentComponent) {
         logGet(target);
 
         addListener(paths.get(target));
+      } else {
+        const nextVersion = state.nextVersionMap.get(target);
+        if (nextVersion) return Reflect.ownKeys(nextVersion);
       }
 
-      return Reflect.ownKeys(target);
+      return result;
     },
 
     set(target, prop, value) {

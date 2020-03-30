@@ -16,6 +16,13 @@ export const makeInternalString = (propPath: PropPath) =>
   join(propPath, PROP_PATH_SEP);
 
 /**
+ * Convert an internal string like `one~~~two~~~three` into a user-facing string
+ * like `one.two.three`
+ */
+export const internalToUser = (internalPath: string) =>
+  makeUserString(internalPath.split(PROP_PATH_SEP));
+
+/**
  * Takes the path stored in an object, and a new prop, and returns the two
  * combined
  */
