@@ -70,3 +70,52 @@ export const logUpdate = (
     console.groupEnd();
   });
 };
+
+type NameMaker = (obj: any) => string;
+type Matcher = string | RegExp;
+
+const getComponentsAndListeners = (
+  componentFirst: boolean,
+  matcher?: Matcher,
+  makeName?: NameMaker
+) => {
+  const result: { [p: string]: string[] } = {};
+
+  Array.from(state.listeners).forEach(([path, componentSet]) => {
+    componentSet.forEach((component) => {
+      let componentName = component._name;
+      if (makeName) {
+        componentName += makeName(component.props) ?? '';
+      }
+      const userPath = paths.internalToUser(path);
+
+      const prop = componentFirst ? componentName : userPath;
+      const value = componentFirst ? userPath : componentName;
+
+      if (matcher && !prop.match(matcher)) return;
+
+      if (!result[prop]) result[prop] = [];
+      if (!result[prop].includes(value)) result[prop].push(value);
+    });
+  });
+
+  return result;
+};
+
+/**
+ * Return an object where the keys are component names and the values are
+ * arrays of the store properties the component is subscribed to
+ */
+export const getListenersByComponent = (
+  matcher?: Matcher,
+  makeName?: NameMaker
+) => getComponentsAndListeners(true, matcher, makeName);
+
+/**
+ * Return an object where the keys are store properties and the values are
+ * the names of the components that listen to the property
+ */
+export const getComponentsByListener = (
+  matcher?: Matcher,
+  makeName?: NameMaker
+) => getComponentsAndListeners(false, matcher, makeName);

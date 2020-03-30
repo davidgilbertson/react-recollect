@@ -2,7 +2,7 @@ import React from 'react';
 import { mocked } from 'ts-jest/utils';
 import { render } from '@testing-library/react';
 import { collect, internals } from '..';
-import { PROP_PATH_SEP } from '../src/shared/constants';
+import * as paths from '../src/shared/paths';
 
 export const renderStrict = (children: React.ReactNode) => {
   return render(<React.StrictMode>{children}</React.StrictMode>);
@@ -25,13 +25,8 @@ export const collectAndRenderStrict = (Comp: React.ComponentType<any>) => {
 export const propPathChanges = (handleChangeMock: jest.Mock) =>
   handleChangeMock.mock.calls.map((call) => call[0].changedProps[0]);
 
-export const getAllListeners = () => {
-  const matches = new RegExp(PROP_PATH_SEP, 'g');
-
-  return Array.from(internals.listeners).map(([path]) =>
-    path.replace(matches, '.')
-  );
-};
+export const getAllListeners = () =>
+  Array.from(internals.listeners.keys()).map(paths.internalToUser);
 
 export const expectToLogError = (func: () => void, message?: string) => {
   // Even though the error is caught, it still gets printed to the console
