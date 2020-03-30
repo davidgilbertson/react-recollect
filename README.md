@@ -453,6 +453,21 @@ need to know is that `[[Target]]` is the actual object you put in the store.
 You can play around with it in this [codesandbox](https://lxy1mz200l.csb.app),
 if you like.
 
+# Loading with a script tag
+
+You can load Recollect via a `<script>` tag, if you like.
+
+```html
+<script src="https://unpkg.com/react-recollect"></script>
+```
+
+You should reference an exact version in the URL so that it can be cached. To
+get the URL with the version, [click here](https://unpkg.com/react -recollect)
+and copy that URL.
+
+[/demo/public/browser.html](./demo/public/browser.html) has a full example with
+React and Babel.
+
 # Usage with TypeScript
 
 ## Your store
@@ -1083,13 +1098,13 @@ Check out the `no-param-reassign` rule in this repo's
 - There's 100+ integration/unit tests in the [tests](./tests) directory.
 - There's a `/demo` directory with a Create React App site using Recollect. This
   has a Cypress test suite.
-- There's `/demo/public/browser.html` for manual testing of the UMD build of
-  Recollect.
+- There's [/demo/public/browser.html](./demo/public/browser.html) for manual
+  testing of the UMD build of Recollect.
 
 ## How big is it?
 
 3—5 KB, depending on what else you've got installed. If you're coming from Redux
-land, you'll a save about 1 KB in library size, but the big savings come from
+land, you'll save about 1 KB in library size, but the big savings come from
 getting rid of all your reducers.
 
 ## Is reading/writing via a proxy slow?
