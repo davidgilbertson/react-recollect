@@ -1,4 +1,9 @@
-import { debugOff, debugOn } from './shared/debug';
+import {
+  debugOff,
+  debugOn,
+  getComponentsByListener,
+  getListenersByComponent,
+} from './shared/debug';
 import state from './shared/state';
 
 export { default as collect } from './collect';
@@ -22,6 +27,14 @@ if (typeof window !== 'undefined') {
       debugOff,
       internals: state,
     };
+
+    // These helpers will be included in the dev build only. A) for size, but
+    // also B) in prod, component names tend to be obscured so they would be
+    // of little use.
+    if (process.env.NODE_ENV !== 'production') {
+      window.__RR__.getListenersByComponent = getListenersByComponent;
+      window.__RR__.getComponentsByListener = getComponentsByListener;
+    }
   } else {
     console.warn(
       "This browser doesn't support the Proxy object, which react-recollect needs. See https://caniuse.com/#search=proxy to find out which browsers do support it"

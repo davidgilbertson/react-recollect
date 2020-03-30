@@ -117,6 +117,9 @@ FA. Otherwise, open a GitHub issue.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
+  - [NPM](#npm)
+  - [CDN](#cdn)
 - [API](#api)
   - [`store`](#store)
   - [`collect(ReactComponent)`](#collectreactcomponent)
@@ -128,7 +131,6 @@ FA. Otherwise, open a GitHub issue.
   - [`useProps(propArray)`](#usepropsproparray)
   - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
-- [Loading with a script tag](#loading-with-a-script-tag)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
@@ -164,6 +166,46 @@ FA. Otherwise, open a GitHub issue.
 - [Is it really OK to drop support for IE?](#is-it-really-ok-to-drop-support-for-ie)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# Installation
+
+## NPM
+
+Install with npm:
+
+```
+npm install react-recollect
+```
+
+Or Yarn:
+
+```
+yarn add react-recollect
+```
+
+You can then import it in the usual ways:
+
+```js
+import { collect, store } from 'react-recollect';
+
+// or
+const { collect, store } = require('react-recollect');
+```
+
+## CDN
+
+You can also load Recollect from the [unpkg CDN](https://unpkg.com).
+
+```html
+<script src="https://unpkg.com/react-recollect"></script>
+```
+
+This will create a global `ReactRecollect` object. See
+[demo/public/browser.html](./demo/public/browser.html) for a working example
+with React and Babel.
+
+It's a good idea to reference an exact version in the URL, so that it can be
+cached. [Click here](https://unpkg.com/react-recollect) to get the full URL.
 
 # API
 
@@ -427,13 +469,14 @@ into `react-recollect`.
 
 ## `window.__RR__`
 
-Use `window.__RR__` to inspect or edit your store in the console.
+Use `window.__RR__` to inspect or edit the Recollect store in your browser's
+console.
 
 `__RR__` does not form part of the official API and should not be used in
 production. It might change between versions without warning and without
 respecting semver.
 
-It has these properties:
+It has these properties, available in development or production:
 
 - `debugOn()` will turn on debugging. This shows you what's updating in the
   store and which components are being updated as a result, and what data those
@@ -451,23 +494,30 @@ If you just log the store to the console, you will see a strange object littered
 with with `[[Handler]]` and `[[Target]]` props. These are the proxies. All you
 need to know is that `[[Target]]` is the actual object you put in the store.
 
-You can play around with it in this [codesandbox](https://lxy1mz200l.csb.app),
-if you like.
+During development there are two more methods to help you inspect your app:
 
-# Loading with a script tag
+- `getListenersByComponent()` will show you which store properties each
+  component is subscribed to.
+- `getComponentsByListener()` is the inverse: it will show you which components
+  are subscribed to which store properties.
 
-You can load Recollect via a `<script>` tag, if you like.
+You can optionally pass a string or regular expression to filter the results.
 
-```html
-<script src="https://unpkg.com/react-recollect"></script>
+```js
+// Which components are subscribed to the user's status
+__RR__.getComponentsByListener('user.status');
+
+// What is <MyComponent> subscribed to?
+__RR__.getListenersByComponent('MyComponent');
+
+// What about the <Task> component where the prop `taskId` is 2?
+__RR__.getListenersByComponent('Task2', (props) => props.taskId);
 ```
 
-You should reference an exact version in the URL so that it can be cached. To
-get the URL with the version, [click here](https://unpkg.com/react-recollect)
-and copy that URL.
+Check out [the debug test suite](./tests/unit/debug.test.tsx) for more examples.
 
-[/demo/public/browser.html](./demo/public/browser.html) is a working example
-with React and Babel.
+You can play around with `__RR__` in
+[the Recollect demo site](https://0q4fo.csb.app).
 
 # Usage with TypeScript
 
