@@ -256,14 +256,17 @@ The callback receives an event object with these properties:
   `['tasks.2.done', 'tasks.4.done']`
 - `renderedComponents` — an array of the components that were updated
 
-For example, if you wanted to sync your store to local storage, you could do the
-following (anywhere in your app).
+For example, if you want to save the current page to local storage when a
+particular value in the store changes, you could do the following (anywhere in
+your app).
 
 ```js
 import { afterChange } from 'react-recollect';
 
 afterChange((e) => {
-  localStorage.siteData = JSON.stringify(e.store);
+  if (e.changedProps.includes('currentPage')) {
+    localStorage.currentPage = e.store.currentPage;
+  }
 });
 ```
 
