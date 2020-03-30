@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import { PropTypes } from 'react-recollect';
 import { VISIBILITY_FILTERS } from '../constants';
 import TodoPropType from './TodoPropType';
 

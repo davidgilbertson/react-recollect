@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import { PropTypes } from 'react-recollect';
 
 const TodoTextInput = (props) => {
   const [inputText, setInputText] = useState(props.title || '');

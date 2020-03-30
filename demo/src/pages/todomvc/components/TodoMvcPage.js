@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
-import { collect } from 'react-recollect';
+import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
 import { LOAD_STATUSES } from '../constants';
 import loadTodoData from '../selectors/loadTodoData';

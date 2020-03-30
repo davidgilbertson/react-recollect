@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import { PropTypes } from 'react-recollect';
 import { PRODUCT_FILTER } from '../../todomvc/constants';
 import ProductPropType from './ProductPropType';
 

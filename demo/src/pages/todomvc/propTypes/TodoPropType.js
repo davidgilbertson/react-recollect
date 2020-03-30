@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import { PropTypes } from 'react-recollect';
 
 const TodoPropType = PropTypes.shape({
   id: PropTypes.number.isRequired,

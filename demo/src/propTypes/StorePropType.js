@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import { PropTypes } from 'react-recollect';
 import ProductPagePropType from '../pages/products/propTypes/ProductPagePropType';
 import { PAGES } from '../pages/todomvc/constants';
 import TodoMvcPropType from '../pages/todomvc/propTypes/TodoMvcPropType';
