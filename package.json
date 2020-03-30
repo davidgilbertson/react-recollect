@@ -27,8 +27,6 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c --watch",
-    "build:watch:dev": "rollup -c --watch --configUse=dev",
-    "build:watch:tests": "rollup -c --watch --configUse=tests",
     "checkall": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
