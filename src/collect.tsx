@@ -98,17 +98,17 @@ const collect = <C extends React.ComponentType<any>>(
 
       // A user shouldn't pass data from the store into a collected component.
       // See the issue linked in the error for details.
-      if (this.props) {
-        const recollectStoreProps: string[] = [];
+      if (process.env.NODE_ENV !== 'production') {
+        if (this.props) {
+          const recollectStoreProps: string[] = [];
 
-        // Note this is only a shallow check.
-        Object.entries(this.props).forEach(([propName, propValue]) => {
-          // If this prop has a 'path', we know it's from the Recollect store
-          // This is not good!
-          if (paths.has(propValue)) recollectStoreProps.push(propName);
-        });
+          // Note this is only a shallow check.
+          Object.entries(this.props).forEach(([propName, propValue]) => {
+            // If this prop has a 'path', we know it's from the Recollect store
+            // This is not good!
+            if (paths.has(propValue)) recollectStoreProps.push(propName);
+          });
 
-        if (process.env.NODE_ENV !== 'production') {
           // We'll just report the first match to keep the message simple
           if (recollectStoreProps.length) {
             console.error(
