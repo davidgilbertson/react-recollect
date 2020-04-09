@@ -27,14 +27,14 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c --watch",
-    "checkall": "npm run build && npm run lint && npm run test:ci",
+    "check:all": "npm run build && npm run lint && npm run test:ci",
     "lint": "eslint src tests --fix --cache --ext js,ts,tsx --max-warnings=0",
     "nodeTest": "node ./tests/integration/nodeJs.js",
-    "prepublishOnly": "npm run checkall",
+    "prepublishOnly": "npm run check:all",
     "readme:toc": "doctoc README.md",
     "test": "npm run nodeTest && jest ./test --watch",
     "test:ci": "npm run nodeTest && jest ./test --ci",
-    "preversion": "npm run checkall"
+    "preversion": "npm run check:all"
   },
   "dependencies": {
     "@types/prop-types": "^15.7.3",
