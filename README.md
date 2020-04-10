@@ -484,7 +484,9 @@ It has these properties, available in development or production:
 - `debugOn()` will turn on debugging. This shows you what's updating in the
   store and which components are being updated as a result, and what data those
   components are reading. Note that this can have a negative impact on
-  performance if you're reading thousands of properties in a render cycle.
+  performance if you're reading thousands of properties in a render cycle. Note 
+  also that it will 'collapse' all other console logs into the output (important
+  for dubbgging, but not ideal a lot of the time).
 - `debugOff()` will surprise you
 - `internals` exposes some interesting things.
 
