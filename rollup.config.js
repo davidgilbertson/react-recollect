@@ -16,6 +16,7 @@ const EXTERNALS = {
 
 const GLOBALS = {
   react: 'React',
+  'react-dom': 'ReactDOM',
 };
 
 const FORMATS = {

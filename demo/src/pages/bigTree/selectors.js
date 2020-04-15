@@ -1,4 +1,4 @@
-import { TYPES } from '../todomvc/constants';
+import { TYPES } from '../../shared/constants';
 
 export const getChildrenAsArray = (item) => {
   if (item.childrenType === TYPES.OBJ) {

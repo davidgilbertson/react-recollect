@@ -1,5 +1,5 @@
 import { PropTypes } from 'react-recollect';
-import { VISIBILITY_FILTERS } from '../constants';
+import { VISIBILITY_FILTERS } from '../../../shared/constants';
 import TodoPropType from './TodoPropType';
 
 const TodoMvcPropType = PropTypes.shape({

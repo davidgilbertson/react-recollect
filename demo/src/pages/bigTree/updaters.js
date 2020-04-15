@@ -1,4 +1,4 @@
-import { TYPES } from '../todomvc/constants';
+import { TYPES } from '../../shared/constants';
 
 export const deleteChild = (parent, child) => {
   if (parent.childrenType === TYPES.OBJ) {

@@ -204,7 +204,8 @@ export const updateDeep = <T extends Target>(
 /**
  * Does some work while the proxy is muted. Returns the result of the
  * callback as a convenience.
- * DO NOT expose this to users as it encourages non-deterministic behaviour.
+ * This prevents components from being subscribed to reads from the store,
+ * it does not prevent updates being triggered.
  */
 export const whileMuted = <T>(cb: () => T): T => {
   state.proxyIsMuted = true;

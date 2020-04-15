@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { useEffect } from 'react';
 import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
-import { LOAD_STATUSES } from '../constants';
+import { LOAD_STATUSES } from '../../../shared/constants';
 import loadTodoData from '../selectors/loadTodoData';
 import Header from './Header';
 import MainSection from './MainSection';

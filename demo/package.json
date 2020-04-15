@@ -32,7 +32,7 @@
     "classnames": "2.2.6",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "react-recollect": "^5.2.0",
+    "react-recollect": "^5.2.2",
     "react-scripts": "3.4.1"
   },
   "devDependencies": {

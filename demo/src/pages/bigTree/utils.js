@@ -1,4 +1,4 @@
-import { TYPES } from '../todomvc/constants';
+import { TYPES } from '../../shared/constants';
 
 let id = 99;
 

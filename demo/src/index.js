@@ -11,12 +11,15 @@ import {
   PRODUCT_FILTER,
   TYPES,
   VISIBILITY_FILTERS,
-} from './pages/todomvc/constants';
+} from './shared/constants';
 import Theme from './shared/Theme';
 
 initStore({
   currentPage: localStorage.currentPage || PAGES.PRODUCTS,
   loading: false,
+  batchUpdatePage: {
+    text: '×',
+  },
   productPage: {
     filter: PRODUCT_FILTER.ALL,
     products: [],

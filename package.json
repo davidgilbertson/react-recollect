@@ -1,6 +1,6 @@
 {
   "name": "react-recollect",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "description": "Simple state management for react",
   "keywords": [
     "flux",
@@ -84,6 +84,7 @@
     "typescript": "^3.8.3"
   },
   "peerDependencies": {
+    "react-dom": ">=15.3",
     "react": ">=15.3"
   }
 }

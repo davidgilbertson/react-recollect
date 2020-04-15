@@ -1,5 +1,5 @@
 import { store } from 'react-recollect';
-import { LOAD_STATUSES } from '../constants';
+import { LOAD_STATUSES } from '../../../shared/constants';
 
 /** @return void */
 const loadTodoData = async () => {
