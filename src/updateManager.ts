@@ -2,6 +2,7 @@ import { logUpdate } from './shared/debug';
 import state from './shared/state';
 import * as paths from './shared/paths';
 import { CollectorComponent, PropPath } from './shared/types';
+import batchedUpdates from './shared/batchedUpdates';
 
 type Queue = {
   components: Map<CollectorComponent, Set<string>>;
@@ -14,10 +15,19 @@ const queue: Queue = {
 };
 
 export const flushUpdates = () => {
-  queue.components.forEach((propsUpdated, component) => {
-    logUpdate(component, Array.from(propsUpdated));
+  // We batch updates here so that React will collect all setState() calls
+  // (one for each component being updated) before triggering a render.
+  // In other words: MANY .update() calls, ONE render.
+  // This is subtly different to what the Recollect batch() function does -
+  // it ensures that the listeners are only notified once for
+  // multiple store changes
+  // In other words: MANY store updates, ONE call to flushUpdates()
+  batchedUpdates(() => {
+    queue.components.forEach((propsUpdated, component) => {
+      logUpdate(component, Array.from(propsUpdated));
 
-    component.update();
+      component.update();
+    });
   });
 
   state.manualListeners.forEach((cb) =>
