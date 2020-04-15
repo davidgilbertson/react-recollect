@@ -1,5 +1,5 @@
 import { store } from 'react-recollect';
-import { VISIBILITY_FILTERS } from '../constants';
+import { VISIBILITY_FILTERS } from '../../../shared/constants';
 
 const getVisibleTodos = () => {
   const { todos, visibilityFilter } = store.todoMvcPage;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
-import { VISIBILITY_FILTERS } from '../constants';
+import { VISIBILITY_FILTERS } from '../../../shared/constants';
 import Link from './Link';
 
 const Footer = (props) => {

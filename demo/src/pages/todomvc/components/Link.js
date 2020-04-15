@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React from 'react';
 import { collect, PropTypes } from 'react-recollect';
 import StorePropType from '../../../propTypes/StorePropType';
-import { VISIBILITY_FILTERS } from '../constants';
+import { VISIBILITY_FILTERS } from '../../../shared/constants';
 
 const Link = ({ filter, children, store }) => (
   <button

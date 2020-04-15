@@ -6,6 +6,7 @@ export const VISIBILITY_FILTERS = {
 
 export const PAGES = {
   PRODUCTS: 'Products',
+  BATCHED_UPDATES: 'Batched updates',
   BIG_TREE: 'Big tree',
   TODO_MVC: 'Todo MVC',
 };

@@ -7,7 +7,7 @@ import { Delete } from '@material-ui/icons';
 import TreeItem from '@material-ui/lab/TreeItem';
 import React, { useRef } from 'react';
 import { PropTypes } from 'react-recollect';
-import { TYPES } from '../todomvc/constants';
+import { TYPES } from '../../shared/constants';
 import { getChildrenAsArray } from './selectors';
 import { deleteChild } from './updaters';
 import { makeItem } from './utils';

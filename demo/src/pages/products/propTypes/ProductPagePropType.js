@@ -1,5 +1,5 @@
 import { PropTypes } from 'react-recollect';
-import { PRODUCT_FILTER } from '../../todomvc/constants';
+import { PRODUCT_FILTER } from '../../../shared/constants';
 import ProductPropType from './ProductPropType';
 
 const ProductPagePropType = PropTypes.shape({

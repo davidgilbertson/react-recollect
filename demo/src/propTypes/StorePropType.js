@@ -1,6 +1,6 @@
 import { PropTypes } from 'react-recollect';
 import ProductPagePropType from '../pages/products/propTypes/ProductPagePropType';
-import { PAGES } from '../pages/todomvc/constants';
+import { PAGES } from '../shared/constants';
 import TodoMvcPropType from '../pages/todomvc/propTypes/TodoMvcPropType';
 
 const StorePropType = PropTypes.shape({

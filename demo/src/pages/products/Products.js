@@ -9,7 +9,7 @@ import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import { collect } from 'react-recollect';
 import StorePropType from '../../propTypes/StorePropType';
-import { PRODUCT_FILTER } from '../todomvc/constants';
+import { PRODUCT_FILTER } from '../../shared/constants';
 import Product from './Product';
 import styles from './Products.module.css';
 
