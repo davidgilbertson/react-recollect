@@ -8,6 +8,10 @@ const StorePropType = PropTypes.shape({
   loading: PropTypes.bool.isRequired,
   productPage: ProductPagePropType.isRequired,
   todoMvcPage: TodoMvcPropType,
+  batchUpdatePage: PropTypes.shape({
+    text: PropTypes.string.isRequired,
+    grid: PropTypes.shape({}),
+  }),
 });
 
 export default StorePropType;

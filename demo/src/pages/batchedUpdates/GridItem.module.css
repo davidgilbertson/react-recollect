@@ -1,0 +1,25 @@
+.gridItem {
+  position: relative;
+  flex: auto;
+  padding: 2px;
+  margin: 2px;
+  background: rgba(33, 150, 243, 0.05);
+  border: 1px solid #fff;
+  box-shadow: 3px 1px 4px 1px rgba(0, 0, 0, 0.05);
+}
+
+.textWrapper {
+  min-height: 100px;
+  min-width: 100px;
+}
+
+.text {
+  margin: 4px 0 0 0;
+  font-size: 18px;
+  font-family: monospace;
+  color: #444;
+}
+
+.childrenWrapper {
+  display: flex;
+}

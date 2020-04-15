@@ -17,13 +17,31 @@ import Theme from './shared/Theme';
 initStore({
   currentPage: localStorage.currentPage || PAGES.PRODUCTS,
   loading: false,
-  batchUpdatePage: {
-    text: '×',
-  },
   productPage: {
     filter: PRODUCT_FILTER.ALL,
     products: [],
     searchQuery: '',
+  },
+  batchUpdatePage: {
+    text: '×',
+    grid: {
+      100: { x: 0, y: 0 },
+      101: { x: 0, y: 0 },
+      102: { x: 0, y: 0 },
+      103: { x: 0, y: 0 },
+      104: { x: 0, y: 0 },
+      105: { x: 0, y: 0 },
+      106: { x: 0, y: 0 },
+      107: { x: 0, y: 0 },
+      108: { x: 0, y: 0 },
+      109: { x: 0, y: 0 },
+      110: { x: 0, y: 0 },
+      111: { x: 0, y: 0 },
+      112: { x: 0, y: 0 },
+      113: { x: 0, y: 0 },
+      114: { x: 0, y: 0 },
+      115: { x: 0, y: 0 },
+    },
   },
   todoMvcPage: {
     loadStatus: LOAD_STATUSES.NOT_STARTED,
