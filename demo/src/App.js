@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import { collect } from 'react-recollect';
 import './App.css';
-import BatchedUpdates from './pages/batchedUpdates/BatchedUpdates';
+import Updates from './pages/updates/Updates';
 import BigTree from './pages/bigTree/BigTree';
 import Products from './pages/products/Products';
 import TodoMvcPage from './pages/todomvc/components/TodoMvcPage';
@@ -38,9 +38,9 @@ const App = ({ store }) => (
       </AppBar>
     </Box>
 
-    {store.currentPage === PAGES.PRODUCTS && <Products />}
+    {store.currentPage === PAGES.UPDATES && <Updates />}
 
-    {store.currentPage === PAGES.BATCHED_UPDATES && <BatchedUpdates />}
+    {store.currentPage === PAGES.PRODUCTS && <Products />}
 
     {store.currentPage === PAGES.BIG_TREE && (
       <ScopedCssBaseline>

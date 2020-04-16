@@ -14,8 +14,12 @@ import {
 } from './shared/constants';
 import Theme from './shared/Theme';
 
+const currentPage = Object.values(PAGES).includes(localStorage.currentPage)
+  ? localStorage.currentPage
+  : PAGES.UPDATES;
+
 initStore({
-  currentPage: localStorage.currentPage || PAGES.PRODUCTS,
+  currentPage,
   loading: false,
   productPage: {
     filter: PRODUCT_FILTER.ALL,

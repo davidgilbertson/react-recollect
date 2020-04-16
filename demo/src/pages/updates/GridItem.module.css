@@ -1,0 +1,26 @@
+.gridItem {
+  position: relative;
+  flex: auto;
+  min-width: 0;
+  padding: 0 4px 4px;
+  background: rgba(33, 150, 243, 0.07);
+  outline: 1px solid white;
+  box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.05);
+  transition: 100ms;
+}
+
+.textWrapper {
+  min-height: 80px;
+  min-width: 100px;
+  padding: 0 4px;
+}
+
+.text {
+  margin: 4px 0 0 0;
+  font-family: monospace;
+  color: #444;
+}
+
+.childrenWrapper {
+  display: flex;
+}

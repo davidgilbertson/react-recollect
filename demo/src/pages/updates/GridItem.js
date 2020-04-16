@@ -8,23 +8,38 @@ const GridItem = ({ store, id, children }) => {
   const countRef = useRef(0);
   countRef.current++;
 
+  const elRef = useRef();
+  const timeoutRef = useRef();
+
   const pos = store.batchUpdatePage.grid[id];
+
+  const handleTouch = (e) => {
+    e.stopPropagation();
+
+    const nextValue = {
+      x: e.nativeEvent.screenX,
+      y: e.nativeEvent.screenY,
+    };
+
+    throttledUpdate(() => {
+      store.batchUpdatePage.grid[id] = nextValue;
+    });
+
+    // Flash the border on render
+    clearTimeout(timeoutRef.current);
+    elRef.current.style.outline = '1px solid orange';
+
+    timeoutRef.current = setTimeout(() => {
+      elRef.current.style.outline = '';
+    }, 200);
+  };
 
   return (
     <div
+      ref={elRef}
       className={styles.gridItem}
-      onMouseMove={(e) => {
-        e.stopPropagation();
-
-        const nextValue = {
-          x: e.nativeEvent.offsetX,
-          y: e.nativeEvent.offsetY,
-        };
-
-        throttledUpdate(() => {
-          store.batchUpdatePage.grid[id] = nextValue;
-        });
-      }}
+      onMouseMove={handleTouch}
+      onMouseDown={handleTouch}
     >
       <div className={styles.textWrapper}>
         <p className={styles.text}>R: {countRef.current}</p>
