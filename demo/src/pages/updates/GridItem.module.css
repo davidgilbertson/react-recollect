@@ -2,21 +2,21 @@
   position: relative;
   flex: auto;
   min-width: 0;
-  padding: 0 4px 4px;
-  background: rgba(33, 150, 243, 0.07);
+  padding: 4px;
+  background: hsla(200, 18%, 46%, 0.08);
   outline: 1px solid white;
+  outline-offset: -1px;
   box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.05);
-  transition: 100ms;
+  transition: 300ms;
 }
 
 .textWrapper {
-  min-height: 80px;
+  min-height: 100px;
   min-width: 100px;
-  padding: 0 4px;
 }
 
 .text {
-  margin: 4px 0 0 0;
+  margin: 0 0 4px;
   font-family: monospace;
   color: #444;
 }

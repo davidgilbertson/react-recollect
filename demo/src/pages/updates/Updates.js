@@ -8,50 +8,60 @@ import StorePropType from '../../propTypes/StorePropType';
 import GridItem from './GridItem';
 import Parent from './Parent';
 
+const getGrid = () => (
+  <Box flex={1} minWidth={0} clone>
+    <GridItem id="101">
+      <GridItem id="102">
+        <GridItem id="103" />
+
+        <GridItem id="104">
+          <GridItem id="105" />
+        </GridItem>
+      </GridItem>
+
+      <GridItem id="107">
+        <GridItem id="108">
+          <GridItem id="109">
+            <GridItem id="110">
+              <GridItem id="111" />
+            </GridItem>
+          </GridItem>
+        </GridItem>
+      </GridItem>
+
+      <GridItem id="112">
+        <GridItem id="113">
+          <GridItem id="114" />
+        </GridItem>
+      </GridItem>
+    </GridItem>
+  </Box>
+);
+
 const Updates = ({ store }) => (
   <Container>
     <Box p={1} mt={2} clone>
       <Paper elevation={1}>
         <Typography variant="h3">Targeted updates</Typography>
         <p>
-          This demonstrates components re-rendering only when their data
-          changes.
+          This is for testing/demonstrating components re-rendering only when
+          their data changes. Best viewed not on a phone.
         </p>
 
         <p>
           Each box updates the store on mouse move, and re-renders when it’s
-          data changes. When a box renders, it will flash with an orange border.
-          Note that when a component re-renders, it doesn’t mean that it’s
-          children re-render too.
+          data changes. When a box renders, it will flash its border. Note that
+          when a component re-renders, it doesn’t mean that it’s children
+          re-render too.
         </p>
 
-        <p>R = render count</p>
+        <p>RC = render count</p>
 
-        <GridItem id="101">
-          <GridItem id="102">
-            <GridItem id="103" />
+        <Box display="flex">
+          {getGrid()}
 
-            <GridItem id="104">
-              <GridItem id="105" />
-            </GridItem>
-          </GridItem>
-
-          <GridItem id="107">
-            <GridItem id="108">
-              <GridItem id="109">
-                <GridItem id="110">
-                  <GridItem id="111" />
-                </GridItem>
-              </GridItem>
-            </GridItem>
-          </GridItem>
-
-          <GridItem id="112">
-            <GridItem id="113">
-              <GridItem id="114" />
-            </GridItem>
-          </GridItem>
-        </GridItem>
+          {getGrid()}
+        </Box>
       </Paper>
     </Box>
 
