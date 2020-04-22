@@ -524,6 +524,8 @@ Check out [the debug test suite](./tests/unit/debug.test.tsx) for more examples.
 
 ### Time travel
 
+> <small>Added in `5.2.3`</small>
+
 You can navigate through the history of changes to the store with the below
 functions (in your DevTools console):
 
