@@ -177,10 +177,9 @@ it('should only update on certain store changes', () => {
   renderCount = 0;
   getByText('No text found');
 
-  // Empty the store. This deletes props individually, resulting in multiple
-  // updates to the top-level object. Rare enough that it's fine.
+  // Empty the store.
   initStore();
-  expect(renderCount).toBe(2);
+  expect(renderCount).toBe(1);
   getByText('No text found');
 });
 

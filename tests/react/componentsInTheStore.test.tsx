@@ -38,7 +38,7 @@ it('will not store a component instance or element', () => {
   });
 
   // I don't know why exactly, but it seems that React sets 'validated'
-  expect(consoleError).toMatch(
+  expect(consoleError[0]).toMatch(
     `You are attempting to modify the store during a render cycle. (You're setting "validated" to "true" somewhere)`
   );
 });

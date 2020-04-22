@@ -2,20 +2,20 @@ import React from 'react';
 import TaskList from './TaskList';
 import { store } from '../../..';
 import * as testUtils from '../../testUtils';
+import loadTasks from './loadTasks';
 
 it('TaskList', async () => {
-  const {
-    findByText,
-    getByText,
-    queryByText,
-    getByLabelText,
-  } = testUtils.renderStrict(<TaskList />);
+  const { getByText, queryByText, getByLabelText } = testUtils.renderStrict(
+    <TaskList />
+  );
 
   // it should render a loading indicator
   getByText('Loading...');
 
+  await loadTasks();
+
   // it should render the tasks once loaded
-  await findByText('Task one');
+  getByText('Task one');
 
   // it should mark a task as done in a child component
   const taskOneCheckbox = getByLabelText('Task one') as HTMLInputElement;

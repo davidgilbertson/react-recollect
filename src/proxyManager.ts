@@ -50,7 +50,7 @@ export const getHandlerForObject = <T extends Target>(
           return result;
         }
 
-        if (!state.currentComponent) {
+        if (!state.currentComponent && state.redirectToNext) {
           const nextVersion = state.nextVersionMap.get(target);
           if (nextVersion) return Reflect.get(nextVersion, prop);
         }
@@ -216,7 +216,7 @@ export const getHandlerForObject = <T extends Target>(
 
           addListener(paths.extend(target, prop));
         }
-      } else {
+      } else if (state.redirectToNext) {
         // When we're outside the render cycle, we route
         // requests to the 'next version'
         // Note, this will result in another get(), but on the equivalent
