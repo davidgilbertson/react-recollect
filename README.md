@@ -212,6 +212,8 @@ cached. [Click here](https://unpkg.com/react-recollect) to get the full URL.
 
 ## `store`
 
+> <small>Added in `1.0.0`</small>
+
 The `store` object that Recollect exposes is designed to behave like a plain old
 JavaScript object. But it's a bit different because it's immutable. You can
 write code as though you _were_ mutating it, but internally it will clone the
@@ -222,6 +224,8 @@ When the store is then passed to a component, React can do its clever shallow
 comparisons to know whether something has changed and update efficiently.
 
 ## `collect(ReactComponent)`
+
+> <small>Added in `1.0.0`</small>
 
 When you wrap a component in `collect`, Recollect will:
 
@@ -248,6 +252,8 @@ export default collect(Header);
 
 ## `afterChange(callback)`
 
+> <small>Added in `1.0.0`, the below applies to `4.0.0` and up</small>
+
 `afterChange` will call the provided callback whenever the store updates.
 
 The callback receives an event object with these properties:
@@ -272,6 +278,8 @@ afterChange((e) => {
 ```
 
 ## `initStore(data)`
+
+> <small>Added in `2.4.0`</small>
 
 The `initStore` function will _replace_ the contents of the store with the
 object you pass in.
@@ -364,6 +372,8 @@ applicable, and will fire `afterChange`.
 
 ## `batch(callback)`
 
+> <small>Added in `4.0.0`</small>
+
 The `batch` function allows you to update the store multiple times, and be
 guaranteed that components will only be updated after all updates are made.
 
@@ -393,6 +403,8 @@ single render cycle. So only clutter up your code with `batch` if it results in
 an actual performance improvement.
 
 ## `useProps(propArray)`
+
+> <small>Added in `5.1.0`</small>
 
 In most cases, you can rely on Recollect to know what data your component
 requires to render. However, Recollect can't know that your component will
@@ -438,6 +450,8 @@ curious, the implementation is literally just `propArray.includes(0)`.)
 Check out [these tests](tests/unit/useProps.test.tsx) for more usage examples.
 
 ## `PropTypes`
+
+> <small>Added in `5.2.0`</small>
 
 As you've learnt by now, Recollect works by 'recording' which properties your
 component reads from the store while it renders. This poses a problem if you use
@@ -953,6 +967,8 @@ the store.
 
 You can store anything that's valid JSON. If that's all you want to do, you can
 skip the rest of this section.
+
+> <small>The below applies to `4.0.0` and up</small>
 
 Recollect will store data of any type, including (but not limited to):
 
