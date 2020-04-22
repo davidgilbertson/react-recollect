@@ -28,21 +28,43 @@ export const propPathChanges = (handleChangeMock: jest.Mock) =>
 export const getAllListeners = () =>
   Array.from(internals.listeners.keys()).map(paths.internalToUser);
 
-export const expectToLogError = (func: () => void, message?: string) => {
-  // Even though the error is caught, it still gets printed to the console
-  // so we mock that out to avoid the wall of red text.
-  jest.spyOn(console, 'error');
-  const mockedConsoleError = mocked(console.error, true);
-  mockedConsoleError.mockImplementation(() => {});
+type ConsoleMethod = jest.FunctionPropertyNames<Required<typeof console>>;
+type ConsoleMockFunc = {
+  (func: () => void): string | string[];
+};
+
+/**
+ * Run some code with the console mocked.
+ */
+const withMockedConsole = (
+  func: () => void,
+  method: ConsoleMethod
+): string | string[] => {
+  jest.spyOn(console, method);
+  const mockedConsole = mocked(window.console[method], true);
+  mockedConsole.mockImplementation(() => {});
 
   func();
 
-  expect(mockedConsoleError).toHaveBeenCalled();
+  const consoleOutput =
+    mockedConsole.mock.calls.length === 1
+      ? mockedConsole.mock.calls[0][0]
+      : mockedConsole.mock.calls.map((args: [string]) => args[0]);
+  mockedConsole.mockRestore();
 
-  if (message) expect(mockedConsoleError).toHaveBeenCalledWith(message);
+  return consoleOutput;
+};
 
-  const consoleError = mockedConsoleError.mock.calls[0][0];
-  mockedConsoleError.mockRestore();
+export const withMockedConsoleInfo: ConsoleMockFunc = (func) =>
+  withMockedConsole(func, 'info');
+
+export const withMockedConsoleWarn: ConsoleMockFunc = (func) =>
+  withMockedConsole(func, 'warn');
+
+export const expectToLogError: ConsoleMockFunc = (func) => {
+  const consoleError = withMockedConsole(func, 'error');
+
+  expect(consoleError).not.toBeUndefined();
 
   return consoleError;
 };

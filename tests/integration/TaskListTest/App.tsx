@@ -4,26 +4,32 @@ import Notifications from './Notifications';
 import { collect, WithStoreProp } from '../../..';
 
 interface Props extends WithStoreProp {
-  onAppUpdate: () => {};
-  onTaskListUpdate: () => {};
-  onNotificationsUpdate: () => {};
+  onAppUpdate?: () => void;
+  onTaskListUpdate?: () => void;
+  onNotificationsUpdate?: () => void;
 }
 
 class App extends Component<Props> {
   componentDidUpdate() {
-    this.props.onAppUpdate();
+    if (this.props.onAppUpdate) {
+      this.props.onAppUpdate();
+    }
   }
 
   render() {
     return (
       <div>
-        <header>{this.props.store.site.title}</header>
+        {!!this.props.store.site && (
+          <header>{this.props.store.site.title}</header>
+        )}
 
         <TaskList onTaskListUpdate={this.props.onTaskListUpdate} />
 
-        <Notifications
-          onNotificationsUpdate={this.props.onNotificationsUpdate}
-        />
+        {!!this.props.store.notifications && (
+          <Notifications
+            onNotificationsUpdate={this.props.onNotificationsUpdate}
+          />
+        )}
       </div>
     );
   }

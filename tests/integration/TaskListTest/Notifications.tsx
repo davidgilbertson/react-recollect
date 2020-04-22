@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 import { collect, WithStoreProp } from '../../..';
 
 type Props = WithStoreProp & {
-  onNotificationsUpdate: () => {};
+  onNotificationsUpdate?: () => void;
 };
 
 class Notifications extends Component<Props> {
   componentDidUpdate() {
-    this.props.onNotificationsUpdate();
+    if (this.props.onNotificationsUpdate) {
+      this.props.onNotificationsUpdate();
+    }
   }
 
   render() {

@@ -43,6 +43,7 @@
         "props": true,
         "ignorePropertyModificationsFor": [
           "mutableTarget",
+          "task",
           "store"
         ]
       }

@@ -105,13 +105,6 @@ export const updateStore: UpdateInStore = ({
 pubSub.onUpdateInNextStore(updateStore);
 
 /**
- * Empty the Recollect store and replace it with new data.
- */
-export const initStore = (data?: Partial<Store>) => {
-  utils.replaceObject(state.store, data);
-};
-
-/**
  * Executes the provided function, then updates appropriate components and calls
  * listeners registered with `afterChange()`. Guaranteed to only trigger one
  * update. The provided function must only contain synchronous code.
@@ -121,4 +114,13 @@ export const batch = (cb: () => void) => {
   cb();
   state.isBatchUpdating = false;
   updateManager.flushUpdates();
+};
+
+/**
+ * Empty the Recollect store and replace it with new data.
+ */
+export const initStore = (data?: Partial<Store>) => {
+  batch(() => {
+    utils.replaceObject(state.store, data);
+  });
 };

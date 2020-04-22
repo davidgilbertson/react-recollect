@@ -6,7 +6,7 @@ import Switch from '@material-ui/core/Switch';
 import { Delete } from '@material-ui/icons';
 import TreeItem from '@material-ui/lab/TreeItem';
 import React, { useRef } from 'react';
-import { PropTypes } from 'react-recollect';
+import { batch, PropTypes } from 'react-recollect';
 import { TYPES } from '../../shared/constants';
 import { getChildrenAsArray } from './selectors';
 import { deleteChild } from './updaters';
@@ -67,10 +67,12 @@ const Item = (props) => {
                   title={`Add ${typeString} child to node ${nodeId}`}
                   onClick={() => {
                     // If this wasn't expanded yet, expanded it now
-                    if (!props.expandedNodeIds.has(nodeId)) {
-                      props.expandedNodeIds.add(nodeId);
-                    }
-                    addChild(makeItem(item.childrenType, typeString));
+                    batch(() => {
+                      if (!props.expandedNodeIds.has(nodeId)) {
+                        props.expandedNodeIds.add(nodeId);
+                      }
+                      addChild(makeItem(item.childrenType, typeString));
+                    });
                   }}
                 >
                   + {typeCode}

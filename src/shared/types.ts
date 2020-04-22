@@ -40,6 +40,8 @@ export type State = {
   /** Records the next version of any target */
   nextVersionMap: WeakMap<Target, Target>;
   proxyIsMuted: boolean;
+  /** Usually true, this will redirect reads to the latest version of the store */
+  redirectToNext: boolean;
   store: Store;
 };
 
@@ -63,18 +65,18 @@ export type UpdateInStore = {
 /**
  * All proxyable objects have these shared keys.
  */
-type SharedBase = {
+interface SharedBase<T> {
   [PATH]?: PropPath;
-  [ORIGINAL]?: Target;
+  [ORIGINAL]?: T;
   [p: string]: any;
   [p: number]: any;
   // [p: symbol]: any; // one day, we'll be able to do this - https://github.com/microsoft/TypeScript/issues/1863
-};
+}
 
-export type ObjWithSymbols = SharedBase & object;
-export type ArrWithSymbols = SharedBase & any[];
-export type MapWithSymbols = SharedBase & Map<any, any>;
-export type SetWithSymbols = SharedBase & Set<any>;
+export type ObjWithSymbols = SharedBase<ObjWithSymbols> & object;
+export type ArrWithSymbols = SharedBase<ArrWithSymbols> & any[];
+export type MapWithSymbols = SharedBase<MapWithSymbols> & Map<any, any>;
+export type SetWithSymbols = SharedBase<SetWithSymbols> & Set<any>;
 
 /**
  * A Target is any item that can be proxied

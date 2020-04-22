@@ -1,17 +1,12 @@
 import React, { Component } from 'react';
 import Task from './Task';
-import loadTasks from './loadTasks';
 import { collect, WithStoreProp } from '../../..';
 
 interface Props extends WithStoreProp {
-  onTaskListUpdate?: () => {};
+  onTaskListUpdate?: () => void;
 }
 
 class TaskList extends Component<Props> {
-  componentDidMount() {
-    loadTasks();
-  }
-
   componentDidUpdate() {
     if (this.props.onTaskListUpdate) {
       this.props.onTaskListUpdate();
@@ -26,7 +21,23 @@ class TaskList extends Component<Props> {
     return (
       <div>
         {store.tasks.length ? (
-          store.tasks.map((task) => <Task key={task.id} task={task} />)
+          <div>
+            <p>{`You have ${store.tasks.length} task${
+              store.tasks.length === 1 ? '' : 's'
+            }`}</p>
+
+            {store.tasks.map((task) => (
+              <Task key={task.id} task={task} />
+            ))}
+
+            <button
+              onClick={() => {
+                if (store.tasks) store.tasks.length = 0;
+              }}
+            >
+              Delete all tasks
+            </button>
+          </div>
         ) : (
           <h1>You have nothing to do</h1>
         )}
@@ -42,14 +53,6 @@ class TaskList extends Component<Props> {
           }}
         >
           Add a task
-        </button>
-
-        <button
-          onClick={() => {
-            if (store.tasks) store.tasks.length = 0;
-          }}
-        >
-          Delete all tasks
         </button>
 
         <button

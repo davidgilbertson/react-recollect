@@ -1,16 +1,14 @@
 import { CollectorComponent, Target } from './types';
 import * as paths from './paths';
+import * as ls from './ls';
 import * as utils from './utils';
 import state from './state';
+import { LS_KEYS } from './constants';
 
 const DEBUG_ON = 'on';
 const DEBUG_OFF = 'off';
 
-const hasLocalStorage = typeof window !== 'undefined' && !!window.localStorage;
-
-let DEBUG = hasLocalStorage
-  ? window.localStorage.RECOLLECT__DEBUG || DEBUG_OFF
-  : DEBUG_OFF;
+let DEBUG = ls.get(LS_KEYS.RR_DEBUG) || DEBUG_OFF;
 
 if (DEBUG === DEBUG_ON) {
   console.info(
@@ -20,12 +18,12 @@ if (DEBUG === DEBUG_ON) {
 
 export const debugOn = () => {
   DEBUG = DEBUG_ON;
-  if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
+  ls.set(LS_KEYS.RR_DEBUG, DEBUG_ON);
 };
 
 export const debugOff = () => {
   DEBUG = DEBUG_OFF;
-  if (hasLocalStorage) window.localStorage.RECOLLECT__DEBUG = DEBUG;
+  ls.set(LS_KEYS.RR_DEBUG, DEBUG_OFF);
 };
 
 export const debug = (cb: () => void) => {

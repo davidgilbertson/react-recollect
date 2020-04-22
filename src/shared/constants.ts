@@ -9,6 +9,11 @@ export const PATH = Symbol('PATH');
 
 export const ORIGINAL = Symbol('ORIGINAL');
 
+export const LS_KEYS = {
+  RR_HISTORY_LIMIT: 'RR_HISTORY_LIMIT',
+  RR_DEBUG: 'RR_DEBUG',
+};
+
 /** Some of the map and set methods */
 export const enum MapOrSetMembers {
   Get = 'get',

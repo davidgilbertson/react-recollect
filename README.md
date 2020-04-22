@@ -131,6 +131,7 @@ FA. Otherwise, open a GitHub issue.
   - [`useProps(propArray)`](#usepropsproparray)
   - [`PropTypes`](#proptypes)
   - [`window.__RR__`](#window__rr__)
+    - [Time travel](#time-travel)
 - [Usage with TypeScript](#usage-with-typescript)
   - [Your store](#your-store)
   - [Using collect](#using-collect)
@@ -484,9 +485,9 @@ It has these properties, available in development or production:
 - `debugOn()` will turn on debugging. This shows you what's updating in the
   store and which components are being updated as a result, and what data those
   components are reading. Note that this can have a negative impact on
-  performance if you're reading thousands of properties in a render cycle. Note 
+  performance if you're reading thousands of properties in a render cycle. Note
   also that it will 'collapse' all other console logs into the output (important
-  for dubbgging, but not ideal a lot of the time).
+  for debugging, but not ideal a lot of the time).
 - `debugOff()` will surprise you
 - `internals` exposes some interesting things.
 
@@ -496,8 +497,8 @@ handy for troubleshooting. For example, typing
 and re-render the appropriate components.
 
 If you just log the store to the console, you will see a strange object littered
-with with `[[Handler]]` and `[[Target]]` props. These are the proxies. All you
-need to know is that `[[Target]]` is the actual object you put in the store.
+with `[[Handler]]` and `[[Target]]` props. These are the proxies. All you need
+to know is that `[[Target]]` is the actual object you put in the store.
 
 During development there are two more methods to help you inspect your app:
 
@@ -521,8 +522,27 @@ __RR__.getListenersByComponent('Task2', (props) => props.taskId);
 
 Check out [the debug test suite](./tests/unit/debug.test.tsx) for more examples.
 
-You can play around with `__RR__` in
-[the Recollect demo site](https://0q4fo.csb.app).
+### Time travel
+
+> <small>Added in `5.2.3`</small>
+
+You can navigate through the history of changes to the store with the below
+functions (in your DevTools console):
+
+- `__RR__.back()` will go back to the state before the last store change.
+- `__RR__.forward()` will go forward again.
+- `__RR__.goTo(index)` will go to a particular index in the history.
+- `__RR__.getHistory()` will log out the entire history.
+- `__RR__.clearHistory()` clears the history.
+- `__RR__.setHistoryLimit(limit)` limits the number of store instances kept in
+  history. Defaults to `50`. Setting to `0` disables time travel. Is stored in
+  local storage.
+
+If you update the store with `initStore` or execute multiple updates within the
+`batch` function callback, those changes are recorded as a single history event.
+
+Note that these time travel functions are only available during development, not
+in the production build.
 
 # Usage with TypeScript
 
@@ -557,13 +577,15 @@ const MyComponent = ({ store, someComponentProp }: Props) => (
   // < your awesome JSX here>
 );
 
-export default collect(TaskList);
+export default collect(MyComponent);
 ```
 
 If the only prop your component needs is `store`, you can use `WithStoreProp`
 directly.
 
 ```tsx
+import { WithStoreProp } from 'react-recollect';
+
 const MyComponent = ({ store }: WithStoreProp) => <div>Hello {store.name}</div>;
 ```
 
@@ -580,7 +602,7 @@ can work out how to resolve the `@ts-ignore` in
 The ideas described in this section aren't part of the Recollect API, they're
 simply a guide.
 
-Two concepts are discussed in this section (neither of them new):
+Two concepts are described in this section (neither of them new):
 
 - **Selectors** contain logic for retrieving and data from the store.
 

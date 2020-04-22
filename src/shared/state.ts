@@ -12,6 +12,7 @@ const state: State = {
   manualListeners: [],
   nextVersionMap: new WeakMap(),
   proxyIsMuted: false,
+  redirectToNext: true,
   store: {},
 };
 
