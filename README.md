@@ -3,6 +3,8 @@
 
 # React Recollect
 
+This is a test, do not merge
+
 ## What?
 
 Recollect is a state management library for React, an alternative to Redux.
