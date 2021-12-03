@@ -6,7 +6,11 @@
     "module": "CommonJS",
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2017"
+    "target": "ES2017",
+    "baseUrl": ".",
+    "paths": {
+      "react-recollect": ["src/index.ts"],
+    }
   },
   "exclude": ["demo", "dist", "index.*.js"]
 }

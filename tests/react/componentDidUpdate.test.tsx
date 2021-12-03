@@ -1,8 +1,14 @@
 /* eslint-disable max-classes-per-file */
+
 import React, { Component, useEffect } from 'react';
 import { waitFor } from '@testing-library/react';
-import { collect, store as globalStore, initStore, WithStoreProp } from '../..';
 import * as testUtils from '../testUtils';
+import {
+  collect,
+  store as globalStore,
+  initStore,
+  WithStoreProp,
+} from 'react-recollect';
 
 interface Props extends WithStoreProp {
   reportUserChange: (comp: string, prev: number, next: number) => {};

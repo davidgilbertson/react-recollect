@@ -5,6 +5,9 @@ module.exports = {
     './jestSetup.js',
   ],
   clearMocks: true,
+  moduleNameMapper: {
+    'react-recollect': '<rootDir>/src/index.ts',
+  },
   modulePaths: ['<rootDir>/'],
   watchPathIgnorePatterns: [
     'node_modules/.cache', // don't listen to rollup-typescript cache

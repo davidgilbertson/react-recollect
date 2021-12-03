@@ -1,7 +1,7 @@
 import React from 'react';
 import { mocked } from 'ts-jest/utils';
 import { render } from '@testing-library/react';
-import { collect, internals } from '..';
+import { collect, internals } from 'react-recollect';
 import * as paths from '../src/shared/paths';
 
 export const renderStrict = (children: React.ReactNode) => {
@@ -75,12 +75,13 @@ export type TaskType = {
   done?: boolean;
 };
 
-declare module '..' {
-  // Add a few things used in the tests
+declare module 'react-recollect' {
   interface Store {
-    tasks?: TaskType[];
-    // And anything else...
-    [key: string]: any;
+    userId: number;
+    loaded: boolean;
+    aProp: string;
+    aMap: Map<any, any>;
+    aSet: Set<any>;
   }
 }
 
